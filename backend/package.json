@@ -1,0 +1,66 @@
+{
+  "name": "gem-optimizer-backend",
+  "version": "1.0.0",
+  "description": "Backend API server for GEM T2 Controller Optimizer with trip planning and community sharing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "init-db": "node database/init.js",
+    "test": "jest",
+    "test-api": "node test-api.js",
+    "setup": "npm install && npm run init-db",
+    "clean": "rm -rf database/*.db data/*.json && npm run setup",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "prod": "NODE_ENV=production node server.js"
+  },
+  "keywords": [
+    "gem",
+    "electric-vehicle",
+    "controller-optimization",
+    "trip-planning",
+    "api",
+    "express",
+    "community-sharing",
+    "sqlite"
+  ],
+  "author": "GEM Optimizer Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "sqlite3": "^5.1.6",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1",
+    "multer": "^1.4.5-lts.1",
+    "dotenv": "^16.3.1",
+    "joi": "^17.11.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gem-optimizer/backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gem-optimizer/backend/issues"
+  },
+  "homepage": "https://github.com/gem-optimizer/backend#readme"
+}

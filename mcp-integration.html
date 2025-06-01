@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEM Optimizer - AI Assistant Integration</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">GEM T2 Controller Optimizer</h1>
+            <p class="text-lg text-gray-600">AI Assistant Integration Example</p>
+        </div>
+
+        <!-- AI Assistant Interface -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Ask the AI Assistant</h2>
+            <p class="text-gray-600 mb-4">
+                This example shows how an AI assistant with MCP access could help optimize your GEM settings.
+                Try these example queries:
+            </p>
+            
+            <!-- Example Queries -->
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <button class="example-query bg-blue-50 hover:bg-blue-100 p-3 rounded text-left transition-colors" 
+                        data-query="I'm planning a camping trip to Big Sur next weekend with my GEM e4. Can you optimize my settings?">
+                    <strong class="text-blue-700">🏕️ Camping Trip</strong><br>
+                    <span class="text-sm text-gray-600">Optimize for a weekend camping adventure</span>
+                </button>
+                
+                <button class="example-query bg-green-50 hover:bg-green-100 p-3 rounded text-left transition-colors"
+                        data-query="My GEM e2 has 25-inch tires and struggles on hills. What settings should I use?">
+                    <strong class="text-green-700">⛰️ Hill Climbing</strong><br>
+                    <span class="text-sm text-gray-600">Improve performance on steep terrain</span>
+                </button>
+                
+                <button class="example-query bg-purple-50 hover:bg-purple-100 p-3 rounded text-left transition-colors"
+                        data-query="I just upgraded to lithium batteries. How can I maximize my range?">
+                    <strong class="text-purple-700">🔋 Battery Upgrade</strong><br>
+                    <span class="text-sm text-gray-600">Optimize for lithium batteries</span>
+                </button>
+                
+                <button class="example-query bg-orange-50 hover:bg-orange-100 p-3 rounded text-left transition-colors"
+                        data-query="I need settings for a parade in downtown LA next month">
+                    <strong class="text-orange-700">🎉 Parade Mode</strong><br>
+                    <span class="text-sm text-gray-600">Low-speed precision control</span>
+                </button>
+            </div>
+            
+            <!-- Query Input -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Your Question:</label>
+                <textarea id="user-query" rows="3" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Ask about optimizing your GEM settings..."></textarea>
+            </div>
+            
+            <button id="ask-ai" 
+                class="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition-colors font-medium">
+                Ask AI Assistant
+            </button>
+        </div>
+
+        <!-- Response Section -->
+        <div id="response-section" class="hidden bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-semibold mb-4">AI Assistant Response</h3>
+            <div id="ai-response" class="prose max-w-none"></div>
+            
+            <!-- Optimized Settings Display -->
+            <div id="settings-display" class="hidden mt-6">
+                <h4 class="text-lg font-semibold mb-3">Optimized Controller Settings</h4>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Function</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Value</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Change</th>
+                            </tr>
+                        </thead>
+                        <tbody id="settings-tbody" class="bg-white divide-y divide-gray-200">
+                            <!-- Settings rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div id="action-buttons" class="hidden mt-6 flex gap-4">
+                <button id="apply-settings" class="flex-1 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
+                    Apply These Settings
+                </button>
+                <button id="open-optimizer" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
+                    Open Full Optimizer
+                </button>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mt-8">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">About MCP Integration</h3>
+                    <p class="mt-2 text-sm text-blue-700">
+                        This demo simulates how an AI assistant with MCP (Model Context Protocol) access 
+                        could help optimize your GEM settings through natural language. In a real implementation, 
+                        the AI would call the MCP server tools to analyze your requirements and generate 
+                        optimized settings.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulated MCP responses for demo purposes
+        const simulatedResponses = {
+            camping: {
+                query: "optimize_for_trip",
+                response: {
+                    optimizedSettings: {
+                        3: 16,   // Faster acceleration for hills
+                        4: 255,  // Max current for climbing
+                        7: 70,   // Higher field for torque
+                        9: 245,  // Strong regen
+                        24: 70,  // Delayed field weakening
+                        26: 5    // Better field ratio
+                    },
+                    performanceChanges: [
+                        "Hill climbing ability improved by approximately 25%",
+                        "Regenerative braking strength increased by approximately 15%",
+                        "Motor protection improved for extended use"
+                    ],
+                    weatherForecast: {
+                        temperature: { min: 55, max: 68 },
+                        conditions: "partly cloudy",
+                        precipitation: { probability: 15 }
+                    },
+                    terrainAnalysis: {
+                        maxGrade: 18,
+                        terrainType: "steep",
+                        totalDistance: 45
+                    }
+                }
+            },
+            hills: {
+                query: "optimize_general",
+                response: {
+                    optimizedSettings: {
+                        1: 25,   // Adjusted for larger tires
+                        3: 16,   // Better acceleration
+                        7: 75,   // Higher field for torque
+                        22: 139, // Odometer for 25" tires
+                        24: 65,  // Delayed weakening
+                        26: 5    // Better torque
+                    },
+                    performanceChanges: [
+                        "Hill climbing improved by approximately 30%",
+                        "Speedometer corrected for 25-inch tires",
+                        "Better low-end torque for steep grades"
+                    ]
+                }
+            },
+            lithium: {
+                query: "optimize_general",
+                response: {
+                    optimizedSettings: {
+                        3: 22,   // Gentler acceleration for range
+                        4: 240,  // Reduced current
+                        7: 68,   // Balanced field
+                        9: 245,  // Strong regen for lithium
+                        10: 225, // Higher regen field
+                        14: 7,   // IR comp for lithium
+                        15: 82   // Lithium voltage
+                    },
+                    performanceChanges: [
+                        "Range improved by approximately 20%",
+                        "Regenerative braking optimized for lithium",
+                        "Smoother power delivery"
+                    ]
+                }
+            },
+            parade: {
+                query: "optimize_for_trip",
+                response: {
+                    optimizedSettings: {
+                        3: 28,   // Very gentle acceleration
+                        6: 70,   // Smooth starts/stops
+                        11: 110, // Lower turf speed
+                        20: 30,  // Reduced top speed
+                    },
+                    performanceChanges: [
+                        "Low-speed control significantly improved",
+                        "Smooth acceleration for parade conditions",
+                        "Speed limited for safety"
+                    ]
+                }
+            }
+        };
+
+        // Factory defaults for comparison
+        const factoryDefaults = {
+            1: 22, 3: 20, 4: 255, 5: 255, 6: 60, 7: 59, 8: 241, 9: 221,
+            10: 180, 11: 122, 12: 149, 14: 3, 15: 72, 19: 12, 20: 40,
+            22: 122, 23: 10, 24: 43, 26: 3
+        };
+
+        const functionDescriptions = {
+            1: "MPH Scaling",
+            3: "Controlled Acceleration",
+            4: "Max Armature Current",
+            6: "Armature Acceleration Rate",
+            7: "Minimum Field Current",
+            9: "Regen Armature Current",
+            10: "Regen Max Field Current",
+            11: "Turf Speed Limit",
+            14: "IR Compensation",
+            15: "Battery Volts",
+            20: "MPH Overspeed",
+            22: "Odometer Calibration",
+            24: "Field Weakening Start",
+            26: "Ratio Field to Arm"
+        };
+
+        // Handle example query buttons
+        document.querySelectorAll('.example-query').forEach(button => {
+            button.addEventListener('click', () => {
+                document.getElementById('user-query').value = button.getAttribute('data-query');
+            });
+        });
+
+        // Handle AI query
+        document.getElementById('ask-ai').addEventListener('click', async () => {
+            const query = document.getElementById('user-query').value.toLowerCase();
+            const responseSection = document.getElementById('response-section');
+            const aiResponse = document.getElementById('ai-response');
+            
+            responseSection.classList.remove('hidden');
+            aiResponse.innerHTML = '<div class="text-gray-600">Analyzing your request...</div>';
+            
+            // Simulate AI processing delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Determine which response to use based on keywords
+            let selectedResponse = null;
+            let responseText = '';
+            
+            if (query.includes('camping') || query.includes('big sur')) {
+                selectedResponse = simulatedResponses.camping;
+                responseText = `
+                    <p class="mb-4">I'll help optimize your GEM e4 for the camping trip to Big Sur. Based on the analysis:</p>
+                    <ul class="list-disc list-inside mb-4">
+                        <li><strong>Weather forecast:</strong> 55-68°F, partly cloudy, 15% chance of rain</li>
+                        <li><strong>Terrain:</strong> Steep grades up to 18%, 45 miles total distance</li>
+                        <li><strong>Load:</strong> Heavy (camping gear for weekend trip)</li>
+                    </ul>
+                    <p class="mb-4">I've generated optimized settings that will improve hill climbing by 25% and enhance regenerative braking for the downhill sections.</p>
+                `;
+            } else if (query.includes('hill') || query.includes('25-inch') || query.includes('struggles')) {
+                selectedResponse = simulatedResponses.hills;
+                responseText = `
+                    <p class="mb-4">I understand your GEM e2 with 25-inch tires is struggling on hills. I've calculated optimized settings that will:</p>
+                    <ul class="list-disc list-inside mb-4">
+                        <li>Correct the speedometer for your larger tires</li>
+                        <li>Improve hill climbing ability by approximately 30%</li>
+                        <li>Provide better low-end torque for steep grades</li>
+                    </ul>
+                `;
+            } else if (query.includes('lithium') || query.includes('range')) {
+                selectedResponse = simulatedResponses.lithium;
+                responseText = `
+                    <p class="mb-4">Excellent! Lithium batteries offer great potential for improved range. I've optimized your settings to:</p>
+                    <ul class="list-disc list-inside mb-4">
+                        <li>Increase range by approximately 20%</li>
+                        <li>Optimize regenerative braking for lithium chemistry</li>
+                        <li>Provide smoother, more efficient power delivery</li>
+                    </ul>
+                `;
+            } else if (query.includes('parade')) {
+                selectedResponse = simulatedResponses.parade;
+                responseText = `
+                    <p class="mb-4">For the parade in downtown LA, you'll need precise low-speed control. I've configured settings for:</p>
+                    <ul class="list-disc list-inside mb-4">
+                        <li>Ultra-smooth acceleration and deceleration</li>
+                        <li>Limited top speed for safety in crowds</li>
+                        <li>Enhanced low-speed maneuverability</li>
+                    </ul>
+                `;
+            } else {
+                responseText = `
+                    <p class="mb-4">I can help optimize your GEM settings! Please provide more details about:</p>
+                    <ul class="list-disc list-inside mb-4">
+                        <li>Your GEM model (e2, e4, e6, etc.)</li>
+                        <li>Your primary use case or specific trip</li>
+                        <li>Any modifications (tire size, battery type)</li>
+                        <li>Terrain and driving conditions</li>
+                    </ul>
+                    <p class="mt-4">Try one of the example queries above for a demonstration.</p>
+                `;
+            }
+            
+            aiResponse.innerHTML = responseText;
+            
+            // Display settings if we have a response
+            if (selectedResponse) {
+                displayOptimizedSettings(selectedResponse.response);
+                document.getElementById('settings-display').classList.remove('hidden');
+                document.getElementById('action-buttons').classList.remove('hidden');
+                
+                // Add performance changes
+                if (selectedResponse.response.performanceChanges) {
+                    const changesHtml = `
+                        <div class="mt-4 bg-green-50 p-4 rounded">
+                            <h5 class="font-semibold text-green-800 mb-2">Expected Performance Changes:</h5>
+                            <ul class="text-sm text-green-700">
+                                ${selectedResponse.response.performanceChanges.map(change => 
+                                    `<li>✓ ${change}</li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    `;
+                    aiResponse.innerHTML += changesHtml;
+                }
+            }
+        });
+
+        function displayOptimizedSettings(response) {
+            const tbody = document.getElementById('settings-tbody');
+            tbody.innerHTML = '';
+            
+            Object.entries(response.optimizedSettings).forEach(([funcNum, value]) => {
+                const factoryValue = factoryDefaults[funcNum];
+                const change = value - factoryValue;
+                const changeSymbol = change > 0 ? '↑' : change < 0 ? '↓' : '=';
+                const changeClass = change > 0 ? 'text-green-600' : change < 0 ? 'text-blue-600' : 'text-gray-500';
+                
+                const row = `
+                    <tr>
+                        <td class="px-4 py-2 text-sm font-medium">F${funcNum}</td>
+                        <td class="px-4 py-2 text-sm">${functionDescriptions[funcNum] || 'Unknown'}</td>
+                        <td class="px-4 py-2 text-sm font-medium">${value}</td>
+                        <td class="px-4 py-2 text-sm ${changeClass}">${changeSymbol} ${Math.abs(change)}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Handle action buttons
+        document.getElementById('apply-settings').addEventListener('click', () => {
+            alert('In a real implementation, these settings would be saved for upload to your controller.');
+        });
+
+        document.getElementById('open-optimizer').addEventListener('click', () => {
+            window.location.href = 'gem-optimizer.html';
+        });
+    </script>
+</body>
+</html>

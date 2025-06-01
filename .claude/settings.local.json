@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm:*)",
+      "Bash(touch:*)",
+      "Bash(mv:*)",
+      "Bash(open index.html)",
+      "Bash(open gem-optimizer.html)",
+      "Bash(open:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(grep:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

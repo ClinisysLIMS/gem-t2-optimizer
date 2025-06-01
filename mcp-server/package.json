@@ -1,0 +1,66 @@
+{
+  "name": "gem-optimizer-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP (Model Context Protocol) server for GEM T2 Controller Optimizer with natural language processing",
+  "type": "module",
+  "main": "src/mcp-server.js",
+  "scripts": {
+    "start": "node src/mcp-server.js",
+    "dev": "node --watch src/mcp-server.js",
+    "test": "node --test tests/*.test.js",
+    "lint": "eslint src/ tests/",
+    "format": "prettier --write src/ tests/",
+    "build": "echo 'No build step required for Node.js'",
+    "validate": "node src/validate-mcp.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "gem",
+    "electric-vehicle",
+    "controller-optimization",
+    "ai-assistant",
+    "natural-language",
+    "trip-planning"
+  ],
+  "author": "GEM Optimizer Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "zod": "^3.22.4",
+    "natural": "^6.12.0",
+    "compromise": "^14.10.0",
+    "chrono-node": "^2.7.3",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "node-cache": "^5.1.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.1",
+    "@types/node": "^20.10.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gem-optimizer/mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gem-optimizer/mcp-server/issues"
+  },
+  "homepage": "https://github.com/gem-optimizer/mcp-server#readme",
+  "mcp": {
+    "protocol_version": "2024-11-05",
+    "capabilities": {
+      "tools": true,
+      "resources": true,
+      "prompts": true,
+      "logging": true
+    },
+    "name": "gem-optimizer",
+    "description": "GEM T2 Controller Optimizer with natural language interface"
+  }
+}
