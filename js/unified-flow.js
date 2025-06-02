@@ -1,0 +1,933 @@
+/**
+ * Unified Flow Controller
+ * Manages the streamlined configuration process for GEM T2 Optimizer
+ */
+class UnifiedFlowController {
+    constructor() {
+        this.currentStep = 1;
+        this.vehicleData = {};
+        this.tripData = {};
+        this.pdfSettings = null;
+        this.classifier = new VehicleClassifier();
+        this.optimizer = new GEMOptimizer();
+        this.pdfParser = new PDFParser();
+        
+        this.init();
+    }
+
+    /**
+     * Initialize the application
+     */
+    init() {
+        this.setupEventListeners();
+        this.loadSavedData();
+        this.updateVehicleClassification();
+        
+        // Initialize services
+        if (typeof WeatherService !== 'undefined') {
+            this.weatherService = new WeatherService();
+        }
+        if (typeof TerrainService !== 'undefined') {
+            this.terrainService = new TerrainService();
+        }
+        if (typeof TripOptimizer !== 'undefined' && this.optimizer) {
+            this.tripOptimizer = new TripOptimizer(this.optimizer);
+        }
+    }
+
+    /**
+     * Setup all event listeners
+     */
+    setupEventListeners() {
+        // Vehicle Information
+        document.getElementById('vehicle-model')?.addEventListener('change', (e) => {
+            this.vehicleData.model = e.target.value;
+            this.validateStep1();
+            this.saveData();
+        });
+
+        document.getElementById('vehicle-year')?.addEventListener('change', (e) => {
+            this.vehicleData.year = e.target.value;
+            this.validateStep1();
+            this.saveData();
+        });
+
+        document.getElementById('controller-type')?.addEventListener('change', (e) => {
+            this.vehicleData.controller = e.target.value;
+            this.validateCompatibility();
+            this.validateStep1();
+            this.saveData();
+        });
+
+        document.getElementById('motor-type')?.addEventListener('change', (e) => {
+            this.vehicleData.motorType = e.target.value;
+            this.validateCompatibility();
+            this.validateStep1();
+            this.saveData();
+        });
+
+        document.getElementById('current-speed')?.addEventListener('input', (e) => {
+            this.vehicleData.currentSpeed = parseInt(e.target.value) || 25;
+            this.updateVehicleClassification();
+            this.validateStep1();
+            this.saveData();
+        });
+
+        // PDF Upload
+        const pdfInput = document.getElementById('settings-pdf');
+        const pdfUploadArea = document.getElementById('pdf-upload-area');
+        
+        if (pdfInput && pdfUploadArea) {
+            pdfInput.addEventListener('change', (e) => this.handlePDFUpload(e));
+            
+            // Drag and drop
+            pdfUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                pdfUploadArea.classList.add('border-green-400', 'bg-green-50');
+            });
+            
+            pdfUploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                pdfUploadArea.classList.remove('border-green-400', 'bg-green-50');
+            });
+            
+            pdfUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                pdfUploadArea.classList.remove('border-green-400', 'bg-green-50');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type === 'application/pdf') {
+                    this.processPDFFile(file);
+                }
+            });
+        }
+
+        // Navigation
+        document.getElementById('continue-to-planning')?.addEventListener('click', () => {
+            if (this.validateStep1()) {
+                this.showStep(2);
+            }
+        });
+
+        document.getElementById('back-to-vehicle')?.addEventListener('click', () => {
+            this.showStep(1);
+        });
+
+        document.getElementById('generate-settings')?.addEventListener('click', () => {
+            this.generateOptimizedSettings();
+        });
+
+        // Quick Actions
+        document.querySelectorAll('.quick-action-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const action = e.currentTarget.dataset.action;
+                this.handleQuickAction(action);
+            });
+        });
+
+        // Trip Planning Inputs
+        document.getElementById('trip-destination')?.addEventListener('input', (e) => {
+            this.tripData.destination = e.target.value;
+            this.saveData();
+        });
+
+        document.getElementById('trip-date')?.addEventListener('change', (e) => {
+            this.tripData.date = e.target.value;
+            this.saveData();
+        });
+
+        document.getElementById('trip-type')?.addEventListener('change', (e) => {
+            this.tripData.type = e.target.value;
+            this.saveData();
+        });
+
+        document.getElementById('passengers')?.addEventListener('change', (e) => {
+            this.tripData.passengers = e.target.value;
+            this.saveData();
+        });
+
+        document.getElementById('cargo')?.addEventListener('change', (e) => {
+            this.tripData.cargo = e.target.value;
+            this.saveData();
+        });
+
+        // MCP Configuration
+        document.getElementById('enable-mcp')?.addEventListener('click', () => {
+            this.showMCPConfiguration();
+        });
+    }
+
+    /**
+     * Validate Step 1 (Vehicle Information)
+     */
+    validateStep1() {
+        const required = ['model', 'year', 'controller', 'motorType', 'currentSpeed'];
+        const isValid = required.every(field => this.vehicleData[field]);
+        
+        const continueBtn = document.getElementById('continue-to-planning');
+        if (continueBtn) {
+            continueBtn.disabled = !isValid;
+        }
+        
+        return isValid;
+    }
+
+    /**
+     * Validate motor and controller compatibility
+     */
+    validateCompatibility() {
+        if (!this.vehicleData.motorType || !this.vehicleData.controller) return;
+        
+        const compatibility = this.classifier.validateCompatibility(
+            this.vehicleData.motorType,
+            this.vehicleData.controller
+        );
+        
+        // Show compatibility message
+        const existingMsg = document.getElementById('compatibility-message');
+        if (existingMsg) existingMsg.remove();
+        
+        if (!compatibility.compatible) {
+            const motorSelect = document.getElementById('motor-type');
+            const msg = document.createElement('div');
+            msg.id = 'compatibility-message';
+            msg.className = 'mt-2 p-2 bg-red-50 text-red-700 text-sm rounded';
+            msg.innerHTML = `
+                <strong>⚠️ Compatibility Issue:</strong> ${compatibility.message}
+                ${compatibility.recommendation ? `<br>${compatibility.recommendation}` : ''}
+            `;
+            motorSelect.parentElement.appendChild(msg);
+        }
+    }
+
+    /**
+     * Update vehicle classification display
+     */
+    updateVehicleClassification() {
+        const speed = this.vehicleData.currentSpeed || 25;
+        const classification = this.classifier.classifyBySpeed(speed);
+        
+        const resultDiv = document.getElementById('classification-result');
+        if (resultDiv) {
+            resultDiv.innerHTML = `
+                <span class="font-semibold">${classification.icon} ${classification.name}</span>
+                <p class="text-xs text-gray-600 mt-1">
+                    Speed: ${speed} MPH | ${classification.requirements}
+                </p>
+                ${classification.warning ? 
+                    `<p class="text-xs text-red-600 mt-1 font-medium">${classification.note}</p>` : 
+                    ''}
+            `;
+            
+            const container = document.getElementById('vehicle-classification');
+            if (container) {
+                container.className = `p-4 rounded-lg ${
+                    classification.warning ? 'bg-red-50' : 'bg-gray-50'
+                }`;
+            }
+        }
+    }
+
+    /**
+     * Handle PDF file upload
+     */
+    async handlePDFUpload(event) {
+        const file = event.target.files[0];
+        if (file && file.type === 'application/pdf') {
+            this.processPDFFile(file);
+        }
+    }
+
+    /**
+     * Process uploaded PDF file
+     */
+    async processPDFFile(file) {
+        const uploadArea = document.getElementById('pdf-upload-area');
+        const resultDiv = document.getElementById('pdf-analysis-result');
+        const contentDiv = document.getElementById('pdf-analysis-content');
+        
+        // Show processing state
+        if (uploadArea) {
+            uploadArea.innerHTML = `
+                <div class="flex items-center justify-center">
+                    <div class="spinner mr-3"></div>
+                    <span class="text-sm text-gray-600">Analyzing PDF...</span>
+                </div>
+            `;
+        }
+        
+        try {
+            const result = await this.pdfParser.parsePDF(file);
+            
+            if (result.success && result.formats.length > 0) {
+                // Use the first format for now
+                const format = result.formats[0];
+                let settings = {};
+                
+                if (format.type === 'optimization-comparison') {
+                    // Use original values by default
+                    settings = format.original;
+                } else if (format.type === 'sentry-export') {
+                    settings = format.settings;
+                }
+                
+                this.pdfSettings = settings;
+                
+                // Show success
+                if (resultDiv && contentDiv) {
+                    resultDiv.classList.remove('hidden');
+                    contentDiv.innerHTML = `
+                        <p>Successfully extracted ${Object.keys(settings).length} controller settings</p>
+                        <p class="text-xs mt-1">Format: ${format.name}</p>
+                        <button class="mt-2 text-xs text-green-600 hover:underline" onclick="unifiedFlow.showPDFDetails()">
+                            View details →
+                        </button>
+                    `;
+                }
+                
+                // Restore upload area
+                this.restoreUploadArea();
+                
+                // Analyze settings for insights
+                this.analyzePDFSettings(settings);
+                
+            } else {
+                throw new Error('No valid settings found in PDF');
+            }
+            
+        } catch (error) {
+            console.error('PDF processing error:', error);
+            if (resultDiv && contentDiv) {
+                resultDiv.classList.remove('hidden');
+                resultDiv.classList.replace('bg-green-50', 'bg-red-50');
+                contentDiv.innerHTML = `
+                    <h4 class="font-medium text-red-900 mb-2">❌ Analysis Failed</h4>
+                    <p class="text-sm text-red-700">${error.message}</p>
+                `;
+            }
+            this.restoreUploadArea();
+        }
+    }
+
+    /**
+     * Restore PDF upload area
+     */
+    restoreUploadArea() {
+        const uploadArea = document.getElementById('pdf-upload-area');
+        if (uploadArea) {
+            uploadArea.innerHTML = `
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-sm text-gray-600">
+                    <label for="settings-pdf" class="cursor-pointer">
+                        <span class="text-green-600 hover:text-green-500">Upload another PDF</span>
+                        <span class="text-gray-500"> to update settings</span>
+                    </label>
+                </p>
+                <input id="settings-pdf" type="file" accept=".pdf" class="hidden">
+                <p class="text-xs text-gray-500 mt-2">Supports Sentry exports and optimization reports</p>
+            `;
+            
+            // Re-attach listener
+            document.getElementById('settings-pdf')?.addEventListener('change', (e) => this.handlePDFUpload(e));
+        }
+    }
+
+    /**
+     * Analyze PDF settings for insights
+     */
+    analyzePDFSettings(settings) {
+        // Basic analysis
+        const analysis = {
+            topSpeed: this.estimateTopSpeed(settings),
+            profile: this.identifyProfile(settings),
+            modifications: this.detectModifications(settings)
+        };
+        
+        // Store analysis
+        this.vehicleData.currentSettings = settings;
+        this.vehicleData.settingsAnalysis = analysis;
+        
+        // Update current speed if detected
+        if (analysis.topSpeed && analysis.topSpeed !== this.vehicleData.currentSpeed) {
+            document.getElementById('current-speed').value = analysis.topSpeed;
+            this.vehicleData.currentSpeed = analysis.topSpeed;
+            this.updateVehicleClassification();
+        }
+    }
+
+    /**
+     * Estimate top speed from settings
+     */
+    estimateTopSpeed(settings) {
+        // F.1 is MPH Scaling, F.20 is MPH Overspeed
+        const mphScaling = settings[1] || 100;
+        const overspeed = settings[20] || 5;
+        
+        // Basic calculation
+        const baseSpeed = 25 * (mphScaling / 100);
+        return Math.round(baseSpeed + overspeed);
+    }
+
+    /**
+     * Identify optimization profile from settings
+     */
+    identifyProfile(settings) {
+        // Analyze key functions to determine profile
+        const accelRate = settings[6] || 60;
+        const maxCurrent = settings[4] || 245;
+        const regenCurrent = settings[9] || 225;
+        
+        if (accelRate > 80 && maxCurrent > 260) {
+            return 'performance';
+        } else if (regenCurrent > 240 && accelRate < 50) {
+            return 'efficiency';
+        } else if (settings[11] && settings[11] < 15) {
+            return 'turf';
+        } else {
+            return 'balanced';
+        }
+    }
+
+    /**
+     * Detect modifications from factory defaults
+     */
+    detectModifications(settings) {
+        const defaults = {
+            1: 100, 3: 15, 4: 245, 5: 5, 6: 60,
+            7: 70, 8: 245, 9: 225, 10: 100, 11: 11
+        };
+        
+        const mods = [];
+        for (const [func, defaultValue] of Object.entries(defaults)) {
+            if (settings[func] && Math.abs(settings[func] - defaultValue) > 5) {
+                mods.push({
+                    function: func,
+                    factory: defaultValue,
+                    current: settings[func],
+                    change: Math.round(((settings[func] - defaultValue) / defaultValue) * 100)
+                });
+            }
+        }
+        
+        return mods;
+    }
+
+    /**
+     * Show PDF details modal
+     */
+    showPDFDetails() {
+        if (!this.pdfSettings) return;
+        
+        // Create modal content
+        const modalContent = `
+            <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+                    <h3 class="text-lg font-bold mb-4">Current Controller Settings</h3>
+                    <div class="max-h-96 overflow-y-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Function</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Value</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${this.generateSettingsTableRows()}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button onclick="document.getElementById('pdf-details-modal').remove()" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const modal = document.createElement('div');
+        modal.id = 'pdf-details-modal';
+        modal.innerHTML = modalContent;
+        document.body.appendChild(modal);
+    }
+
+    /**
+     * Generate settings table rows
+     */
+    generateSettingsTableRows() {
+        const functionNames = this.optimizer.getFunctionDescriptions();
+        const mods = this.vehicleData.settingsAnalysis?.modifications || [];
+        
+        return Object.entries(this.pdfSettings)
+            .sort(([a], [b]) => parseInt(a) - parseInt(b))
+            .map(([func, value]) => {
+                const mod = mods.find(m => m.function == func);
+                const status = mod ? 
+                    `<span class="text-xs ${mod.change > 0 ? 'text-green-600' : 'text-red-600'}">
+                        ${mod.change > 0 ? '↑' : '↓'} ${Math.abs(mod.change)}%
+                    </span>` : 
+                    '<span class="text-xs text-gray-500">Default</span>';
+                
+                return `
+                    <tr>
+                        <td class="px-3 py-2 text-sm text-gray-900">F${func}</td>
+                        <td class="px-3 py-2 text-sm text-gray-600">${functionNames[func] || 'Unknown'}</td>
+                        <td class="px-3 py-2 text-sm font-medium text-gray-900">${value}</td>
+                        <td class="px-3 py-2">${status}</td>
+                    </tr>
+                `;
+            }).join('');
+    }
+
+    /**
+     * Handle quick action buttons
+     */
+    handleQuickAction(action) {
+        // Remove active state from all buttons
+        document.querySelectorAll('.quick-action-btn').forEach(btn => {
+            btn.classList.remove('border-green-400', 'bg-green-50');
+        });
+        
+        // Add active state to clicked button
+        const activeBtn = document.querySelector(`[data-action="${action}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('border-green-400', 'bg-green-50');
+        }
+        
+        // Set trip data based on action
+        switch (action) {
+            case 'daily-commute':
+                this.tripData.optimizationMode = 'efficiency';
+                this.tripData.preset = 'commute';
+                break;
+            case 'weekend-outing':
+                // Weekend outing now opens dedicated planner
+                if (this.validateStep1()) {
+                    window.location.href = 'weekend-planner.html';
+                }
+                return;
+            case 'performance':
+                this.tripData.optimizationMode = 'performance';
+                this.tripData.preset = 'performance';
+                break;
+        }
+        
+        this.saveData();
+    }
+
+    /**
+     * Generate optimized settings
+     */
+    async generateOptimizedSettings() {
+        // Show loading state
+        const resultsSection = document.getElementById('results-section');
+        resultsSection.innerHTML = `
+            <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+                <div class="spinner mx-auto mb-4"></div>
+                <h3 class="text-lg font-semibold mb-2">Generating Optimized Settings...</h3>
+                <p class="text-sm text-gray-600">Analyzing vehicle data and trip requirements</p>
+            </div>
+        `;
+        resultsSection.classList.remove('hidden');
+        this.showStep(3);
+        
+        try {
+            // Prepare optimization data
+            const profile = this.vehicleData.settingsAnalysis?.profile || 'balanced';
+            const baseSettings = this.pdfSettings || this.optimizer.getFactoryDefaults();
+            
+            // Get optimization based on mode
+            let optimizedSettings;
+            if (this.tripData.preset === 'weekend' && this.tripData.destination) {
+                // Use trip optimizer for weekend outings
+                optimizedSettings = await this.optimizeTripSettings();
+            } else {
+                // Use standard optimization
+                optimizedSettings = this.optimizer.optimizeSettings(
+                    baseSettings,
+                    this.tripData.optimizationMode || profile,
+                    this.vehicleData
+                );
+            }
+            
+            // Display results
+            this.displayResults(optimizedSettings);
+            
+        } catch (error) {
+            console.error('Optimization error:', error);
+            resultsSection.innerHTML = `
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="text-red-600 text-center">
+                        <h3 class="text-lg font-semibold mb-2">Optimization Failed</h3>
+                        <p class="text-sm">${error.message}</p>
+                        <button onclick="unifiedFlow.showStep(2)" class="mt-4 text-blue-600 hover:underline">
+                            ← Back to Planning
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * Optimize settings for trip
+     */
+    async optimizeTripSettings() {
+        if (!this.tripOptimizer) {
+            throw new Error('Trip optimizer not available');
+        }
+        
+        // Get weather and terrain data if available
+        let conditions = {
+            weather: { temperature: 75, conditions: 'Clear' },
+            terrain: { type: 'mixed', maxGrade: 10 }
+        };
+        
+        if (this.weatherService?.isConfigured() && this.tripData.destination && this.tripData.date) {
+            try {
+                const weather = await this.weatherService.getWeatherForDate(
+                    this.tripData.destination,
+                    this.tripData.date
+                );
+                conditions.weather = weather;
+            } catch (e) {
+                console.warn('Weather fetch failed, using defaults', e);
+            }
+        }
+        
+        // Optimize for trip
+        return this.tripOptimizer.optimizeForTrip({
+            vehicleData: this.vehicleData,
+            tripData: this.tripData,
+            conditions,
+            baseSettings: this.pdfSettings || this.optimizer.getFactoryDefaults()
+        });
+    }
+
+    /**
+     * Display optimization results
+     */
+    displayResults(settings) {
+        const resultsSection = document.getElementById('results-section');
+        const profile = this.classifier.generateVehicleProfile(this.vehicleData);
+        
+        resultsSection.innerHTML = `
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6">Optimized Controller Settings</h2>
+                
+                <!-- Vehicle Summary -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-semibold mb-2">Vehicle Profile</h3>
+                    <div class="grid md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Model:</span>
+                            <span class="font-medium ml-1">${this.vehicleData.model?.toUpperCase()}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Classification:</span>
+                            <span class="font-medium ml-1">${profile.summary.classification.name}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Optimization:</span>
+                            <span class="font-medium ml-1 capitalize">${this.tripData.optimizationMode || 'Balanced'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Table -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-3">Controller Settings</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Function</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Current</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Optimized</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Change</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${this.generateOptimizedSettingsRows(settings)}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Safety Recommendations -->
+                ${this.generateSafetySection(profile.recommendations)}
+                
+                <!-- Action Buttons -->
+                <div class="mt-8 flex justify-between">
+                    <button onclick="unifiedFlow.showStep(2)" 
+                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        ← Modify Settings
+                    </button>
+                    <div class="space-x-3">
+                        <button onclick="unifiedFlow.exportSettings()" 
+                                class="px-4 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-50">
+                            📄 Export PDF
+                        </button>
+                        <button onclick="unifiedFlow.applySettings()" 
+                                class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700">
+                            Apply Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Generate optimized settings table rows
+     */
+    generateOptimizedSettingsRows(optimized) {
+        const current = this.pdfSettings || this.optimizer.getFactoryDefaults();
+        const descriptions = this.optimizer.getFunctionDescriptions();
+        
+        return Object.entries(optimized)
+            .filter(([func]) => descriptions[func])
+            .sort(([a], [b]) => parseInt(a) - parseInt(b))
+            .map(([func, newValue]) => {
+                const currentValue = current[func] || 0;
+                const change = newValue - currentValue;
+                const changePercent = currentValue > 0 ? Math.round((change / currentValue) * 100) : 0;
+                
+                return `
+                    <tr>
+                        <td class="px-4 py-2 text-sm text-gray-900">F.${func}</td>
+                        <td class="px-4 py-2 text-sm text-gray-600">${descriptions[func]}</td>
+                        <td class="px-4 py-2 text-sm text-gray-900">${currentValue}</td>
+                        <td class="px-4 py-2 text-sm font-medium text-gray-900">${newValue}</td>
+                        <td class="px-4 py-2 text-sm">
+                            ${change !== 0 ? `
+                                <span class="${change > 0 ? 'text-green-600' : 'text-red-600'}">
+                                    ${change > 0 ? '↑' : '↓'} ${Math.abs(changePercent)}%
+                                </span>
+                            ` : '<span class="text-gray-400">-</span>'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+    }
+
+    /**
+     * Generate safety recommendations section
+     */
+    generateSafetySection(recommendations) {
+        if (!recommendations || recommendations.length === 0) return '';
+        
+        const priorityColors = {
+            high: 'red',
+            medium: 'yellow',
+            low: 'blue'
+        };
+        
+        return `
+            <div class="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
+                <h3 class="font-semibold text-yellow-800 mb-3">⚠️ Safety Recommendations</h3>
+                <div class="space-y-2">
+                    ${recommendations
+                        .sort((a, b) => {
+                            const priority = { high: 0, medium: 1, low: 2 };
+                            return priority[a.priority] - priority[b.priority];
+                        })
+                        .map(rec => `
+                            <div class="text-sm">
+                                <span class="inline-block px-2 py-1 text-xs font-medium bg-${priorityColors[rec.priority]}-100 text-${priorityColors[rec.priority]}-800 rounded">
+                                    ${rec.priority.toUpperCase()}
+                                </span>
+                                <span class="ml-2 text-gray-700">${rec.message}</span>
+                                <p class="ml-14 text-xs text-gray-600 mt-1">${rec.action}</p>
+                            </div>
+                        `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Show specific step
+     */
+    showStep(step) {
+        this.currentStep = step;
+        
+        // Hide all sections
+        document.getElementById('vehicle-info-section')?.classList.add('hidden');
+        document.getElementById('trip-planning-section')?.classList.add('hidden');
+        document.getElementById('results-section')?.classList.add('hidden');
+        
+        // Show current step
+        switch (step) {
+            case 1:
+                document.getElementById('vehicle-info-section')?.classList.remove('hidden');
+                break;
+            case 2:
+                document.getElementById('trip-planning-section')?.classList.remove('hidden');
+                break;
+            case 3:
+                document.getElementById('results-section')?.classList.remove('hidden');
+                break;
+        }
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /**
+     * Show MCP configuration modal
+     */
+    showMCPConfiguration() {
+        // This would open the MCP configuration interface
+        // For now, show a simple message
+        alert('MCP Configuration: This feature allows AI-powered optimization using Model Context Protocol. Configuration interface coming soon!');
+    }
+
+    /**
+     * Export settings as PDF
+     */
+    exportSettings() {
+        // Use jsPDF to generate a PDF report
+        if (typeof jspdf === 'undefined') {
+            alert('PDF export library not loaded');
+            return;
+        }
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Add content
+        doc.setFontSize(20);
+        doc.text('GEM T2 Optimized Settings', 20, 20);
+        
+        doc.setFontSize(12);
+        doc.text(`Vehicle: ${this.vehicleData.model?.toUpperCase()} (${this.vehicleData.year})`, 20, 35);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 42);
+        
+        // Add settings table
+        // ... (implement full PDF generation)
+        
+        doc.save('gem-optimized-settings.pdf');
+    }
+
+    /**
+     * Apply settings (show instructions)
+     */
+    applySettings() {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
+        modal.innerHTML = `
+            <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+                <h3 class="text-lg font-bold mb-4">Apply Settings to Your GEM</h3>
+                <div class="space-y-3 text-sm">
+                    <p class="font-medium text-red-600">⚠️ Important Safety Steps:</p>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                        <li>Turn key switch to OFF position</li>
+                        <li>Engage parking brake</li>
+                        <li>Connect programmer to diagnostic port</li>
+                        <li>Save current settings as backup</li>
+                        <li>Enter each function value carefully</li>
+                        <li>Double-check all values before saving</li>
+                        <li>Test at low speed in safe area</li>
+                    </ol>
+                    <p class="text-xs text-gray-600 mt-4">
+                        Always follow manufacturer procedures and safety guidelines.
+                    </p>
+                </div>
+                <div class="mt-6 text-center">
+                    <button onclick="this.closest('.fixed').remove()" 
+                            class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        I Understand
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    /**
+     * Save data to local storage
+     */
+    saveData() {
+        localStorage.setItem('gem-vehicle-data', JSON.stringify(this.vehicleData));
+        localStorage.setItem('gem-trip-data', JSON.stringify(this.tripData));
+    }
+
+    /**
+     * Load saved data
+     */
+    loadSavedData() {
+        try {
+            const vehicleData = localStorage.getItem('gem-vehicle-data');
+            const tripData = localStorage.getItem('gem-trip-data');
+            
+            if (vehicleData) {
+                this.vehicleData = JSON.parse(vehicleData);
+                this.populateVehicleForm();
+            }
+            
+            if (tripData) {
+                this.tripData = JSON.parse(tripData);
+                this.populateTripForm();
+            }
+        } catch (error) {
+            console.error('Error loading saved data:', error);
+        }
+    }
+
+    /**
+     * Populate vehicle form with saved data
+     */
+    populateVehicleForm() {
+        if (this.vehicleData.model) {
+            document.getElementById('vehicle-model').value = this.vehicleData.model;
+        }
+        if (this.vehicleData.year) {
+            document.getElementById('vehicle-year').value = this.vehicleData.year;
+        }
+        if (this.vehicleData.controller) {
+            document.getElementById('controller-type').value = this.vehicleData.controller;
+        }
+        if (this.vehicleData.motorType) {
+            document.getElementById('motor-type').value = this.vehicleData.motorType;
+        }
+        if (this.vehicleData.currentSpeed) {
+            document.getElementById('current-speed').value = this.vehicleData.currentSpeed;
+        }
+        
+        this.validateStep1();
+        this.validateCompatibility();
+        this.updateVehicleClassification();
+    }
+
+    /**
+     * Populate trip form with saved data
+     */
+    populateTripForm() {
+        if (this.tripData.destination) {
+            document.getElementById('trip-destination').value = this.tripData.destination;
+        }
+        if (this.tripData.date) {
+            document.getElementById('trip-date').value = this.tripData.date;
+        }
+        if (this.tripData.type) {
+            document.getElementById('trip-type').value = this.tripData.type;
+        }
+        if (this.tripData.passengers) {
+            document.getElementById('passengers').value = this.tripData.passengers;
+        }
+        if (this.tripData.cargo) {
+            document.getElementById('cargo').value = this.tripData.cargo;
+        }
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.unifiedFlow = new UnifiedFlowController();
+});

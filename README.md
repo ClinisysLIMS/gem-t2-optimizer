@@ -30,10 +30,12 @@ A comprehensive web-based tool for optimizing GEM (Global Electric Motorcars) T2
 - **Real-time Validation**: Ensures all settings are within safe operating parameters
 
 ### 🌟 Weekend Outing & Trip Planning
-- **Interactive Trip Planner**: Plan your GEM adventures with optimized controller settings
-- **Weather Integration**: Real-time weather data for trip-specific optimizations
-- **Terrain Analysis**: Elevation profiling and grade analysis for route planning
-- **Smart Recommendations**: AI-powered suggestions based on trip conditions
+- **Single-Page Trip Planner**: Streamlined interface for weekend adventure planning
+- **Legal Route Filtering**: Automatic filtering based on Golf Cart vs LSV classification
+- **Towing Mode**: Special optimizations for pulling trailers or cargo
+- **Exploration Radius**: Selectable radius (2-20 miles) for trip planning
+- **Example Routes**: Pre-configured routes like San Carlos to Point Loma
+- **Smart Recommendations**: AI-powered suggestions based on vehicle capabilities
 
 ### 📄 PDF Import & Export
 - **Multi-format PDF Support**: Import from Sentry software exports and optimization comparison documents

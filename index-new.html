@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEM T2 Optimizer - Smart Weekend Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-green-700 text-white p-4 no-print">
+        <div class="container mx-auto">
+            <h1 class="text-2xl font-bold">🚗⚡ GEM T2 Smart Optimizer</h1>
+            <p class="text-sm opacity-90">AI-Powered Weekend Planning & Controller Optimization</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Main Flow Container -->
+        <div id="main-flow" class="max-w-4xl mx-auto">
+            
+            <!-- Step 1: Vehicle Information (Mandatory) -->
+            <section id="vehicle-info-section" class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-bold text-gray-900">Step 1: Vehicle Information</h2>
+                        <span class="text-sm text-gray-500">Required</span>
+                    </div>
+                    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                        <p class="text-sm text-blue-700">
+                            <strong>Important:</strong> Accurate vehicle information is required for safe optimization and legal compliance.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Basic Vehicle Info -->
+                    <div class="space-y-4">
+                        <h3 class="font-semibold text-gray-800 mb-3">Vehicle Details</h3>
+                        
+                        <div>
+                            <label for="vehicle-model" class="block text-sm font-medium text-gray-700 mb-1">
+                                Vehicle Model *
+                            </label>
+                            <select id="vehicle-model" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                <option value="">Select your GEM model...</option>
+                                <option value="e2">e2 (2-passenger)</option>
+                                <option value="e4">e4 (4-passenger)</option>
+                                <option value="e6">e6 (6-passenger)</option>
+                                <option value="eS">eS (2-passenger utility)</option>
+                                <option value="eL">eL (4-passenger utility)</option>
+                                <option value="eM">eM (Mighty Mite utility)</option>
+                                <option value="elXD">elXD (Extra Duty)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="vehicle-year" class="block text-sm font-medium text-gray-700 mb-1">
+                                Model Year *
+                            </label>
+                            <select id="vehicle-year" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                <option value="">Select year...</option>
+                                <option value="2016+">2016 or newer</option>
+                                <option value="2010-2015">2010-2015</option>
+                                <option value="2005-2009">2005-2009</option>
+                                <option value="1999-2004">1999-2004</option>
+                                <option value="pre-1999">Before 1999</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="controller-type" class="block text-sm font-medium text-gray-700 mb-1">
+                                Controller Type *
+                            </label>
+                            <select id="controller-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                <option value="">Select controller...</option>
+                                <option value="T2">T2 Controller</option>
+                                <option value="T4">T4 Controller</option>
+                                <option value="T1">T1 Controller (Legacy)</option>
+                                <option value="unknown">Not Sure</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Motor & Classification -->
+                    <div class="space-y-4">
+                        <h3 class="font-semibold text-gray-800 mb-3">Motor Details & Classification</h3>
+                        
+                        <div>
+                            <label for="motor-type" class="block text-sm font-medium text-gray-700 mb-1">
+                                Motor Type *
+                                <button type="button" id="motor-type-ai-assist" class="ml-2 text-xs text-blue-600 hover:text-blue-500">
+                                    🤖 AI Suggest
+                                </button>
+                            </label>
+                            <select id="motor-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                <option value="">Select motor type...</option>
+                                <option value="dc-stock">DC Motor (Stock 3.5HP)</option>
+                                <option value="dc-upgrade">DC Motor (Upgraded 5HP+)</option>
+                                <option value="ac-stock">AC Motor (Stock)</option>
+                                <option value="ac-performance">AC Motor (Performance)</option>
+                                <option value="custom">Custom/Modified</option>
+                            </select>
+                            <div id="motor-ai-suggestion" class="hidden mt-2 p-2 bg-blue-50 text-sm text-blue-700 rounded"></div>
+                        </div>
+                        
+                        <div>
+                            <label for="motor-model" class="block text-sm font-medium text-gray-700 mb-1">
+                                Motor Model/Part Number
+                            </label>
+                            <input type="text" id="motor-model" placeholder="e.g., GE 5BC59JBS6439" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <div>
+                            <label for="motor-power" class="block text-sm font-medium text-gray-700 mb-1">
+                                Power Rating
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="motor-power" min="1" max="15" step="0.5" placeholder="3.5" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <span class="text-sm text-gray-600">HP</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="current-speed" class="block text-sm font-medium text-gray-700 mb-1">
+                                Current Top Speed *
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="current-speed" min="15" max="40" value="25" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                <span class="text-sm text-gray-600">MPH</span>
+                            </div>
+                        </div>
+
+                        <div id="vehicle-classification" class="p-4 bg-gray-50 rounded-lg">
+                            <h4 class="font-medium text-gray-700 mb-2">Vehicle Classification</h4>
+                            <div id="classification-result" class="text-sm">
+                                <span class="font-semibold">Golf Cart</span>
+                                <p class="text-xs text-gray-600 mt-1">Speed: ≤25 MPH | Local roads only</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Motor Condition & Maintenance -->
+                <div class="mt-6 pt-6 border-t">
+                    <h3 class="font-semibold text-gray-800 mb-4">Motor Condition & Maintenance</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Condition Indicators
+                                </label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="motor-sparking" class="mr-2 text-green-600 focus:ring-green-500">
+                                        <span class="text-sm">Sparking/Arcing visible</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="motor-noise" class="mr-2 text-green-600 focus:ring-green-500">
+                                        <span class="text-sm">Unusual noise (grinding, squealing)</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="motor-overheating" class="mr-2 text-green-600 focus:ring-green-500">
+                                        <span class="text-sm">Overheating issues</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="motor-vibration" class="mr-2 text-green-600 focus:ring-green-500">
+                                        <span class="text-sm">Excessive vibration</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" id="motor-power-loss" class="mr-2 text-green-600 focus:ring-green-500">
+                                        <span class="text-sm">Power loss/weak acceleration</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="motor-age" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Motor Age/Hours
+                                </label>
+                                <select id="motor-age" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <option value="new">New (< 100 hours)</option>
+                                    <option value="low">Low Hours (100-500)</option>
+                                    <option value="moderate">Moderate (500-2000)</option>
+                                    <option value="high">High Hours (2000-5000)</option>
+                                    <option value="very-high">Very High (> 5000)</option>
+                                    <option value="unknown">Unknown</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="motor-last-service" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Last Service Date
+                                </label>
+                                <input type="date" id="motor-last-service" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            
+                            <div id="motor-health-score" class="p-3 bg-yellow-50 rounded-lg hidden">
+                                <h5 class="font-medium text-yellow-900 mb-1">Motor Health Score</h5>
+                                <div class="flex items-center">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+                                        <div id="health-score-bar" class="bg-green-500 h-2 rounded-full transition-all" style="width: 100%"></div>
+                                    </div>
+                                    <span id="health-score-text" class="text-sm font-medium">Good</span>
+                                </div>
+                                <p id="health-recommendations" class="text-xs text-yellow-700 mt-2"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Upload Section -->
+                <div class="mt-6 pt-6 border-t">
+                    <h3 class="font-semibold text-gray-800 mb-3">Current Settings (Optional)</h3>
+                    <div id="pdf-upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        <p class="text-sm text-gray-600">
+                            <label for="settings-pdf" class="cursor-pointer">
+                                <span class="text-green-600 hover:text-green-500">Upload PDF</span>
+                                <span class="text-gray-500"> of current settings for AI analysis</span>
+                            </label>
+                        </p>
+                        <input id="settings-pdf" type="file" accept=".pdf" class="hidden">
+                        <p class="text-xs text-gray-500 mt-2">Supports Sentry exports and optimization reports</p>
+                    </div>
+                    
+                    <div id="pdf-analysis-result" class="hidden mt-4 p-4 bg-green-50 rounded-lg">
+                        <h4 class="font-medium text-green-900 mb-2">✅ Settings Analyzed</h4>
+                        <div id="pdf-analysis-content" class="text-sm text-green-800"></div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button id="continue-to-planning" class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Continue to Trip Planning →
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 2: Trip Planning & Optimization -->
+            <section id="trip-planning-section" class="hidden">
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Step 2: Plan Your Adventure</h2>
+                        <p class="text-gray-600">Tell us about your trip for optimized controller settings</p>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="grid md:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
+                        <button class="quick-action-btn p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all" data-action="daily-commute">
+                            <div class="text-3xl mb-2">🏠</div>
+                            <h4 class="font-semibold">Daily Commute</h4>
+                            <p class="text-xs text-gray-600">Optimize for efficiency</p>
+                        </button>
+                        
+                        <button class="quick-action-btn p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all" data-action="weekend-outing" onclick="if(unifiedFlow.validateStep1()) { window.location.href='weekend-planner.html'; }">
+                            <div class="text-3xl mb-2">🌲</div>
+                            <h4 class="font-semibold">Weekend Outing</h4>
+                            <p class="text-xs text-gray-600">Open trip planner</p>
+                        </button>
+                        
+                        <button class="quick-action-btn p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all" data-action="performance">
+                            <div class="text-3xl mb-2">🏁</div>
+                            <h4 class="font-semibold">Max Performance</h4>
+                            <p class="text-xs text-gray-600">Speed & acceleration</p>
+                        </button>
+                        
+                        <button class="quick-action-btn p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all" onclick="window.location.href='accessories-config.html'">
+                            <div class="text-3xl mb-2">🔧</div>
+                            <h4 class="font-semibold">Accessories</h4>
+                            <p class="text-xs text-gray-600">Manage add-ons</p>
+                        </button>
+                        
+                        <button class="quick-action-btn p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all" onclick="window.location.href='driving-modes.html'">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <h4 class="font-semibold">Driving Modes</h4>
+                            <p class="text-xs text-gray-600">Special scenarios</p>
+                        </button>
+                        
+                        <button class="quick-action-btn p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all" onclick="window.location.href='mobile-route-map.html'">
+                            <div class="text-3xl mb-2">📱</div>
+                            <h4 class="font-semibold">Mobile Routes</h4>
+                            <p class="text-xs text-gray-600">Mobile mapping</p>
+                        </button>
+                    </div>
+
+
+                    <!-- MCP Integration -->
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-medium text-blue-900">AI-Powered Optimization</h4>
+                                <p class="text-sm text-blue-700 mt-1">
+                                    Our MCP integration analyzes weather, terrain, and your vehicle specs to provide optimal settings.
+                                </p>
+                                <button id="enable-mcp" class="mt-2 text-sm text-blue-600 hover:text-blue-500 underline">
+                                    Configure MCP Connection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-between">
+                        <button id="back-to-vehicle" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                            ← Back
+                        </button>
+                        <button id="generate-settings" class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Generate Optimized Settings
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Results & Settings -->
+            <section id="results-section" class="hidden">
+                <!-- Results will be dynamically generated here -->
+            </section>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white p-4 mt-12 no-print">
+        <div class="container mx-auto text-center text-sm">
+            <p>© 2024 GEM T2 Smart Optimizer. Not affiliated with GEM, Polaris, or General Electric.</p>
+            <p class="mt-1">Use at your own risk. Always follow manufacturer safety guidelines.</p>
+        </div>
+    </footer>
+
+    <!-- Load JavaScript modules -->
+    <script>
+        // Set PDF.js worker
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+    <script src="js/secure-storage.js"></script>
+    <script src="js/weather-service.js"></script>
+    <script src="js/terrain-service.js"></script>
+    <script src="js/optimizer.js"></script>
+    <script src="js/trip-optimizer.js"></script>
+    <script src="js/pdf-parser.js"></script>
+    <script src="js/vehicle-classifier.js"></script>
+    <script src="js/accessories-manager.js"></script>
+    <script src="js/driving-modes.js"></script>
+    <script src="js/enhanced-pdf-analyzer.js"></script>
+    <script src="js/ai-assistant.js"></script>
+    <script src="js/ai-ui-integration.js"></script>
+    <script src="js/unified-flow.js"></script>
+</body>
+</html>

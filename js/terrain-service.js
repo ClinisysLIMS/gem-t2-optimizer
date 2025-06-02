@@ -181,46 +181,435 @@ class TerrainService {
     }
     
     /**
-     * Analyze terrain for a route between two locations
-     * @param {string} startLocation - Starting location
-     * @param {string} endLocation - Destination location
+     * Analyze terrain for a route between two locations or within a radius
+     * @param {string|Object} input - Starting location or options object
+     * @param {string} endLocation - Destination location (if input is string)
      * @param {number} samples - Number of elevation samples (default: 50)
      * @returns {Promise<Object>} Comprehensive terrain analysis
      */
-    async analyzeRoute(startLocation, endLocation, samples = 50) {
+    async analyzeRoute(input, endLocation, samples = 50) {
         try {
-            // Get route coordinates
-            const routeCoords = await this.geocodeRoute(startLocation, endLocation);
+            // Handle different input types
+            if (typeof input === 'object' && input.coordinates) {
+                // Radius-based analysis
+                return await this.analyzeRadiusArea(input);
+            } else if (typeof input === 'string' && endLocation) {
+                // Point-to-point route analysis
+                return await this.analyzePointToPointRoute(input, endLocation, samples);
+            } else if (typeof input === 'object' && input.start && input.end) {
+                // Route coordinates provided directly
+                return await this.analyzePointToPointRoute(input.start, input.end, samples);
+            } else {
+                throw new Error('Invalid input parameters for terrain analysis');
+            }
+        } catch (error) {
+            console.error('Route analysis error:', error);
+            return this.getFallbackTerrainData(input, endLocation);
+        }
+    }
+    
+    /**
+     * Analyze terrain within a radius from a center point
+     * @param {Object} options - Analysis options
+     * @returns {Promise<Object>} Radius terrain analysis
+     */
+    async analyzeRadiusArea(options) {
+        const { coordinates, radius = 5, samples = 100 } = options;
+        
+        try {
+            // Generate analysis points in a grid pattern within the radius
+            const analysisPoints = this.generateRadiusPoints(coordinates, radius, samples);
             
-            // Generate route points
-            const routePoints = this.generateRoutePoints(
-                routeCoords.start,
-                routeCoords.end,
-                samples
-            );
+            // Get elevation data for all points
+            const elevationData = await this.getElevationProfile(analysisPoints);
             
-            // Get elevation data
-            const elevationData = await this.getElevationProfile(routePoints);
+            // Calculate radius-specific metrics
+            const radiusMetrics = this.calculateRadiusMetrics(elevationData, coordinates, radius);
             
-            // Calculate terrain metrics
-            const analysis = this.calculateTerrainMetrics(elevationData, routeCoords);
+            // Find routes within legal constraints
+            const legalRoutes = await this.findLegalRoutesInRadius(coordinates, radius, elevationData);
             
             return {
-                ...analysis,
-                route: {
-                    start: routeCoords.start,
-                    end: routeCoords.end,
-                    samples: samples
-                },
+                ...radiusMetrics,
+                center: coordinates,
+                radius: radius,
+                analysisPoints: analysisPoints.length,
                 elevationProfile: elevationData,
+                legalRoutes: legalRoutes,
+                type: 'radius_analysis',
                 source: this.isMapboxConfigured() ? 'mapbox' : 'open-elevation'
             };
             
         } catch (error) {
-            console.error('Route analysis error:', error);
-            // Return fallback data
-            return this.getFallbackTerrainData(startLocation, endLocation);
+            console.error('Radius analysis error:', error);
+            return this.getFallbackRadiusData(coordinates, radius);
         }
+    }
+    
+    /**
+     * Analyze point-to-point route
+     * @param {string} startLocation - Starting location
+     * @param {string} endLocation - Destination location
+     * @param {number} samples - Number of elevation samples
+     * @returns {Promise<Object>} Point-to-point analysis
+     */
+    async analyzePointToPointRoute(startLocation, endLocation, samples = 50) {
+        // Get route coordinates
+        const routeCoords = await this.geocodeRoute(startLocation, endLocation);
+        
+        // Generate route points
+        const routePoints = this.generateRoutePoints(
+            routeCoords.start,
+            routeCoords.end,
+            samples
+        );
+        
+        // Get elevation data
+        const elevationData = await this.getElevationProfile(routePoints);
+        
+        // Calculate terrain metrics
+        const analysis = this.calculateTerrainMetrics(elevationData, routeCoords);
+        
+        return {
+            ...analysis,
+            route: {
+                start: routeCoords.start,
+                end: routeCoords.end,
+                samples: samples
+            },
+            elevationProfile: elevationData,
+            type: 'point_to_point',
+            source: this.isMapboxConfigured() ? 'mapbox' : 'open-elevation'
+        };
+    }
+    
+    /**
+     * Generate analysis points within a radius
+     * @param {Object} center - Center coordinates {lat, lon}
+     * @param {number} radius - Radius in miles
+     * @param {number} samples - Number of sample points
+     * @returns {Array} Array of coordinate points
+     */
+    generateRadiusPoints(center, radius, samples) {
+        const points = [];
+        const gridSize = Math.ceil(Math.sqrt(samples));
+        const radiusInDegrees = radius / 69; // Approximate conversion for lat/lon
+        
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                const latOffset = (i / (gridSize - 1) - 0.5) * 2 * radiusInDegrees;
+                const lonOffset = (j / (gridSize - 1) - 0.5) * 2 * radiusInDegrees;
+                
+                const lat = center.lat + latOffset;
+                const lon = center.lon + lonOffset;
+                
+                // Check if point is within radius
+                const distance = this.calculateDistance(center.lat, center.lon, lat, lon);
+                if (distance <= radius) {
+                    points.push({ lat, lon, distanceFromCenter: distance });
+                }
+            }
+        }
+        
+        return points;
+    }
+    
+    /**
+     * Calculate metrics specific to radius analysis
+     * @param {Array} elevationData - Elevation profile data
+     * @param {Object} center - Center coordinates
+     * @param {number} radius - Analysis radius
+     * @returns {Object} Radius-specific metrics
+     */
+    calculateRadiusMetrics(elevationData, center, radius) {
+        if (elevationData.length < 2) {
+            throw new Error('Insufficient elevation data for radius analysis');
+        }
+        
+        // Calculate elevation statistics
+        const elevations = elevationData.map(p => p.elevation);
+        const minElevation = Math.min(...elevations);
+        const maxElevation = Math.max(...elevations);
+        const avgElevation = Math.round(elevations.reduce((a, b) => a + b, 0) / elevations.length);
+        const elevationRange = maxElevation - minElevation;
+        
+        // Calculate gradients between points
+        const gradients = [];
+        const terrainVariability = [];
+        
+        elevationData.forEach(point => {
+            // Find nearest neighbors
+            const neighbors = elevationData
+                .filter(p => p !== point)
+                .map(p => ({
+                    ...p,
+                    distance: this.calculateDistance(point.lat, point.lon, p.lat, p.lon)
+                }))
+                .filter(p => p.distance < 0.5) // Within 0.5 miles
+                .sort((a, b) => a.distance - b.distance)
+                .slice(0, 4); // Take 4 nearest neighbors
+            
+            if (neighbors.length > 0) {
+                const avgNeighborElevation = neighbors.reduce((sum, n) => sum + n.elevation, 0) / neighbors.length;
+                const elevationDiff = Math.abs(point.elevation - avgNeighborElevation);
+                terrainVariability.push(elevationDiff);
+                
+                neighbors.forEach(neighbor => {
+                    if (neighbor.distance > 0) {
+                        const grade = Math.abs(point.elevation - neighbor.elevation) / (neighbor.distance * 5280) * 100;
+                        gradients.push(grade);
+                    }
+                });
+            }
+        });
+        
+        const maxGrade = gradients.length > 0 ? Math.max(...gradients) : 0;
+        const avgGrade = gradients.length > 0 ? gradients.reduce((a, b) => a + b, 0) / gradients.length : 0;
+        const avgVariability = terrainVariability.length > 0 ? 
+            terrainVariability.reduce((a, b) => a + b, 0) / terrainVariability.length : 0;
+        
+        // Calculate terrain difficulty for the area
+        const areaDifficultyScore = this.calculateAreaDifficultyScore({
+            elevationRange,
+            maxGrade,
+            avgGrade,
+            variability: avgVariability,
+            radius
+        });
+        
+        // Classify terrain zones within radius
+        const terrainZones = this.classifyRadiusTerrainZones(elevationData, center);
+        
+        // Generate recommendations specific to radius exploration
+        const recommendations = this.generateRadiusRecommendations(areaDifficultyScore, terrainZones, radius);
+        
+        return {
+            elevationRange,
+            minElevation,
+            maxElevation,
+            avgElevation,
+            maxGrade: Math.round(maxGrade * 10) / 10,
+            avgGrade: Math.round(avgGrade * 10) / 10,
+            terrainVariability: Math.round(avgVariability),
+            difficultyScore: areaDifficultyScore,
+            terrainZones,
+            classification: this.getTerrainClassification(areaDifficultyScore),
+            recommendations,
+            areaAnalysis: {
+                suitableForGolfCart: maxGrade < 8 && elevationRange < 500,
+                suitableForLSV: maxGrade < 15 && elevationRange < 1000,
+                challengingAreas: gradients.filter(g => g > 10).length,
+                flatAreas: gradients.filter(g => g < 3).length,
+                coverageArea: Math.PI * radius * radius
+            }
+        };
+    }
+    
+    /**
+     * Calculate difficulty score for area analysis
+     * @param {Object} metrics - Area metrics
+     * @returns {number} Difficulty score (0-100)
+     */
+    calculateAreaDifficultyScore(metrics) {
+        const { elevationRange, maxGrade, avgGrade, variability, radius } = metrics;
+        
+        // Weighted scoring factors for area analysis
+        const elevationScore = Math.min(elevationRange / 1000 * 25, 25); // Max 25 points for 1000+ ft range
+        const maxGradeScore = Math.min(maxGrade / 20 * 30, 30); // Max 30 points for 20%+ max grade
+        const avgGradeScore = Math.min(avgGrade / 10 * 20, 20); // Max 20 points for 10%+ avg grade
+        const variabilityScore = Math.min(variability / 100 * 15, 15); // Max 15 points for high variability
+        const areaScore = Math.min(radius / 10 * 10, 10); // Max 10 points for large area
+        
+        return Math.round(elevationScore + maxGradeScore + avgGradeScore + variabilityScore + areaScore);
+    }
+    
+    /**
+     * Classify terrain zones within radius
+     * @param {Array} elevationData - Elevation data points
+     * @param {Object} center - Center coordinates
+     * @returns {Object} Terrain zone classification
+     */
+    classifyRadiusTerrainZones(elevationData, center) {
+        const zones = {
+            flat: { count: 0, percentage: 0 },
+            rolling: { count: 0, percentage: 0 },
+            hilly: { count: 0, percentage: 0 },
+            steep: { count: 0, percentage: 0 }
+        };
+        
+        // Classify each point based on local gradient
+        elevationData.forEach(point => {
+            // Calculate local gradient (simplified)
+            const nearbyPoints = elevationData
+                .filter(p => this.calculateDistance(point.lat, point.lon, p.lat, p.lon) < 0.2)
+                .filter(p => p !== point);
+            
+            if (nearbyPoints.length > 0) {
+                const elevationDiffs = nearbyPoints.map(p => Math.abs(p.elevation - point.elevation));
+                const maxLocalDiff = Math.max(...elevationDiffs);
+                
+                if (maxLocalDiff < 20) zones.flat.count++;
+                else if (maxLocalDiff < 50) zones.rolling.count++;
+                else if (maxLocalDiff < 100) zones.hilly.count++;
+                else zones.steep.count++;
+            }
+        });
+        
+        // Calculate percentages
+        const totalPoints = elevationData.length;
+        Object.keys(zones).forEach(zone => {
+            zones[zone].percentage = Math.round((zones[zone].count / totalPoints) * 100);
+        });
+        
+        return zones;
+    }
+    
+    /**
+     * Find legal routes within radius based on terrain
+     * @param {Object} center - Center coordinates
+     * @param {number} radius - Search radius
+     * @param {Array} elevationData - Elevation data
+     * @returns {Array} Legal route suggestions
+     */
+    async findLegalRoutesInRadius(center, radius, elevationData) {
+        const routes = [];
+        
+        // Find points with gentle grades suitable for GEM vehicles
+        const suitablePoints = elevationData.filter(point => {
+            // Calculate grade to center
+            const distance = this.calculateDistance(center.lat, center.lon, point.lat, point.lon);
+            if (distance === 0) return false;
+            
+            const elevationDiff = Math.abs(point.elevation - elevationData[0].elevation);
+            const grade = (elevationDiff / (distance * 5280)) * 100;
+            
+            return grade < 8; // Suitable for golf carts/LSVs
+        });
+        
+        // Generate route suggestions to interesting points
+        const interestingPoints = suitablePoints
+            .filter(p => p.distanceFromCenter > radius * 0.3) // Not too close to center
+            .sort((a, b) => a.distanceFromCenter - b.distanceFromCenter)
+            .slice(0, 8); // Top 8 destinations
+        
+        interestingPoints.forEach((point, index) => {
+            routes.push({
+                id: `route_${index + 1}`,
+                destination: {
+                    lat: point.lat,
+                    lon: point.lon,
+                    elevation: point.elevation
+                },
+                distance: Math.round(point.distanceFromCenter * 10) / 10,
+                estimatedGrade: this.calculateEstimatedGrade(center, point),
+                difficulty: 'easy',
+                suitable: true,
+                description: `${Math.round(point.distanceFromCenter)} mile route to elevation ${point.elevation}ft`
+            });
+        });
+        
+        return routes;
+    }
+    
+    /**
+     * Calculate estimated grade between two points
+     * @param {Object} point1 - First point
+     * @param {Object} point2 - Second point
+     * @returns {number} Estimated grade percentage
+     */
+    calculateEstimatedGrade(point1, point2) {
+        const distance = this.calculateDistance(point1.lat, point1.lon, point2.lat, point2.lon);
+        if (distance === 0) return 0;
+        
+        const elevationDiff = Math.abs((point2.elevation || 0) - (point1.elevation || 0));
+        return Math.round((elevationDiff / (distance * 5280)) * 100 * 10) / 10;
+    }
+    
+    /**
+     * Generate recommendations for radius exploration
+     * @param {number} difficultyScore - Area difficulty score
+     * @param {Object} terrainZones - Terrain zone classification
+     * @param {number} radius - Exploration radius
+     * @returns {Array} Recommendations
+     */
+    generateRadiusRecommendations(difficultyScore, terrainZones, radius) {
+        const recommendations = [];
+        
+        if (terrainZones.flat.percentage > 60) {
+            recommendations.push('Excellent area for recreational driving - mostly flat terrain');
+            recommendations.push('Suitable for all GEM vehicle types including golf carts');
+        }
+        
+        if (terrainZones.steep.percentage > 20) {
+            recommendations.push('Steep areas detected - LSV recommended over golf cart');
+            recommendations.push('Monitor battery levels when exploring hilly sections');
+        }
+        
+        if (difficultyScore > 50) {
+            recommendations.push('Challenging terrain in area - plan shorter routes');
+            recommendations.push('Consider weather conditions before exploring steep areas');
+        }
+        
+        if (radius > 8) {
+            recommendations.push('Large exploration area - plan multiple shorter trips');
+            recommendations.push('Identify charging opportunities for longer range needs');
+        }
+        
+        // Add specific recommendations based on terrain zones
+        if (terrainZones.rolling.percentage > 40) {
+            recommendations.push('Rolling hills present - optimize regenerative braking settings');
+        }
+        
+        if (terrainZones.hilly.percentage > 30) {
+            recommendations.push('Significant hills detected - increase motor current for climbs');
+            recommendations.push('Allow extra time for routes through hilly areas');
+        }
+        
+        // General exploration recommendations
+        recommendations.push('Use legal routing system to verify road access');
+        recommendations.push('Check local regulations for vehicle type restrictions');
+        
+        return recommendations;
+    }
+    
+    /**
+     * Get fallback radius terrain data
+     * @param {Object} coordinates - Center coordinates
+     * @param {number} radius - Radius in miles
+     * @returns {Object} Fallback radius data
+     */
+    getFallbackRadiusData(coordinates, radius) {
+        // Generate estimated data based on radius size
+        const estimatedVariability = radius * 10; // Larger radius = more variability
+        const estimatedMaxGrade = Math.min(radius * 2, 15); // Larger radius = potentially steeper terrain
+        
+        return {
+            elevationRange: estimatedVariability * 5,
+            minElevation: 500,
+            maxElevation: 500 + (estimatedVariability * 5),
+            avgElevation: 500 + (estimatedVariability * 2.5),
+            maxGrade: estimatedMaxGrade,
+            avgGrade: estimatedMaxGrade * 0.4,
+            terrainVariability: estimatedVariability,
+            difficultyScore: Math.min(radius * 8, 80),
+            terrainZones: {
+                flat: { count: 20, percentage: 40 },
+                rolling: { count: 20, percentage: 40 },
+                hilly: { count: 8, percentage: 16 },
+                steep: { count: 2, percentage: 4 }
+            },
+            classification: this.getTerrainClassification(Math.min(radius * 8, 80)),
+            center: coordinates,
+            radius: radius,
+            type: 'radius_analysis',
+            source: 'estimated',
+            error: 'Terrain API unavailable - using estimates',
+            recommendations: [
+                'Terrain data unavailable - use conservative settings',
+                'Verify local terrain conditions before departure',
+                'Plan shorter routes until terrain is confirmed'
+            ]
+        };
     }
     
     /**

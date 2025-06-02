@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEM Accessories Configuration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .accessory-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .accessory-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .accessory-card.installed {
+            border-color: #22c55e;
+            background: linear-gradient(135deg, #f0fdf4 0%, #f7fee7 100%);
+        }
+        .impact-meter {
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #e5e7eb;
+        }
+        .impact-bar {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        .category-tabs {
+            display: flex;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .category-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        .maintenance-item {
+            border-left: 4px solid #e5e7eb;
+            transition: border-color 0.3s ease;
+        }
+        .maintenance-item.high-priority {
+            border-left-color: #ef4444;
+        }
+        .maintenance-item.medium-priority {
+            border-left-color: #f59e0b;
+        }
+        .maintenance-item.low-priority {
+            border-left-color: #22c55e;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-green-700 text-white p-4 no-print">
+        <div class="container mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold">🔧 GEM Accessories Configuration</h1>
+                <p class="text-sm opacity-90">Manage vehicle accessories and their power impact</p>
+            </div>
+            <a href="index-new.html" class="text-sm hover:underline">← Back to Optimizer</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Summary Dashboard -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span class="text-lg">⚡</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Power Draw</p>
+                        <p class="text-2xl font-bold text-gray-900" id="total-power">0W</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <span class="text-lg">⚖️</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Weight Added</p>
+                        <p class="text-2xl font-bold text-gray-900" id="total-weight">0 lbs</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                            <span class="text-lg">📉</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Range Impact</p>
+                        <p class="text-2xl font-bold text-gray-900" id="range-impact">-0%</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <span class="text-lg">💰</span>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Investment</p>
+                        <p class="text-2xl font-bold text-gray-900" id="total-cost">$0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="bg-white rounded-lg shadow mb-8">
+            <div class="category-tabs border-b border-gray-200">
+                <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:text-green-600 hover:border-green-300 active" data-tab="all">
+                    All Accessories
+                </button>
+                <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:text-green-600 hover:border-green-300" data-tab="lighting">
+                    💡 Lighting
+                </button>
+                <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:text-green-600 hover:border-green-300" data-tab="comfort">
+                    🌡️ Comfort
+                </button>
+                <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:text-green-600 hover:border-green-300" data-tab="utility">
+                    🔧 Utility
+                </button>
+                <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:text-green-600 hover:border-green-300" data-tab="protection">
+                    🛡️ Protection
+                </button>
+                <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:text-green-600 hover:border-green-300" data-tab="entertainment">
+                    🔊 Entertainment
+                </button>
+                <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:text-green-600 hover:border-green-300" data-tab="suspension">
+                    🏔️ Suspension
+                </button>
+                <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent hover:text-green-600 hover:border-green-300" data-tab="security">
+                    📍 Security
+                </button>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Left Column: Accessories Grid -->
+            <div class="lg:col-span-2">
+                <div id="accessories-grid" class="grid md:grid-cols-2 gap-6">
+                    <!-- Accessories will be dynamically populated here -->
+                </div>
+
+                <!-- Recommendations Section -->
+                <div id="recommendations-section" class="mt-8 bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">🎯 Recommended Accessories</h3>
+                    <div id="recommendations-list">
+                        <!-- Recommendations will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Sidebar -->
+            <div class="space-y-6">
+                <!-- Impact Analysis -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">📊 Performance Impact</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Range Reduction</span>
+                                <span id="range-impact-text">0%</span>
+                            </div>
+                            <div class="impact-meter">
+                                <div class="impact-bar bg-red-500" id="range-impact-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Acceleration Impact</span>
+                                <span id="accel-impact-text">0%</span>
+                            </div>
+                            <div class="impact-meter">
+                                <div class="impact-bar bg-yellow-500" id="accel-impact-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Top Speed Impact</span>
+                                <span id="speed-impact-text">0%</span>
+                            </div>
+                            <div class="impact-meter">
+                                <div class="impact-bar bg-orange-500" id="speed-impact-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-medium text-gray-800 mb-2">Power Breakdown</h4>
+                        <div id="power-breakdown" class="space-y-2 text-sm">
+                            <!-- Power breakdown will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Installed Accessories -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">✅ Installed Accessories</h3>
+                    <div id="installed-list" class="space-y-3">
+                        <p class="text-sm text-gray-500">No accessories installed</p>
+                    </div>
+                </div>
+
+                <!-- Maintenance Schedule -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">🔧 Maintenance Schedule</h3>
+                    <div id="maintenance-schedule" class="space-y-3">
+                        <p class="text-sm text-gray-500">No maintenance scheduled</p>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">⚡ Quick Actions</h3>
+                    <div class="space-y-2">
+                        <button onclick="exportConfiguration()" class="w-full py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            📄 Export Configuration
+                        </button>
+                        <button onclick="optimizeForMode()" class="w-full py-2 px-4 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700">
+                            🎯 Optimize for Mode
+                        </button>
+                        <button onclick="resetToFactory()" class="w-full py-2 px-4 border border-red-300 text-red-600 rounded-md text-sm font-medium hover:bg-red-50">
+                            🔄 Reset to Factory
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Accessory Details Modal -->
+    <div id="accessory-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-start mb-4">
+                <h3 id="modal-title" class="text-lg font-bold">Accessory Details</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div id="modal-content">
+                <!-- Modal content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Installation Confirmation Modal -->
+    <div id="install-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-bold mb-4">Install Accessory</h3>
+            <div id="install-modal-content">
+                <!-- Installation content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/accessories-manager.js"></script>
+    <script src="js/enhanced-pdf-analyzer.js"></script>
+    <script src="js/ai-assistant.js"></script>
+    <script src="js/ai-ui-integration.js"></script>
+    <script>
+        let accessoriesManager;
+        let currentCategory = 'all';
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            accessoriesManager = new AccessoriesManager();
+            
+            // Setup tab listeners
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    switchCategory(this.dataset.tab);
+                });
+            });
+            
+            // Initial render
+            renderAccessories();
+            updateSummary();
+            updateSidebar();
+            
+            // Load vehicle data for recommendations
+            loadVehicleData();
+        });
+        
+        /**
+         * Switch category tab
+         */
+        function switchCategory(category) {
+            currentCategory = category;
+            
+            // Update tab styling
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-green-500', 'text-green-600');
+                btn.classList.add('border-transparent');
+            });
+            
+            const activeTab = document.querySelector(`[data-tab="${category}"]`);
+            activeTab.classList.add('active', 'border-green-500', 'text-green-600');
+            
+            renderAccessories();
+        }
+        
+        /**
+         * Render accessories grid
+         */
+        function renderAccessories() {
+            const grid = document.getElementById('accessories-grid');
+            const accessories = accessoriesManager.accessories;
+            
+            let filteredAccessories = Object.entries(accessories);
+            
+            if (currentCategory !== 'all') {
+                filteredAccessories = filteredAccessories.filter(([id, accessory]) => 
+                    accessory.category === currentCategory
+                );
+            }
+            
+            grid.innerHTML = filteredAccessories.map(([id, accessory]) => {
+                const isInstalled = accessory.installed;
+                const variant = isInstalled ? accessory.selectedVariant : 'basic';
+                const config = accessory.variants[variant];
+                
+                return `
+                    <div class="accessory-card bg-white rounded-lg shadow p-6 ${isInstalled ? 'installed' : ''}" 
+                         onclick="showAccessoryDetails('${id}')">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center">
+                                <span class="text-3xl mr-3">${accessory.icon}</span>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">${accessory.name}</h3>
+                                    <p class="text-sm text-gray-600 capitalize">${accessory.category}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                ${isInstalled ? 
+                                    '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Installed</span>' :
+                                    '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">Available</span>'
+                                }
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-600 mb-4">${accessory.description}</p>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <span class="text-xs text-gray-500">Power Draw</span>
+                                <p class="font-medium">${config?.powerDraw || accessory.powerDraw || 0}W</p>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500">Weight</span>
+                                <p class="font-medium">${config?.weight || accessory.weightChange || 0} lbs</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">
+                                From $${Math.min(...Object.values(accessory.variants).map(v => v.cost))}
+                            </span>
+                            <button class="px-3 py-1 text-sm ${isInstalled ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'} rounded-md transition-colors"
+                                    onclick="event.stopPropagation(); ${isInstalled ? `removeAccessory('${id}')` : `showInstallModal('${id}')`}">
+                                ${isInstalled ? 'Remove' : 'Install'}
+                            </button>
+                        </div>
+                        
+                        ${isInstalled ? `
+                            <div class="mt-3 pt-3 border-t text-xs text-gray-500">
+                                Installed: ${new Date(accessory.installDate).toLocaleDateString()}
+                                ${accessory.selectedVariant ? ` • ${accessory.variants[accessory.selectedVariant].name}` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            if (filteredAccessories.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <p class="text-gray-500">No accessories in this category</p>
+                    </div>
+                `;
+            }
+        }
+        
+        /**
+         * Show accessory details modal
+         */
+        function showAccessoryDetails(accessoryId) {
+            const accessory = accessoriesManager.accessories[accessoryId];
+            const modal = document.getElementById('accessory-modal');
+            const title = document.getElementById('modal-title');
+            const content = document.getElementById('modal-content');
+            
+            title.textContent = accessory.name;
+            
+            const isInstalled = accessory.installed;
+            const impact = isInstalled ? accessoriesManager.getAccessoryImpact(accessoryId) : null;
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-start space-x-4">
+                        <span class="text-4xl">${accessory.icon}</span>
+                        <div class="flex-1">
+                            <p class="text-gray-600 mb-4">${accessory.description}</p>
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                ${accessory.impacts.map(impact => 
+                                    `<span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">${impact}</span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${isInstalled ? `
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <h4 class="font-medium text-green-900 mb-3">Current Installation</h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-green-700">Variant:</span>
+                                    <p class="font-medium">${accessory.variants[accessory.selectedVariant].name}</p>
+                                </div>
+                                <div>
+                                    <span class="text-green-700">Installed:</span>
+                                    <p class="font-medium">${new Date(accessory.installDate).toLocaleDateString()}</p>
+                                </div>
+                                <div>
+                                    <span class="text-green-700">Power Impact:</span>
+                                    <p class="font-medium">${impact.powerDraw}W</p>
+                                </div>
+                                <div>
+                                    <span class="text-green-700">Range Impact:</span>
+                                    <p class="font-medium">-${impact.rangeImpact.toFixed(1)}%</p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-3">Available Variants</h4>
+                        <div class="grid gap-3">
+                            ${Object.entries(accessory.variants).map(([variantId, variant]) => `
+                                <div class="border rounded-lg p-3 ${isInstalled && accessory.selectedVariant === variantId ? 'border-green-500 bg-green-50' : ''}">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h5 class="font-medium">${variant.name}</h5>
+                                        <span class="font-bold text-green-600">$${variant.cost}</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-xs text-gray-600">
+                                        <div>Power: ${variant.powerDraw || accessory.powerDraw || 0}W</div>
+                                        <div>Weight: ${variant.weight || accessory.weightChange || 0} lbs</div>
+                                        <div>Aero: ${variant.aeroImpact || accessory.aerodynamicImpact || 0}%</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="closeModal()" 
+                                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                            Close
+                        </button>
+                        ${isInstalled ? `
+                            <button onclick="removeAccessory('${accessoryId}'); closeModal();" 
+                                    class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                                Remove Accessory
+                            </button>
+                        ` : `
+                            <button onclick="showInstallModal('${accessoryId}'); closeModal();" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                Install Accessory
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+        
+        /**
+         * Show installation modal
+         */
+        function showInstallModal(accessoryId) {
+            const accessory = accessoriesManager.accessories[accessoryId];
+            const modal = document.getElementById('install-modal');
+            const content = document.getElementById('install-modal-content');
+            
+            content.innerHTML = `
+                <div class="mb-4">
+                    <h4 class="font-medium mb-2">${accessory.name}</h4>
+                    <p class="text-sm text-gray-600 mb-4">Select a variant to install:</p>
+                    
+                    <div class="space-y-3 mb-6">
+                        ${Object.entries(accessory.variants).map(([variantId, variant]) => `
+                            <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                                <input type="radio" name="variant" value="${variantId}" 
+                                       class="text-green-600 focus:ring-green-500" ${variantId === 'basic' ? 'checked' : ''}>
+                                <div class="ml-3 flex-1">
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium">${variant.name}</span>
+                                        <span class="font-bold text-green-600">$${variant.cost}</span>
+                                    </div>
+                                    <div class="text-sm text-gray-600 mt-1">
+                                        ${variant.powerDraw || accessory.powerDraw || 0}W • 
+                                        ${variant.weight || accessory.weightChange || 0} lbs
+                                    </div>
+                                </div>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeInstallModal()" 
+                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button onclick="confirmInstallation('${accessoryId}')" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        Install Accessory
+                    </button>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+        
+        /**
+         * Confirm accessory installation
+         */
+        function confirmInstallation(accessoryId) {
+            const selectedVariant = document.querySelector('input[name="variant"]:checked')?.value;
+            if (!selectedVariant) {
+                alert('Please select a variant');
+                return;
+            }
+            
+            try {
+                const result = accessoriesManager.installAccessory(accessoryId, selectedVariant);
+                closeInstallModal();
+                
+                // Show success message
+                showNotification(`${result.accessory} (${result.variant}) installed successfully!`, 'success');
+                
+                // Update UI
+                renderAccessories();
+                updateSummary();
+                updateSidebar();
+                
+            } catch (error) {
+                alert('Installation failed: ' + error.message);
+            }
+        }
+        
+        /**
+         * Remove accessory
+         */
+        function removeAccessory(accessoryId) {
+            if (!confirm('Are you sure you want to remove this accessory?')) {
+                return;
+            }
+            
+            try {
+                const result = accessoriesManager.removeAccessory(accessoryId);
+                
+                showNotification(result.message, 'success');
+                
+                // Update UI
+                renderAccessories();
+                updateSummary();
+                updateSidebar();
+                
+            } catch (error) {
+                alert('Removal failed: ' + error.message);
+            }
+        }
+        
+        /**
+         * Update summary dashboard
+         */
+        function updateSummary() {
+            const impact = accessoriesManager.calculateTotalImpact();
+            
+            document.getElementById('total-power').textContent = impact.powerDraw + 'W';
+            document.getElementById('total-weight').textContent = impact.weightChange + ' lbs';
+            document.getElementById('range-impact').textContent = '-' + impact.rangeReduction.toFixed(1) + '%';
+            document.getElementById('total-cost').textContent = '$' + impact.cost.toLocaleString();
+        }
+        
+        /**
+         * Update sidebar content
+         */
+        function updateSidebar() {
+            const impact = accessoriesManager.calculateTotalImpact();
+            
+            // Update impact meters
+            updateImpactMeter('range-impact', impact.rangeReduction, 40);
+            updateImpactMeter('accel-impact', impact.accelerationImpact, 25);
+            updateImpactMeter('speed-impact', impact.topSpeedImpact, 15);
+            
+            // Update installed list
+            updateInstalledList();
+            
+            // Update maintenance schedule
+            updateMaintenanceSchedule();
+            
+            // Update power breakdown
+            updatePowerBreakdown();
+        }
+        
+        /**
+         * Update impact meter
+         */
+        function updateImpactMeter(id, value, max) {
+            const percentage = Math.min((value / max) * 100, 100);
+            document.getElementById(id + '-text').textContent = value.toFixed(1) + '%';
+            document.getElementById(id + '-bar').style.width = percentage + '%';
+        }
+        
+        /**
+         * Update installed accessories list
+         */
+        function updateInstalledList() {
+            const installed = accessoriesManager.getInstalledAccessories();
+            const list = document.getElementById('installed-list');
+            
+            if (installed.length === 0) {
+                list.innerHTML = '<p class="text-sm text-gray-500">No accessories installed</p>';
+                return;
+            }
+            
+            list.innerHTML = installed.map(accessory => `
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div class="flex items-center">
+                        <span class="mr-2">${accessory.icon}</span>
+                        <div>
+                            <p class="text-sm font-medium">${accessory.name}</p>
+                            <p class="text-xs text-gray-600">${accessory.variantName}</p>
+                        </div>
+                    </div>
+                    <button onclick="removeAccessory('${accessory.id}')" 
+                            class="text-red-600 hover:text-red-800 text-xs">
+                        Remove
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        /**
+         * Update maintenance schedule
+         */
+        function updateMaintenanceSchedule() {
+            const schedule = accessoriesManager.getMaintenanceSchedule();
+            const container = document.getElementById('maintenance-schedule');
+            
+            if (schedule.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500">No maintenance scheduled</p>';
+                return;
+            }
+            
+            const upcomingItems = schedule.slice(0, 5); // Show next 5 items
+            
+            container.innerHTML = upcomingItems.map(item => {
+                const daysUntil = Math.ceil((item.nextDue - new Date()) / (1000 * 60 * 60 * 24));
+                const isOverdue = daysUntil < 0;
+                const isUrgent = daysUntil <= 7;
+                
+                return `
+                    <div class="maintenance-item ${item.priority}-priority p-3 bg-gray-50 rounded">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium">${item.task}</p>
+                                <p class="text-xs text-gray-600">${item.accessoryName}</p>
+                            </div>
+                            <span class="text-xs ${isOverdue ? 'text-red-600 font-medium' : isUrgent ? 'text-yellow-600' : 'text-gray-500'}">
+                                ${isOverdue ? 'Overdue' : isUrgent ? `${daysUntil} days` : item.nextDue.toLocaleDateString()}
+                            </span>
+                        </div>
+                        ${item.estimated_cost > 0 ? `
+                            <p class="text-xs text-gray-500 mt-1">Est. cost: $${item.estimated_cost}</p>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        /**
+         * Update power breakdown
+         */
+        function updatePowerBreakdown() {
+            const categories = accessoriesManager.getAccessoryCategories();
+            const breakdown = document.getElementById('power-breakdown');
+            
+            let totalPower = 0;
+            const categoryPower = {};
+            
+            // Calculate power by category
+            Object.entries(accessoriesManager.accessories).forEach(([id, accessory]) => {
+                if (accessory.installed) {
+                    const power = accessory.currentConfig?.powerDraw || 0;
+                    categoryPower[accessory.category] = (categoryPower[accessory.category] || 0) + power;
+                    totalPower += power;
+                }
+            });
+            
+            if (totalPower === 0) {
+                breakdown.innerHTML = '<p class="text-gray-500">No power draw</p>';
+                return;
+            }
+            
+            breakdown.innerHTML = Object.entries(categoryPower)
+                .filter(([category, power]) => power > 0)
+                .map(([category, power]) => {
+                    const percentage = ((power / totalPower) * 100).toFixed(1);
+                    return `
+                        <div class="flex justify-between">
+                            <span class="capitalize">${category}:</span>
+                            <span class="font-medium">${power}W (${percentage}%)</span>
+                        </div>
+                    `;
+                }).join('');
+        }
+        
+        /**
+         * Load vehicle data for recommendations
+         */
+        function loadVehicleData() {
+            const vehicleData = JSON.parse(localStorage.getItem('gem-vehicle-data') || '{}');
+            const usageProfile = vehicleData.usageProfile || ['recreation'];
+            
+            const recommendations = accessoriesManager.getRecommendations(vehicleData, usageProfile);
+            updateRecommendations(recommendations);
+        }
+        
+        /**
+         * Update recommendations section
+         */
+        function updateRecommendations(recommendations) {
+            const section = document.getElementById('recommendations-list');
+            
+            if (recommendations.length === 0) {
+                section.innerHTML = '<p class="text-sm text-gray-500">No specific recommendations at this time</p>';
+                return;
+            }
+            
+            section.innerHTML = recommendations.map(rec => {
+                const accessory = accessoriesManager.accessories[rec.accessory];
+                const variant = accessory.variants[rec.variant];
+                
+                return `
+                    <div class="border rounded-lg p-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">${accessory.icon}</span>
+                                <div>
+                                    <h4 class="font-medium">${accessory.name}</h4>
+                                    <p class="text-sm text-gray-600">${variant.name}</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-${rec.priority === 'high' ? 'red' : rec.priority === 'medium' ? 'yellow' : 'blue'}-100 
+                                         text-${rec.priority === 'high' ? 'red' : rec.priority === 'medium' ? 'yellow' : 'blue'}-800 
+                                         text-xs rounded-full capitalize">
+                                ${rec.priority}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">${rec.reason}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="font-medium text-green-600">$${variant.cost}</span>
+                            <button onclick="showInstallModal('${rec.accessory}')" 
+                                    class="px-3 py-1 bg-green-100 text-green-600 rounded text-sm hover:bg-green-200">
+                                Install
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        /**
+         * Export configuration
+         */
+        function exportConfiguration() {
+            const config = accessoriesManager.exportConfiguration();
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gem-accessories-config-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Configuration exported successfully!', 'success');
+        }
+        
+        /**
+         * Optimize for driving mode
+         */
+        function optimizeForMode() {
+            // This would integrate with the driving modes system
+            window.location.href = 'driving-modes.html';
+        }
+        
+        /**
+         * Reset to factory configuration
+         */
+        function resetToFactory() {
+            if (!confirm('This will remove all accessories and reset to factory configuration. Continue?')) {
+                return;
+            }
+            
+            // Remove all accessories
+            Object.keys(accessoriesManager.accessories).forEach(id => {
+                if (accessoriesManager.accessories[id].installed) {
+                    try {
+                        accessoriesManager.removeAccessory(id);
+                    } catch (error) {
+                        console.error('Error removing accessory:', error);
+                    }
+                }
+            });
+            
+            // Clear saved configuration
+            localStorage.removeItem('gem-accessories-config');
+            
+            // Reinitialize
+            accessoriesManager = new AccessoriesManager();
+            
+            // Update UI
+            renderAccessories();
+            updateSummary();
+            updateSidebar();
+            
+            showNotification('Reset to factory configuration complete', 'success');
+        }
+        
+        /**
+         * Close modal
+         */
+        function closeModal() {
+            document.getElementById('accessory-modal').classList.add('hidden');
+        }
+        
+        /**
+         * Close installation modal
+         */
+        function closeInstallModal() {
+            document.getElementById('install-modal').classList.add('hidden');
+        }
+        
+        /**
+         * Show notification
+         */
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            } text-white transform translate-x-full transition-transform`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(full)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

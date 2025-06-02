@@ -228,6 +228,214 @@ class GEMOptimizerMCPServer {
                             },
                             required: ['title', 'optimization_result']
                         }
+                    },
+                    {
+                        name: 'optimize_for_beach_driving',
+                        description: 'Optimize GEM controller settings specifically for beach driving conditions',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                vehicle_model: {
+                                    type: 'string',
+                                    enum: ['e2', 'e4', 'e6', 'eS', 'eL', 'elXD'],
+                                    description: 'GEM vehicle model'
+                                },
+                                sand_type: {
+                                    type: 'string',
+                                    enum: ['soft', 'packed', 'mixed'],
+                                    description: 'Type of sand conditions expected'
+                                },
+                                temperature: {
+                                    type: 'number',
+                                    description: 'Expected temperature in Fahrenheit'
+                                },
+                                load_weight: {
+                                    type: 'number',
+                                    description: 'Additional load weight in pounds'
+                                }
+                            },
+                            required: ['vehicle_model']
+                        }
+                    },
+                    {
+                        name: 'optimize_for_hill_climbing',
+                        description: 'Optimize GEM controller settings for steep terrain and hill climbing',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                vehicle_model: {
+                                    type: 'string',
+                                    enum: ['e2', 'e4', 'e6', 'eS', 'eL', 'elXD'],
+                                    description: 'GEM vehicle model'
+                                },
+                                max_grade: {
+                                    type: 'number',
+                                    description: 'Maximum grade percentage expected'
+                                },
+                                elevation_gain: {
+                                    type: 'number',
+                                    description: 'Total elevation gain in feet'
+                                },
+                                distance: {
+                                    type: 'number',
+                                    description: 'Total distance in miles'
+                                }
+                            },
+                            required: ['vehicle_model', 'max_grade']
+                        }
+                    },
+                    {
+                        name: 'optimize_for_cold_weather',
+                        description: 'Optimize GEM controller settings for cold weather conditions',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                vehicle_model: {
+                                    type: 'string',
+                                    enum: ['e2', 'e4', 'e6', 'eS', 'eL', 'elXD'],
+                                    description: 'GEM vehicle model'
+                                },
+                                temperature: {
+                                    type: 'number',
+                                    description: 'Expected temperature in Fahrenheit'
+                                },
+                                snow_conditions: {
+                                    type: 'boolean',
+                                    description: 'Whether snow or ice conditions are expected'
+                                },
+                                battery_age: {
+                                    type: 'string',
+                                    enum: ['new', 'good', 'fair', 'old'],
+                                    description: 'Battery condition'
+                                }
+                            },
+                            required: ['vehicle_model', 'temperature']
+                        }
+                    },
+                    {
+                        name: 'optimize_for_towing',
+                        description: 'Optimize GEM controller settings for towing trailers or heavy loads',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                vehicle_model: {
+                                    type: 'string',
+                                    enum: ['e4', 'e6', 'eS', 'eL', 'elXD'],
+                                    description: 'GEM vehicle model (towing capable)'
+                                },
+                                trailer_weight: {
+                                    type: 'number',
+                                    description: 'Trailer weight in pounds'
+                                },
+                                load_type: {
+                                    type: 'string',
+                                    enum: ['light_cargo', 'heavy_cargo', 'utility_trailer', 'passengers'],
+                                    description: 'Type of load being towed'
+                                },
+                                terrain_type: {
+                                    type: 'string',
+                                    enum: ['flat', 'hilly', 'mixed'],
+                                    description: 'Expected terrain type'
+                                }
+                            },
+                            required: ['vehicle_model', 'trailer_weight']
+                        }
+                    },
+                    {
+                        name: 'optimize_for_maximum_range',
+                        description: 'Optimize GEM controller settings for maximum battery range and efficiency',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                vehicle_model: {
+                                    type: 'string',
+                                    enum: ['e2', 'e4', 'e6', 'eS', 'eL', 'elXD'],
+                                    description: 'GEM vehicle model'
+                                },
+                                target_distance: {
+                                    type: 'number',
+                                    description: 'Target distance to travel in miles'
+                                },
+                                speed_priority: {
+                                    type: 'string',
+                                    enum: ['efficiency', 'balance', 'performance'],
+                                    description: 'Priority between efficiency and speed'
+                                },
+                                accessories: {
+                                    type: 'array',
+                                    items: { type: 'string' },
+                                    description: 'List of accessories that will be used'
+                                }
+                            },
+                            required: ['vehicle_model']
+                        }
+                    },
+                    {
+                        name: 'analyze_radius_terrain',
+                        description: 'Analyze terrain within a radius for exploration planning',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                center_location: {
+                                    type: 'string',
+                                    description: 'Center location for radius analysis'
+                                },
+                                radius: {
+                                    type: 'number',
+                                    description: 'Analysis radius in miles (default: 5)'
+                                },
+                                vehicle_type: {
+                                    type: 'string',
+                                    enum: ['golf_cart', 'lsv', 'any'],
+                                    description: 'Vehicle type for legal route filtering'
+                                }
+                            },
+                            required: ['center_location']
+                        }
+                    },
+                    {
+                        name: 'get_real_time_weather_impact',
+                        description: 'Get real-time weather conditions and their impact on vehicle performance',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                location: {
+                                    type: 'string',
+                                    description: 'Location for weather analysis'
+                                },
+                                vehicle_model: {
+                                    type: 'string',
+                                    enum: ['e2', 'e4', 'e6', 'eS', 'eL', 'elXD'],
+                                    description: 'GEM vehicle model'
+                                }
+                            },
+                            required: ['location']
+                        }
+                    },
+                    {
+                        name: 'natural_language_optimization',
+                        description: 'Process any natural language optimization request with advanced AI analysis',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                query: {
+                                    type: 'string',
+                                    description: 'Natural language description of what you want to optimize (e.g., "make my GEM go faster for racing", "optimize for camping trip in mountains")'
+                                },
+                                context: {
+                                    type: 'object',
+                                    properties: {
+                                        current_location: { type: 'string' },
+                                        vehicle_condition: { type: 'string' },
+                                        weather_conditions: { type: 'string' },
+                                        time_of_day: { type: 'string' },
+                                        urgency: { type: 'string', enum: ['low', 'medium', 'high'] }
+                                    },
+                                    description: 'Additional context for the optimization'
+                                }
+                            },
+                            required: ['query']
+                        }
                     }
                 ]
             };
@@ -261,6 +469,30 @@ class GEMOptimizerMCPServer {
                     
                     case 'save_trip_configuration':
                         return await this.handleSaveTrip(args);
+                    
+                    case 'optimize_for_beach_driving':
+                        return await this.handleBeachOptimization(args);
+                    
+                    case 'optimize_for_hill_climbing':
+                        return await this.handleHillClimbingOptimization(args);
+                    
+                    case 'optimize_for_cold_weather':
+                        return await this.handleColdWeatherOptimization(args);
+                    
+                    case 'optimize_for_towing':
+                        return await this.handleTowingOptimization(args);
+                    
+                    case 'optimize_for_maximum_range':
+                        return await this.handleMaxRangeOptimization(args);
+                    
+                    case 'analyze_radius_terrain':
+                        return await this.handleRadiusTerrainAnalysis(args);
+                    
+                    case 'get_real_time_weather_impact':
+                        return await this.handleRealTimeWeatherImpact(args);
+                    
+                    case 'natural_language_optimization':
+                        return await this.handleNaturalLanguageOptimization(args);
                     
                     default:
                         throw new McpError(
@@ -763,6 +995,849 @@ class GEMOptimizerMCPServer {
         }
         
         return `${comparison.differences.length} parameter differences found. Review the specific function changes to determine which scenario better fits your needs.`;
+    }
+
+    /**
+     * Handle beach driving optimization
+     */
+    async handleBeachOptimization(args) {
+        const { vehicle_model, sand_type = 'mixed', temperature = 75, load_weight = 0 } = args;
+        
+        const beachSettings = {
+            1: 85,   // Reduced speed for sand
+            3: 20,   // Higher pot gain for sand traction
+            4: 280,  // Higher current for sand resistance
+            6: 45,   // Slower acceleration for sand
+            7: 85,   // Stronger deceleration for stopping in sand
+            8: 280,  // Higher field current
+            9: 180,  // Moderate regen to avoid wheel slip
+            10: 95,  // Adjusted map select
+            11: 8,   // Lower turf mode for beach conditions
+            12: 8,   // Higher temp limit for beach heat
+            20: 3    // Lower overspeed for safety
+        };
+        
+        // Adjust for sand type
+        if (sand_type === 'soft') {
+            beachSettings[4] += 20; // More current for soft sand
+            beachSettings[6] -= 10; // Even slower acceleration
+        } else if (sand_type === 'packed') {
+            beachSettings[1] += 10; // Slightly higher speed on packed sand
+            beachSettings[6] += 10; // Faster acceleration
+        }
+        
+        // Adjust for temperature
+        if (temperature > 90) {
+            beachSettings[4] -= 15; // Reduce current in extreme heat
+            beachSettings[12] += 1; // Higher temp limit
+        }
+        
+        // Adjust for load
+        if (load_weight > 200) {
+            beachSettings[4] += Math.round(load_weight / 50); // More current for load
+            beachSettings[6] -= 5; // Slower acceleration with load
+        }
+        
+        const response = {
+            success: true,
+            optimization_type: 'beach_driving',
+            settings: beachSettings,
+            conditions: {
+                sand_type,
+                temperature,
+                load_weight,
+                vehicle_model
+            },
+            recommendations: [
+                'Check tire pressure - lower pressure improves sand traction',
+                'Avoid sudden acceleration to prevent wheel spin',
+                'Monitor battery temperature in hot sand conditions',
+                'Consider salt air protection for electrical components',
+                'Clean vehicle thoroughly after beach use'
+            ],
+            analysis: {
+                optimized_for: 'Beach and sand driving conditions',
+                key_adjustments: [
+                    'Reduced top speed for safety on sand',
+                    'Increased motor current for sand resistance',
+                    'Optimized acceleration for traction control',
+                    'Enhanced cooling for beach heat conditions'
+                ]
+            }
+        };
+        
+        return {
+            content: [{
+                type: 'text',
+                text: JSON.stringify(response, null, 2)
+            }]
+        };
+    }
+
+    /**
+     * Handle hill climbing optimization
+     */
+    async handleHillClimbingOptimization(args) {
+        const { vehicle_model, max_grade, elevation_gain = 0, distance = 0 } = args;
+        
+        const hillSettings = {
+            1: 95,   // Slightly reduced speed for control
+            3: 25,   // Higher pot gain for hill control
+            4: 320,  // High current for hill climbing
+            6: 35,   // Slower acceleration for control
+            7: 90,   // Strong deceleration for downhill control
+            8: 320,  // High field current for torque
+            9: 250,  // Strong regen for downhill braking
+            10: 110, // Higher map select for power
+            11: 15,  // Higher turf mode for traction
+            12: 9,   // Higher temp limit for sustained climbs
+            20: 2    // Very low overspeed for safety
+        };
+        
+        // Adjust for grade severity
+        if (max_grade > 20) {
+            hillSettings[4] = 350; // Maximum current for extreme grades
+            hillSettings[8] = 350; // Maximum field current
+            hillSettings[6] = 25;  // Very slow acceleration
+        } else if (max_grade > 15) {
+            hillSettings[4] += 20; // More current for steep grades
+            hillSettings[6] -= 5;  // Slower acceleration
+        }
+        
+        // Adjust for elevation gain
+        if (elevation_gain > 1000) {
+            hillSettings[9] += 20; // More regen for long descents
+            hillSettings[12] += 1; // Higher temp limit for sustained use
+        }
+        
+        // Vehicle-specific adjustments
+        const vehicleAdjustments = {
+            'e2': { 4: -20, 8: -20 }, // Less current for smaller motor
+            'e6': { 4: +10, 8: +10 }, // More current for heavier vehicle
+            'elXD': { 4: +30, 8: +30 } // Maximum for extra duty
+        };
+        
+        if (vehicleAdjustments[vehicle_model]) {
+            Object.keys(vehicleAdjustments[vehicle_model]).forEach(key => {
+                hillSettings[key] += vehicleAdjustments[vehicle_model][key];
+            });
+        }
+        
+        const response = {
+            success: true,
+            optimization_type: 'hill_climbing',
+            settings: hillSettings,
+            conditions: {
+                max_grade,
+                elevation_gain,
+                distance,
+                vehicle_model
+            },
+            recommendations: [
+                'Ensure battery is fully charged before attempting steep climbs',
+                'Monitor motor temperature during extended climbs',
+                'Take advantage of regenerative braking on descents',
+                'Consider zig-zag pattern on extremely steep grades',
+                'Allow motor cooling time between major climbs'
+            ],
+            warnings: max_grade > 20 ? [
+                'EXTREME GRADE WARNING: Verify vehicle capability before attempting',
+                'Consider alternative route if possible',
+                'Have emergency plan in case of power loss'
+            ] : max_grade > 15 ? [
+                'Steep grade detected - drive carefully and monitor systems'
+            ] : [],
+            analysis: {
+                optimized_for: `Hill climbing up to ${max_grade}% grade`,
+                key_adjustments: [
+                    'Increased motor current for climbing power',
+                    'Enhanced regenerative braking for descents',
+                    'Optimized acceleration for traction control',
+                    'Adjusted temperature limits for sustained operation'
+                ]
+            }
+        };
+        
+        return {
+            content: [{
+                type: 'text',
+                text: JSON.stringify(response, null, 2)
+            }]
+        };
+    }
+
+    /**
+     * Handle cold weather optimization
+     */
+    async handleColdWeatherOptimization(args) {
+        const { vehicle_model, temperature, snow_conditions = false, battery_age = 'good' } = args;
+        
+        const coldSettings = {
+            1: 105,  // Slightly higher speed to compensate for efficiency loss
+            3: 18,   // Higher pot gain for cold conditions
+            4: 270,  // Higher current for cold battery compensation
+            6: 50,   // Slower acceleration for cold conditions
+            7: 75,   // Moderate deceleration for cold weather
+            8: 270,  // Higher field current for cold compensation
+            9: 200,  // Reduced regen in very cold conditions
+            10: 105, // Higher map select for power
+            11: 12,  // Standard turf mode
+            12: 5,   // Lower temp limit (motor stays cooler in cold)
+            20: 6    // Standard overspeed
+        };
+        
+        // Severe cold adjustments
+        if (temperature < 32) {
+            coldSettings[4] += 30; // Much more current for freezing conditions
+            coldSettings[6] -= 10; // Even slower acceleration
+            coldSettings[9] -= 25; // Less regen to avoid battery stress
+            coldSettings[12] -= 1; // Even lower temp limit
+        } else if (temperature < 50) {
+            coldSettings[4] += 15; // More current for cold conditions
+            coldSettings[6] -= 5;  // Slightly slower acceleration
+        }
+        
+        // Snow/ice conditions
+        if (snow_conditions) {
+            coldSettings[1] -= 15;  // Much lower speed for safety
+            coldSettings[6] -= 15;  // Very gentle acceleration
+            coldSettings[7] += 15;  // More deceleration capability
+            coldSettings[11] -= 3;  // Lower turf mode for traction
+        }
+        
+        // Battery age adjustments
+        const batteryAdjustments = {
+            'new': { 4: 0, 9: 0 },
+            'good': { 4: +5, 9: -5 },
+            'fair': { 4: +15, 9: -15 },
+            'old': { 4: +25, 9: -25 }
+        };
+        
+        if (batteryAdjustments[battery_age]) {
+            Object.keys(batteryAdjustments[battery_age]).forEach(key => {
+                coldSettings[key] += batteryAdjustments[battery_age][key];
+            });
+        }
+        
+        const response = {
+            success: true,
+            optimization_type: 'cold_weather',
+            settings: coldSettings,
+            conditions: {
+                temperature,
+                snow_conditions,
+                battery_age,
+                vehicle_model
+            },
+            recommendations: [
+                'Allow extra warm-up time before driving',
+                'Monitor battery voltage closely in cold weather',
+                'Keep vehicle in heated garage when possible',
+                'Check tire pressure - cold air reduces pressure',
+                'Consider battery blanket for extreme cold',
+                snow_conditions ? 'Use tire chains or winter tires if available' : '',
+                'Plan for reduced range in cold conditions'
+            ].filter(Boolean),
+            analysis: {
+                optimized_for: `Cold weather operation at ${temperature}°F`,
+                expected_range_reduction: temperature < 32 ? '30-40%' : temperature < 50 ? '15-25%' : '5-15%',
+                key_adjustments: [
+                    'Increased motor current to compensate for cold battery',
+                    'Reduced regenerative braking to protect cold battery',
+                    'Gentle acceleration for traction in cold conditions',
+                    'Adjusted temperature limits for cold operation'
+                ]
+            }
+        };
+        
+        return {
+            content: [{
+                type: 'text',
+                text: JSON.stringify(response, null, 2)
+            }]
+        };
+    }
+
+    /**
+     * Handle towing optimization
+     */
+    async handleTowingOptimization(args) {
+        const { vehicle_model, trailer_weight, load_type = 'light_cargo', terrain_type = 'flat' } = args;
+        
+        // Verify vehicle is capable of towing
+        const towingCapableModels = ['e4', 'e6', 'eS', 'eL', 'elXD'];
+        if (!towingCapableModels.includes(vehicle_model)) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify({
+                        success: false,
+                        error: `${vehicle_model} model is not recommended for towing. Consider e4, e6, eS, eL, or elXD models.`
+                    }, null, 2)
+                }]
+            };
+        }
+        
+        const towingSettings = {
+            1: 90,   // Reduced speed for towing safety
+            3: 22,   // Higher pot gain for load control
+            4: 300,  // High current for pulling power
+            6: 40,   // Slower acceleration for trailer stability
+            7: 95,   // Enhanced deceleration for stopping with load
+            8: 300,  // High field current for torque
+            9: 220,  // Moderate regen (not too aggressive with trailer)
+            10: 110, // Higher map select for power
+            11: 13,  // Moderate turf mode
+            12: 8,   // Higher temp limit for sustained towing
+            20: 3    // Low overspeed for safety
+        };
+        
+        // Adjust for trailer weight
+        const weightFactor = trailer_weight / 500; // Base adjustment per 500 lbs
+        towingSettings[4] += Math.round(weightFactor * 20); // More current for heavier loads
+        towingSettings[8] += Math.round(weightFactor * 20); // More field current
+        towingSettings[6] -= Math.round(weightFactor * 5);  // Slower acceleration
+        
+        // Load type adjustments
+        const loadAdjustments = {
+            'heavy_cargo': { 4: +30, 6: -10, 7: +10 },
+            'utility_trailer': { 4: +20, 6: -5, 9: +10 },
+            'passengers': { 4: +10, 6: +5, 7: +15 } // Gentler for passenger comfort
+        };
+        
+        if (loadAdjustments[load_type]) {
+            Object.keys(loadAdjustments[load_type]).forEach(key => {
+                towingSettings[key] += loadAdjustments[load_type][key];
+            });
+        }
+        
+        // Terrain adjustments
+        if (terrain_type === 'hilly') {
+            towingSettings[4] += 25; // Much more current for hills with trailer
+            towingSettings[8] += 25; // More field current
+            towingSettings[6] -= 10; // Even slower acceleration
+            towingSettings[9] += 30; // More regen for downhill control
+        }
+        
+        // Vehicle-specific towing capacity adjustments
+        const vehicleCapacities = {
+            'e4': { max_weight: 800, 4: 0, 8: 0 },
+            'e6': { max_weight: 1000, 4: +10, 8: +10 },
+            'eS': { max_weight: 750, 4: -10, 8: -10 },
+            'eL': { max_weight: 900, 4: +5, 8: +5 },
+            'elXD': { max_weight: 1200, 4: +20, 8: +20 }
+        };
+        
+        const capacity = vehicleCapacities[vehicle_model];
+        if (capacity) {
+            // Apply vehicle-specific adjustments
+            towingSettings[4] += capacity[4];
+            towingSettings[8] += capacity[8];
+            
+            // Check weight limits
+            if (trailer_weight > capacity.max_weight) {
+                return {
+                    content: [{
+                        type: 'text',
+                        text: JSON.stringify({
+                            success: false,
+                            error: `Trailer weight ${trailer_weight} lbs exceeds ${vehicle_model} towing capacity of ${capacity.max_weight} lbs`,
+                            recommendation: 'Reduce load or consider a more capable vehicle model'
+                        }, null, 2)
+                    }]
+                };
+            }
+        }
+        
+        const response = {
+            success: true,
+            optimization_type: 'towing',
+            settings: towingSettings,
+            conditions: {
+                vehicle_model,
+                trailer_weight,
+                load_type,
+                terrain_type,
+                towing_capacity: capacity?.max_weight
+            },
+            recommendations: [
+                'Perform pre-trip inspection of trailer connections',
+                'Check tire pressure on both vehicle and trailer',
+                'Allow extra stopping distance when towing',
+                'Use lower gears on hills and avoid sudden maneuvers',
+                'Monitor motor temperature during extended towing',
+                'Practice backing up with trailer in safe area first',
+                terrain_type === 'hilly' ? 'Take breaks on long climbs to prevent overheating' : ''
+            ].filter(Boolean),
+            safety_notes: [
+                `Maximum recommended trailer weight: ${capacity?.max_weight || 'See manual'} lbs`,
+                'Always use proper hitch and safety chains',
+                'Verify brake lights and turn signals work on trailer',
+                'Check local regulations for towing requirements'
+            ],
+            analysis: {
+                optimized_for: `Towing ${trailer_weight} lb ${load_type} on ${terrain_type} terrain`,
+                expected_range_reduction: '25-40%',
+                key_adjustments: [
+                    'Increased motor current for pulling power',
+                    'Enhanced deceleration for safe stopping with load',
+                    'Reduced acceleration for trailer stability',
+                    'Optimized regeneration for load control'
+                ]
+            }
+        };
+        
+        return {
+            content: [{
+                type: 'text',
+                text: JSON.stringify(response, null, 2)
+            }]
+        };
+    }
+
+    /**
+     * Handle maximum range optimization
+     */
+    async handleMaxRangeOptimization(args) {
+        const { vehicle_model, target_distance = 0, speed_priority = 'efficiency', accessories = [] } = args;
+        
+        const efficiencySettings = {
+            1: 85,   // Reduced speed for efficiency
+            3: 12,   // Lower pot gain for smooth operation
+            4: 220,  // Reduced current for efficiency
+            6: 70,   // Gentle acceleration
+            7: 80,   // Moderate deceleration
+            8: 220,  // Reduced field current
+            9: 240,  // High regen for energy recovery
+            10: 95,  // Lower map select for efficiency
+            11: 9,   // Lower turf mode
+            12: 7,   // Standard temp limit
+            20: 4    // Low overspeed
+        };
+        
+        // Speed priority adjustments
+        if (speed_priority === 'performance') {
+            efficiencySettings[1] += 15;  // Higher speed
+            efficiencySettings[4] += 25;  // More current
+            efficiencySettings[6] += 15;  // Faster acceleration
+        } else if (speed_priority === 'balance') {
+            efficiencySettings[1] += 8;   // Moderate speed increase
+            efficiencySettings[4] += 10;  // Slight current increase
+            efficiencySettings[6] += 8;   // Moderate acceleration
+        }
+        
+        // Accessory power compensation
+        let accessoryPowerDraw = 0;
+        const accessoryPowerMap = {
+            'lights': 50,
+            'radio': 25,
+            'heater': 200,
+            'air_conditioning': 300,
+            'winch': 500,
+            'work_lights': 100
+        };
+        
+        accessories.forEach(accessory => {
+            accessoryPowerDraw += accessoryPowerMap[accessory] || 0;
+        });
+        
+        if (accessoryPowerDraw > 100) {
+            const powerFactor = accessoryPowerDraw / 100;
+            efficiencySettings[9] += Math.round(powerFactor * 10); // More regen to offset power draw
+        }
+        
+        // Target distance adjustments
+        if (target_distance > 30) {
+            efficiencySettings[1] -= 5;   // Even lower speed for long distance
+            efficiencySettings[4] -= 10;  // Less current
+            efficiencySettings[6] += 10;  // Even gentler acceleration
+        }
+        
+        // Vehicle-specific efficiency adjustments
+        const vehicleEfficiency = {
+            'e2': { baseline_range: 35, 4: -15, 8: -15 }, // Lighter, less current needed
+            'e4': { baseline_range: 30, 4: 0, 8: 0 },     // Standard
+            'e6': { baseline_range: 25, 4: +10, 8: +10 }, // Heavier, needs more current
+            'eS': { baseline_range: 32, 4: -5, 8: -5 },   // Utility but efficient
+            'eL': { baseline_range: 28, 4: +5, 8: +5 },   // Larger utility
+            'elXD': { baseline_range: 22, 4: +15, 8: +15 } // Heavy duty, shorter range
+        };
+        
+        const vehicleData = vehicleEfficiency[vehicle_model] || vehicleEfficiency['e4'];
+        efficiencySettings[4] += vehicleData[4];
+        efficiencySettings[8] += vehicleData[8];
+        
+        // Calculate estimated range
+        let estimatedRange = vehicleData.baseline_range;
+        
+        // Adjust for speed priority
+        if (speed_priority === 'performance') {
+            estimatedRange *= 0.85; // 15% reduction
+        } else if (speed_priority === 'balance') {
+            estimatedRange *= 0.92; // 8% reduction
+        } else {
+            estimatedRange *= 1.05; // 5% improvement for pure efficiency
+        }
+        
+        // Adjust for accessories
+        if (accessoryPowerDraw > 0) {
+            const accessoryImpact = 1 - (accessoryPowerDraw / 1000); // Rough calculation
+            estimatedRange *= Math.max(accessoryImpact, 0.6); // Minimum 40% reduction
+        }
+        
+        const response = {
+            success: true,
+            optimization_type: 'maximum_range',
+            settings: efficiencySettings,
+            conditions: {
+                vehicle_model,
+                target_distance,
+                speed_priority,
+                accessories,
+                accessory_power_draw: accessoryPowerDraw
+            },
+            range_analysis: {
+                baseline_range: vehicleData.baseline_range,
+                estimated_range: Math.round(estimatedRange),
+                range_factors: {
+                    speed_priority_impact: speed_priority === 'efficiency' ? '+5%' : 
+                                          speed_priority === 'balance' ? '-8%' : '-15%',
+                    accessory_impact: accessoryPowerDraw > 0 ? `-${Math.round((1 - (1 - accessoryPowerDraw/1000)) * 100)}%` : '0%'
+                }
+            },
+            recommendations: [
+                'Maintain steady speed and avoid rapid acceleration',
+                'Use regenerative braking whenever possible',
+                'Plan route to minimize hills and stops',
+                'Turn off unnecessary accessories to maximize range',
+                'Check tire pressure regularly for optimal efficiency',
+                'Consider charging opportunities along longer routes',
+                target_distance > estimatedRange ? 
+                    `WARNING: Target distance ${target_distance} miles exceeds estimated range ${Math.round(estimatedRange)} miles` : ''
+            ].filter(Boolean),
+            efficiency_tips: [
+                'Coast to red lights and stop signs when possible',
+                'Use the most direct route available',
+                'Avoid peak traffic hours to reduce stop-and-go driving',
+                'Remove unnecessary weight from vehicle',
+                'Combine multiple errands into single trip'
+            ],
+            analysis: {
+                optimized_for: `Maximum range with ${speed_priority} speed priority`,
+                estimated_range: `${Math.round(estimatedRange)} miles`,
+                key_adjustments: [
+                    'Reduced motor current for efficiency',
+                    'Enhanced regenerative braking for energy recovery',
+                    'Optimized acceleration for smooth operation',
+                    'Balanced speed settings for range vs usability'
+                ]
+            }
+        };
+        
+        return {
+            content: [{
+                type: 'text',
+                text: JSON.stringify(response, null, 2)
+            }]
+        };
+    }
+
+    /**
+     * Handle radius terrain analysis
+     */
+    async handleRadiusTerrainAnalysis(args) {
+        const { center_location, radius = 5, vehicle_type = 'any' } = args;
+        
+        try {
+            // This would integrate with the enhanced terrain service
+            // For now, simulate the analysis
+            const analysis = {
+                center: center_location,
+                radius: radius,
+                vehicle_type: vehicle_type,
+                terrain_zones: {
+                    flat: { percentage: 45, suitable_for_golf_cart: true },
+                    rolling: { percentage: 35, suitable_for_golf_cart: true },
+                    hilly: { percentage: 15, suitable_for_golf_cart: false },
+                    steep: { percentage: 5, suitable_for_golf_cart: false }
+                },
+                elevation_analysis: {
+                    min_elevation: 500,
+                    max_elevation: 1200,
+                    elevation_range: 700,
+                    average_grade: 4.2,
+                    max_grade: 12.5
+                },
+                legal_routes: [
+                    {
+                        id: 'route_1',
+                        destination: 'Scenic overlook',
+                        distance: 3.2,
+                        estimated_grade: 5.5,
+                        suitable_for: vehicle_type === 'golf_cart' ? 'Golf Cart & LSV' : 'LSV only'
+                    },
+                    {
+                        id: 'route_2', 
+                        destination: 'Valley loop',
+                        distance: 4.8,
+                        estimated_grade: 2.1,
+                        suitable_for: 'All vehicles'
+                    }
+                ],
+                recommendations: this.generateRadiusRecommendations(radius, vehicle_type)
+            };
+            
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify({
+                        success: true,
+                        analysis: analysis
+                    }, null, 2)
+                }]
+            };
+            
+        } catch (error) {
+            logger.error('Radius terrain analysis error:', error);
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify({
+                        success: false,
+                        error: error.message,
+                        fallback: 'Use conservative settings for unknown terrain'
+                    }, null, 2)
+                }]
+            };
+        }
+    }
+
+    /**
+     * Handle real-time weather impact analysis
+     */
+    async handleRealTimeWeatherImpact(args) {
+        const { location, vehicle_model } = args;
+        
+        try {
+            // Get current weather (would integrate with weather service)
+            const weather = await this.fetchWeatherData(location, new Date());
+            
+            // Calculate performance impact
+            const impact = this.calculateWeatherPerformanceImpact(weather, vehicle_model);
+            
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify({
+                        success: true,
+                        weather: weather,
+                        performance_impact: impact,
+                        controller_adjustments: impact.recommended_adjustments,
+                        recommendations: impact.recommendations
+                    }, null, 2)
+                }]
+            };
+            
+        } catch (error) {
+            logger.error('Weather impact analysis error:', error);
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify({
+                        success: false,
+                        error: error.message,
+                        fallback: this.generateFallbackWeatherImpact(location)
+                    }, null, 2)
+                }]
+            };
+        }
+    }
+
+    /**
+     * Handle natural language optimization with advanced AI
+     */
+    async handleNaturalLanguageOptimization(args) {
+        const { query, context = {} } = args;
+        
+        try {
+            // Enhanced NLP processing with context
+            const enhancedParameters = nlpProcessor.processQueryWithContext(query, context);
+            
+            // Generate AI-driven optimization
+            const optimization = gemOptimizer.optimizeFromAdvancedNLP(enhancedParameters);
+            
+            // Add real-time adjustments if location is provided
+            if (context.current_location) {
+                const weatherImpact = await this.handleRealTimeWeatherImpact({
+                    location: context.current_location,
+                    vehicle_model: enhancedParameters.vehicle.model || 'e4'
+                });
+                
+                if (weatherImpact.success) {
+                    optimization.weather_adjustments = JSON.parse(weatherImpact.content[0].text).controller_adjustments;
+                }
+            }
+            
+            const response = {
+                success: true,
+                original_query: query,
+                context_used: context,
+                optimization: optimization,
+                nlp_analysis: {
+                    extracted_parameters: enhancedParameters,
+                    confidence: enhancedParameters.confidence,
+                    interpretation: enhancedParameters.interpretation,
+                    suggestions: nlpProcessor.generateAdvancedSuggestions(enhancedParameters)
+                },
+                explanation: this.generateAdvancedExplanation(optimization, enhancedParameters, query),
+                follow_up_suggestions: [
+                    'Would you like me to explain any specific controller setting?',
+                    'Should I save this optimization for future use?',
+                    'Would you like to compare with other optimization scenarios?'
+                ]
+            };
+            
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify(response, null, 2)
+                }]
+            };
+            
+        } catch (error) {
+            logger.error('Natural language optimization error:', error);
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify({
+                        success: false,
+                        error: error.message,
+                        suggestion: 'Try rephrasing your request or providing more specific details about your vehicle and intended use.'
+                    }, null, 2)
+                }]
+            };
+        }
+    }
+
+    /**
+     * Generate radius exploration recommendations
+     */
+    generateRadiusRecommendations(radius, vehicle_type) {
+        const recommendations = [];
+        
+        if (radius > 8) {
+            recommendations.push('Large exploration area - plan multiple shorter trips');
+            recommendations.push('Identify charging opportunities for longer range needs');
+        }
+        
+        if (vehicle_type === 'golf_cart') {
+            recommendations.push('Stick to flatter areas and local roads only');
+            recommendations.push('Verify speed limit compliance (≤25 MPH zones)');
+        } else if (vehicle_type === 'lsv') {
+            recommendations.push('Can handle more challenging terrain up to 25 MPH roads');
+            recommendations.push('Check local LSV regulations and requirements');
+        }
+        
+        recommendations.push('Use legal routing system to verify road access');
+        recommendations.push('Check weather conditions before longer explorations');
+        recommendations.push('Inform others of your planned route and return time');
+        
+        return recommendations;
+    }
+
+    /**
+     * Calculate weather performance impact
+     */
+    calculateWeatherPerformanceImpact(weather, vehicle_model) {
+        const impact = {
+            temperature_effect: 'normal',
+            range_impact: 0,
+            recommended_adjustments: {},
+            recommendations: []
+        };
+        
+        // Temperature impact
+        if (weather.temperature < 32) {
+            impact.temperature_effect = 'severe_cold';
+            impact.range_impact = -35;
+            impact.recommended_adjustments = { 4: +25, 6: -10, 9: -20, 12: -2 };
+            impact.recommendations.push('Allow extra warm-up time');
+            impact.recommendations.push('Monitor battery voltage closely');
+        } else if (weather.temperature < 50) {
+            impact.temperature_effect = 'cold';
+            impact.range_impact = -20;
+            impact.recommended_adjustments = { 4: +15, 6: -5, 9: -10 };
+            impact.recommendations.push('Cold weather reduces battery efficiency');
+        } else if (weather.temperature > 95) {
+            impact.temperature_effect = 'extreme_heat';
+            impact.range_impact = -15;
+            impact.recommended_adjustments = { 4: -15, 7: +10, 12: +2 };
+            impact.recommendations.push('Monitor motor temperature closely');
+            impact.recommendations.push('Take breaks to allow cooling');
+        } else if (weather.temperature > 85) {
+            impact.temperature_effect = 'hot';
+            impact.range_impact = -8;
+            impact.recommended_adjustments = { 4: -8, 12: +1 };
+            impact.recommendations.push('Hot weather increases cooling needs');
+        }
+        
+        // Precipitation impact
+        if (weather.precipitation > 20) {
+            impact.recommended_adjustments[1] = (impact.recommended_adjustments[1] || 0) - 10; // Reduce speed
+            impact.recommended_adjustments[6] = (impact.recommended_adjustments[6] || 0) - 10; // Slower acceleration
+            impact.recommendations.push('Wet conditions - drive carefully and allow extra stopping distance');
+        }
+        
+        return impact;
+    }
+
+    /**
+     * Generate fallback weather impact
+     */
+    generateFallbackWeatherImpact(location) {
+        return {
+            temperature_effect: 'unknown',
+            range_impact: 0,
+            recommended_adjustments: {},
+            recommendations: [
+                'Weather data unavailable - use conservative settings',
+                'Monitor vehicle performance for any issues',
+                'Check local weather conditions manually'
+            ]
+        };
+    }
+
+    /**
+     * Generate advanced explanation for natural language optimization
+     */
+    generateAdvancedExplanation(optimization, parameters, originalQuery) {
+        const explanations = [];
+        
+        explanations.push(`I analyzed your request: "${originalQuery}"`);
+        
+        if (parameters.interpretation) {
+            explanations.push(`My interpretation: ${parameters.interpretation}`);
+        }
+        
+        if (parameters.vehicle.model) {
+            explanations.push(`Optimized for ${parameters.vehicle.model} vehicle`);
+        }
+        
+        if (parameters.priorities && Object.keys(parameters.priorities).length > 0) {
+            const priorityList = Object.entries(parameters.priorities)
+                .sort(([,a], [,b]) => b - a)
+                .map(([key, value]) => `${key} (${value}/10)`)
+                .slice(0, 3);
+            explanations.push(`Priorities identified: ${priorityList.join(', ')}`);
+        }
+        
+        if (optimization.changes && optimization.changes.length > 0) {
+            explanations.push(`Modified ${optimization.changes.length} controller parameters`);
+        }
+        
+        explanations.push(`Analysis confidence: ${Math.round(parameters.confidence * 100)}%`);
+        
+        return explanations.join('. ') + '.';
     }
 
     /**

@@ -120,14 +120,26 @@ class WeatherService {
     }
     
     /**
-     * Get current weather for coordinates
-     * @param {number} lat - Latitude
-     * @param {number} lon - Longitude
+     * Get current weather for coordinates or location string
+     * @param {number|string} lat - Latitude or location string
+     * @param {number} lon - Longitude (if lat is number)
      * @returns {Promise<Object>} Current weather data
      */
     async getCurrentWeather(lat, lon) {
+        // Handle location string input
+        if (typeof lat === 'string') {
+            try {
+                const coords = await this.geocodeLocation(lat);
+                return await this.getCurrentWeather(coords.lat, coords.lon);
+            } catch (error) {
+                console.warn('Geocoding failed, using fallback weather');
+                return this.getFallbackWeather(lat, new Date());
+            }
+        }
+        
         if (!this.isConfigured()) {
-            throw new Error('Weather API key not configured');
+            console.warn('Weather API key not configured, using fallback');
+            return this.getFallbackWeather(`${lat},${lon}`, new Date());
         }
         
         const cacheKey = `current:${lat},${lon}`;
@@ -153,8 +165,262 @@ class WeatherService {
             
         } catch (error) {
             console.error('Current weather error:', error);
-            throw error;
+            return this.getFallbackWeather(`${lat},${lon}`, new Date());
         }
+    }
+    
+    /**
+     * Get real-time weather conditions that affect vehicle settings
+     * @param {string|number} location - Location string or latitude
+     * @param {number} lon - Longitude (if location is latitude)
+     * @returns {Promise<Object>} Weather conditions affecting vehicle performance
+     */
+    async getPerformanceWeather(location, lon) {
+        try {
+            const weather = await this.getCurrentWeather(location, lon);
+            
+            // Calculate performance impact factors
+            const performanceImpact = this.calculatePerformanceImpact(weather);
+            
+            return {
+                ...weather,
+                performanceImpact,
+                recommendations: this.generateWeatherRecommendations(weather, performanceImpact)
+            };
+            
+        } catch (error) {
+            console.error('Performance weather error:', error);
+            return this.getFallbackPerformanceWeather();
+        }
+    }
+    
+    /**
+     * Calculate how weather affects vehicle performance
+     * @param {Object} weather - Weather data
+     * @returns {Object} Performance impact analysis
+     */
+    calculatePerformanceImpact(weather) {
+        const impact = {
+            temperature: this.analyzeTemperatureImpact(weather.temperature),
+            humidity: this.analyzeHumidityImpact(weather.humidity),
+            wind: this.analyzeWindImpact(weather.wind),
+            precipitation: this.analyzePrecipitationImpact(weather.precipitation || 0),
+            overall: 'normal'
+        };
+        
+        // Calculate overall impact
+        const factors = [impact.temperature, impact.humidity, impact.wind, impact.precipitation];
+        const severeCounts = factors.filter(f => f.severity === 'severe').length;
+        const moderateCounts = factors.filter(f => f.severity === 'moderate').length;
+        
+        if (severeCounts > 0) {
+            impact.overall = 'severe';
+        } else if (moderateCounts >= 2) {
+            impact.overall = 'moderate';
+        } else if (moderateCounts >= 1) {
+            impact.overall = 'minor';
+        }
+        
+        return impact;
+    }
+    
+    analyzeTemperatureImpact(temperature) {
+        if (temperature < 32) {
+            return {
+                severity: 'severe',
+                factor: 'freezing',
+                impact: 'Reduced battery capacity, increased current draw',
+                adjustment: { current: +20, acceleration: -10, tempLimit: -2 }
+            };
+        } else if (temperature < 50) {
+            return {
+                severity: 'moderate',
+                factor: 'cold',
+                impact: 'Reduced battery efficiency, slower acceleration',
+                adjustment: { current: +10, acceleration: -5, tempLimit: -1 }
+            };
+        } else if (temperature > 95) {
+            return {
+                severity: 'severe',
+                factor: 'extreme_heat',
+                impact: 'Overheating risk, reduced performance',
+                adjustment: { current: -15, deceleration: +10, tempLimit: +2 }
+            };
+        } else if (temperature > 85) {
+            return {
+                severity: 'moderate',
+                factor: 'hot',
+                impact: 'Increased cooling needs, thermal stress',
+                adjustment: { current: -8, deceleration: +5, tempLimit: +1 }
+            };
+        }
+        
+        return {
+            severity: 'none',
+            factor: 'optimal',
+            impact: 'Optimal temperature conditions',
+            adjustment: {}
+        };
+    }
+    
+    analyzeHumidityImpact(humidity) {
+        if (humidity > 90) {
+            return {
+                severity: 'moderate',
+                factor: 'high_humidity',
+                impact: 'Increased electrical resistance, corrosion risk',
+                adjustment: { regen: +5 }
+            };
+        } else if (humidity < 20) {
+            return {
+                severity: 'minor',
+                factor: 'low_humidity',
+                impact: 'Static electricity buildup risk',
+                adjustment: {}
+            };
+        }
+        
+        return {
+            severity: 'none',
+            factor: 'normal',
+            impact: 'Normal humidity conditions',
+            adjustment: {}
+        };
+    }
+    
+    analyzeWindImpact(wind) {
+        const windSpeed = wind.speed || 0;
+        
+        if (windSpeed > 25) {
+            return {
+                severity: 'severe',
+                factor: 'high_wind',
+                impact: 'Significant drag increase, stability concerns',
+                adjustment: { speed: -10, current: +15 }
+            };
+        } else if (windSpeed > 15) {
+            return {
+                severity: 'moderate',
+                factor: 'moderate_wind',
+                impact: 'Increased power consumption from drag',
+                adjustment: { speed: -5, current: +8 }
+            };
+        }
+        
+        return {
+            severity: 'none',
+            factor: 'calm',
+            impact: 'Minimal wind resistance',
+            adjustment: {}
+        };
+    }
+    
+    analyzePrecipitationImpact(precipitation) {
+        if (precipitation > 0.5) {
+            return {
+                severity: 'severe',
+                factor: 'heavy_rain',
+                impact: 'Reduced traction, visibility, electrical risks',
+                adjustment: { speed: -15, acceleration: -15, deceleration: +10 }
+            };
+        } else if (precipitation > 0.1) {
+            return {
+                severity: 'moderate',
+                factor: 'light_rain',
+                impact: 'Reduced traction, increased stopping distance',
+                adjustment: { speed: -5, acceleration: -8, deceleration: +5 }
+            };
+        }
+        
+        return {
+            severity: 'none',
+            factor: 'dry',
+            impact: 'Optimal traction conditions',
+            adjustment: {}
+        };
+    }
+    
+    /**
+     * Generate weather-based recommendations
+     * @param {Object} weather - Weather data
+     * @param {Object} impact - Performance impact analysis
+     * @returns {Array} Array of recommendations
+     */
+    generateWeatherRecommendations(weather, impact) {
+        const recommendations = [];
+        
+        if (impact.temperature.severity !== 'none') {
+            recommendations.push({
+                type: 'temperature',
+                priority: impact.temperature.severity,
+                message: impact.temperature.impact,
+                action: 'Adjust current and temperature settings based on conditions'
+            });
+        }
+        
+        if (impact.wind.severity !== 'none') {
+            recommendations.push({
+                type: 'wind',
+                priority: impact.wind.severity,
+                message: impact.wind.impact,
+                action: 'Reduce speed and increase power for wind resistance'
+            });
+        }
+        
+        if (impact.precipitation.severity !== 'none') {
+            recommendations.push({
+                type: 'precipitation',
+                priority: impact.precipitation.severity,
+                message: impact.precipitation.impact,
+                action: 'Enable conservative driving mode for safety'
+            });
+        }
+        
+        // Add general recommendations
+        if (weather.temperature < 50) {
+            recommendations.push({
+                type: 'cold_weather',
+                priority: 'moderate',
+                message: 'Cold weather reduces battery performance',
+                action: 'Allow extra warm-up time and monitor battery levels'
+            });
+        }
+        
+        if (weather.temperature > 85) {
+            recommendations.push({
+                type: 'hot_weather',
+                priority: 'moderate',
+                message: 'High temperature increases overheating risk',
+                action: 'Take breaks to allow cooling and monitor motor temperature'
+            });
+        }
+        
+        return recommendations;
+    }
+    
+    /**
+     * Get fallback performance weather when API is unavailable
+     * @returns {Object} Fallback performance weather data
+     */
+    getFallbackPerformanceWeather() {
+        const fallbackWeather = this.getFallbackWeather('Unknown', new Date());
+        
+        return {
+            ...fallbackWeather,
+            performanceImpact: {
+                temperature: { severity: 'none', factor: 'unknown', impact: 'Unknown conditions', adjustment: {} },
+                humidity: { severity: 'none', factor: 'unknown', impact: 'Unknown conditions', adjustment: {} },
+                wind: { severity: 'none', factor: 'unknown', impact: 'Unknown conditions', adjustment: {} },
+                precipitation: { severity: 'none', factor: 'unknown', impact: 'Unknown conditions', adjustment: {} },
+                overall: 'unknown'
+            },
+            recommendations: [{
+                type: 'no_data',
+                priority: 'minor',
+                message: 'Weather data unavailable',
+                action: 'Use conservative settings until weather conditions are known'
+            }]
+        };
     }
     
     /**

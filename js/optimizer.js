@@ -3,7 +3,7 @@
  * GEM T2 Controller Optimizer Engine
  * Core logic for calculating optimal controller settings based on vehicle configuration
  */
-class GEMControllerOptimizer {
+class GEMOptimizer {
     constructor() {
         // Factory default settings for GEM T2 controllers
         this.factoryDefaults = {
@@ -535,5 +535,70 @@ class GEMControllerOptimizer {
         const fieldEffect = (optimized[10] / factory[10]) - 1;
         
         return Math.round((armatureEffect + fieldEffect) * 50);
+    }
+    
+    /**
+     * Get factory default settings
+     * @returns {Object} Factory default controller settings
+     */
+    getFactoryDefaults() {
+        return this.factoryDefaults;
+    }
+    
+    /**
+     * Get function descriptions
+     * @returns {Object} Function number to description mapping
+     */
+    getFunctionDescriptions() {
+        return this.functionDescriptions;
+    }
+    
+    /**
+     * Optimize settings with simplified API
+     * @param {Object} settings - Current settings
+     * @param {string} mode - Optimization mode
+     * @param {Object} vehicleData - Vehicle specifications
+     * @returns {Object} Optimized settings
+     */
+    optimizeSettings(settings, mode, vehicleData = {}) {
+        // Map mode to priorities
+        const priorityMap = {
+            'performance': { speed: 10, acceleration: 8, hillClimbing: 6, range: 2, regen: 3 },
+            'efficiency': { speed: 3, acceleration: 3, hillClimbing: 5, range: 10, regen: 8 },
+            'balanced': { speed: 5, acceleration: 5, hillClimbing: 5, range: 5, regen: 5 },
+            'commute': { speed: 4, acceleration: 3, hillClimbing: 4, range: 8, regen: 7 },
+            'weekend': { speed: 6, acceleration: 5, hillClimbing: 7, range: 6, regen: 5 }
+        };
+        
+        const priorities = priorityMap[mode] || priorityMap['balanced'];
+        
+        // Create input data structure
+        const inputData = {
+            vehicle: {
+                model: vehicleData.model || 'e4',
+                motorCondition: vehicleData.motorCondition || 'good'
+            },
+            battery: {
+                type: vehicleData.batteryType?.includes('lithium') ? 'lithium' : 'lead',
+                voltage: vehicleData.batteryVoltage || 72,
+                capacity: vehicleData.batteryCapacity || 150,
+                age: vehicleData.batteryAge || 'good'
+            },
+            wheel: {
+                tireDiameter: vehicleData.tireDiameter || 22,
+                gearRatio: vehicleData.gearRatio || 8.91
+            },
+            environment: {
+                terrain: vehicleData.terrain || 'mixed',
+                vehicleLoad: vehicleData.vehicleLoad || 'medium',
+                temperatureRange: vehicleData.temperatureRange || 'mild',
+                hillGrade: vehicleData.hillGrade || 10
+            },
+            priorities
+        };
+        
+        // Run optimization
+        const result = this.optimizeController(inputData, settings);
+        return result.optimizedSettings;
     }
 }

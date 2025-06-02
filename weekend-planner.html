@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEM Weekend Outing Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-green-700 text-white p-4 no-print">
+        <div class="container mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold">🌲 GEM Weekend Outing Planner</h1>
+                <p class="text-sm opacity-90">Smart route planning with legal road filtering</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="mobile-route-map.html" class="lg:hidden bg-green-600 px-3 py-1 rounded text-sm hover:bg-green-500">
+                    📱 Mobile Map
+                </a>
+                <a href="route-map.html" class="hidden lg:inline bg-green-600 px-3 py-1 rounded text-sm hover:bg-green-500">
+                    🗺️ Interactive Map
+                </a>
+                <a href="index-new.html" class="text-sm hover:underline">← Back to Optimizer</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Vehicle Status Bar -->
+        <div id="vehicle-status" class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-6">
+                    <div>
+                        <span class="text-sm text-gray-600">Vehicle:</span>
+                        <span id="vehicle-model-display" class="font-medium">GEM e4</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-600">Classification:</span>
+                        <span id="vehicle-class-display" class="font-medium text-green-600">Golf Cart (≤25 MPH)</span>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-600">Legal Roads:</span>
+                        <span id="legal-roads-display" class="font-medium">Local roads only</span>
+                    </div>
+                </div>
+                <button onclick="location.href='index-new.html'" class="text-sm text-blue-600 hover:underline">
+                    Change Vehicle
+                </button>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-6">
+            <!-- Left Column: Trip Planning Form -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold mb-6">Plan Your Weekend Adventure</h2>
+                    
+                    <!-- Quick Options -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-gray-800">Quick Options</h3>
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="towing-mode" class="mr-2 text-green-600 focus:ring-green-500">
+                                    <span class="text-sm">🚐 Towing Mode</span>
+                                </label>
+                                <div class="flex items-center">
+                                    <label for="exploration-radius" class="text-sm mr-2">Radius:</label>
+                                    <select id="exploration-radius" class="text-sm border rounded px-2 py-1">
+                                        <option value="2">2 miles</option>
+                                        <option value="5" selected>5 miles</option>
+                                        <option value="10">10 miles</option>
+                                        <option value="15">15 miles</option>
+                                        <option value="20">20 miles</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="optimization-factors"></div>
+                    </div>
+
+                    <!-- Route Form -->
+                    <div class="space-y-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="trip-start" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Starting Point
+                                </label>
+                                <input type="text" id="trip-start" placeholder="Current location or address" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="trip-destination" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Destination
+                                </label>
+                                <input type="text" id="trip-destination" placeholder="Where do you want to go?" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <div id="route-legality"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="trip-date" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Trip Date
+                                </label>
+                                <input type="date" id="trip-date" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="trip-time" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Departure Time
+                                </label>
+                                <input type="time" id="trip-time" value="09:00"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="passengers" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Passengers
+                                </label>
+                                <select id="passengers" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <option value="1">Just me</option>
+                                    <option value="2">2 people</option>
+                                    <option value="3-4">3-4 people</option>
+                                    <option value="full">Full capacity</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="route-preview" class="hidden"></div>
+
+                        <div class="flex justify-end mt-6">
+                            <button id="generate-route" class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                🗺️ Generate Optimized Route
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="route-results" class="mt-6 hidden"></div>
+            </div>
+
+            <!-- Right Column: Example Routes -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="font-semibold text-gray-800 mb-4">📍 Popular GEM Routes</h3>
+                    <div id="example-routes" class="space-y-3">
+                        <!-- Example routes will be populated here -->
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-medium text-blue-900 mb-2">💡 Weekend Tips</h4>
+                        <ul class="text-sm text-blue-800 space-y-1">
+                            <li>• Check battery charge before departing</li>
+                            <li>• Plan charging stops for routes >10 miles</li>
+                            <li>• Avoid peak traffic hours</li>
+                            <li>• Bring sun protection for open vehicles</li>
+                            <li>• Check local GEM regulations at destination</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-medium text-gray-700 mb-2">🛡️ Safety Reminders</h4>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• Always wear seatbelts</li>
+                            <li>• Use lights in low visibility</li>
+                            <li>• Stay in designated lanes</li>
+                            <li>• Yield to faster traffic</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white p-4 mt-12 no-print">
+        <div class="container mx-auto text-center text-sm">
+            <p>© 2024 GEM Weekend Outing Planner. Not affiliated with GEM, Polaris, or General Electric.</p>
+            <p class="mt-1">Always verify local regulations and road restrictions before traveling.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/weekend-planner.js"></script>
+    <script>
+        // Initialize planner with vehicle data
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get vehicle data from storage or use defaults
+            const vehicleData = JSON.parse(localStorage.getItem('gem-vehicle-data') || '{}');
+            
+            // Update vehicle status display
+            if (vehicleData.model) {
+                document.getElementById('vehicle-model-display').textContent = 
+                    `GEM ${vehicleData.model.toUpperCase()}`;
+            }
+            
+            // Determine classification
+            const speed = vehicleData.currentSpeed || 25;
+            const classification = speed > 25 ? 'lsv' : 'golf-cart';
+            
+            if (classification === 'lsv') {
+                document.getElementById('vehicle-class-display').textContent = 'LSV (20-25 MPH)';
+                document.getElementById('vehicle-class-display').className = 'font-medium text-blue-600';
+                document.getElementById('legal-roads-display').textContent = 'Roads ≤35 MPH';
+            }
+            
+            // Initialize weekend planner
+            weekendPlanner.init({ 
+                ...vehicleData, 
+                classification 
+            });
+            
+            // Set default date to next Saturday
+            const today = new Date();
+            const nextSaturday = new Date();
+            nextSaturday.setDate(today.getDate() + (6 - today.getDay() + 7) % 7);
+            document.getElementById('trip-date').value = nextSaturday.toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>

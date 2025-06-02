@@ -268,6 +268,106 @@ input[type="range"]::-moz-range-thumb {
     80%, 100% { content: ''; }
 }
 
+/* Mobile-specific styles */
+.current-location-marker {
+    position: relative;
+    width: 20px;
+    height: 20px;
+}
+
+.location-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    background: #4285F4;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 2s infinite;
+    opacity: 0.6;
+}
+
+.location-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border: 2px solid #4285F4;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.6;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
+}
+
+/* Touch-friendly mobile controls */
+@media (max-width: 768px) {
+    /* Larger touch targets */
+    button, .button {
+        min-height: 44px;
+        padding: 12px 16px;
+    }
+    
+    /* Prevent text selection on mobile */
+    .no-select {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    
+    /* Smooth scrolling */
+    .scroll-smooth {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+    
+    /* Hide scrollbars but keep functionality */
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* iOS specific styles */
+@supports (-webkit-touch-callout: none) {
+    /* iOS safe area handling */
+    .ios-safe-top {
+        padding-top: env(safe-area-inset-top);
+    }
+    
+    .ios-safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    /* Prevent zoom on input focus */
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
 /* Print styles */
 @media print {
     .no-print { display: none !important; }

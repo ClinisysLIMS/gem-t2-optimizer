@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEM Legal Route Map</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        #route-map { height: 600px; }
+        .route-segment { cursor: pointer; transition: all 0.2s; }
+        .route-segment:hover { background-color: #f3f4f6; }
+        .indicator-dot { 
+            display: inline-block; 
+            width: 12px; 
+            height: 12px; 
+            border-radius: 50%; 
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-green-700 text-white p-4 no-print">
+        <div class="container mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold">🗺️ GEM Legal Route Map</h1>
+                <p class="text-sm opacity-90">Interactive routing with road legality filtering</p>
+            </div>
+            <a href="weekend-planner.html" class="text-sm hover:underline">← Back to Trip Planner</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+        <div class="grid lg:grid-cols-4 gap-6">
+            <!-- Left Panel: Route Planning -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow p-4 mb-4">
+                    <h3 class="font-semibold mb-3">Route Planning</h3>
+                    
+                    <!-- Vehicle Info -->
+                    <div class="mb-4 p-3 bg-gray-50 rounded">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium">Vehicle Type</span>
+                            <span id="vehicle-type" class="text-sm font-bold text-green-600">Golf Cart</span>
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            <div>Max Speed: <span id="vehicle-speed" class="font-medium">25 MPH</span></div>
+                            <div>Legal Roads: <span id="legal-roads" class="font-medium">≤25 MPH</span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Route Input -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">From</label>
+                            <input type="text" id="route-start" placeholder="Starting location" 
+                                   class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">To</label>
+                            <input type="text" id="route-end" placeholder="Destination" 
+                                   class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <button id="plan-route" class="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
+                            Calculate Legal Route
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Quick Examples -->
+                <div class="bg-white rounded-lg shadow p-4 mb-4">
+                    <h4 class="font-medium mb-2">Quick Examples</h4>
+                    <div class="space-y-2">
+                        <button class="example-route w-full text-left p-2 bg-gray-50 rounded hover:bg-gray-100 text-sm" 
+                                data-start="32.7341,-117.1446" data-end="32.7157,-117.1611">
+                            Balboa Park → Downtown
+                        </button>
+                        <button class="example-route w-full text-left p-2 bg-gray-50 rounded hover:bg-gray-100 text-sm" 
+                                data-start="32.6859,-117.1831" data-end="32.6807,-117.1786">
+                            Coronado Ferry → Hotel Del
+                        </button>
+                        <button class="example-route w-full text-left p-2 bg-gray-50 rounded hover:bg-gray-100 text-sm" 
+                                data-start="32.7157,-117.1611" data-end="32.6735,-117.2425">
+                            San Carlos → Point Loma
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Legend -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h4 class="font-medium mb-3">Map Legend</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center">
+                            <span class="indicator-dot" style="background: #22c55e;"></span>
+                            <span>Legal Roads</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="indicator-dot" style="background: #eab308;"></span>
+                            <span>Caution (Check local laws)</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="indicator-dot" style="background: #dc2626;"></span>
+                            <span>Illegal (Too fast)</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="indicator-dot" style="background: #3b82f6;"></span>
+                            <span>Cart Paths</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="indicator-dot" style="background: #8b5cf6;"></span>
+                            <span>LSV Lanes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Center: Map -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div id="route-map"></div>
+                    <div id="map-loading" class="hidden absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="spinner mx-auto mb-2"></div>
+                            <p class="text-sm text-gray-600">Calculating legal route...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Route Summary -->
+                <div id="route-summary" class="hidden mt-4 bg-white rounded-lg shadow p-4">
+                    <h4 class="font-semibold mb-2">Route Summary</h4>
+                    <div class="grid grid-cols-3 gap-4 text-sm">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900" id="route-distance">0</div>
+                            <div class="text-xs text-gray-600">Miles</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-gray-900" id="route-time">0</div>
+                            <div class="text-xs text-gray-600">Minutes</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" id="route-status">-</div>
+                            <div class="text-xs text-gray-600">Status</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel: Route Details -->
+            <div class="lg:col-span-1">
+                <div id="route-details" class="bg-white rounded-lg shadow p-4 hidden">
+                    <h3 class="font-semibold mb-3">Route Details</h3>
+                    
+                    <!-- Route Segments -->
+                    <div id="route-segments" class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- Segments will be populated here -->
+                    </div>
+                    
+                    <!-- Warnings -->
+                    <div id="route-warnings" class="mt-4 hidden">
+                        <h4 class="font-medium text-red-600 mb-2">⚠️ Warnings</h4>
+                        <div id="warning-list" class="space-y-2 text-sm">
+                            <!-- Warnings will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Recommendations -->
+                    <div id="route-recommendations" class="mt-4">
+                        <h4 class="font-medium text-blue-600 mb-2">💡 Recommendations</h4>
+                        <div id="recommendation-list" class="space-y-2 text-sm text-gray-600">
+                            <!-- Recommendations will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Special Routes -->
+                <div class="bg-white rounded-lg shadow p-4 mt-4">
+                    <h4 class="font-semibold mb-3">🛤️ Special Routes Nearby</h4>
+                    <div class="space-y-3 text-sm">
+                        <div class="p-3 bg-blue-50 rounded">
+                            <div class="font-medium text-blue-900">Balboa Park Cart Paths</div>
+                            <div class="text-xs text-blue-700 mt-1">
+                                2.3 miles of dedicated cart paths<br>
+                                Open: Sunrise to sunset
+                            </div>
+                        </div>
+                        <div class="p-3 bg-purple-50 rounded">
+                            <div class="font-medium text-purple-900">Coronado LSV Lane</div>
+                            <div class="text-xs text-purple-700 mt-1">
+                                3.5 mile dedicated LSV route<br>
+                                Speed limit: 25 MPH
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/legal-routing.js"></script>
+    <script>
+        let routingSystem;
+        let currentRoute;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Get vehicle data
+            const vehicleData = JSON.parse(localStorage.getItem('gem-vehicle-data') || '{}');
+            const speed = vehicleData.currentSpeed || 25;
+            
+            // Initialize routing system
+            routingSystem = new LegalRoutingSystem();
+            const classification = await routingSystem.init(
+                { currentSpeed: speed },
+                document.getElementById('route-map')
+            );
+            
+            // Update UI with classification
+            updateVehicleInfo(classification);
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
+        
+        function updateVehicleInfo(classification) {
+            document.getElementById('vehicle-type').textContent = classification.name;
+            document.getElementById('vehicle-type').className = `text-sm font-bold ${
+                classification.type === 'golf-cart' ? 'text-green-600' : 'text-blue-600'
+            }`;
+            document.getElementById('vehicle-speed').textContent = classification.actualSpeed + ' MPH';
+            document.getElementById('legal-roads').textContent = `≤${classification.maxRoadSpeed} MPH`;
+        }
+        
+        function setupEventListeners() {
+            // Plan route button
+            document.getElementById('plan-route').addEventListener('click', planRoute);
+            
+            // Example routes
+            document.querySelectorAll('.example-route').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const start = this.dataset.start.split(',');
+                    const end = this.dataset.end.split(',');
+                    
+                    document.getElementById('route-start').value = this.textContent.split('→')[0].trim();
+                    document.getElementById('route-end').value = this.textContent.split('→')[1].trim();
+                    
+                    planRouteWithCoords(
+                        { lat: parseFloat(start[0]), lon: parseFloat(start[1]) },
+                        { lat: parseFloat(end[0]), lon: parseFloat(end[1]) }
+                    );
+                });
+            });
+        }
+        
+        async function planRoute() {
+            const start = document.getElementById('route-start').value;
+            const end = document.getElementById('route-end').value;
+            
+            if (!start || !end) {
+                alert('Please enter both start and end locations');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('map-loading').classList.remove('hidden');
+            
+            // For demo, use geocoding service or default coords
+            // In production, integrate with geocoding API
+            const startCoords = { lat: 32.7341, lon: -117.1446 }; // Balboa Park
+            const endCoords = { lat: 32.7157, lon: -117.1611 }; // Downtown
+            
+            await planRouteWithCoords(startCoords, endCoords);
+        }
+        
+        async function planRouteWithCoords(start, end) {
+            // Show loading
+            document.getElementById('map-loading').classList.remove('hidden');
+            
+            try {
+                // Plan legal route
+                currentRoute = await routingSystem.planLegalRoute(start, end);
+                
+                if (currentRoute.success) {
+                    // Display route on map
+                    routingSystem.displayRoute(currentRoute);
+                    
+                    // Update UI
+                    displayRouteDetails(currentRoute);
+                    
+                    // Generate report
+                    const report = routingSystem.generateRouteReport(currentRoute);
+                    displayRouteReport(report);
+                } else {
+                    alert('Unable to find route: ' + currentRoute.error);
+                }
+            } catch (error) {
+                console.error('Routing error:', error);
+                alert('Error planning route');
+            } finally {
+                document.getElementById('map-loading').classList.add('hidden');
+            }
+        }
+        
+        function displayRouteDetails(route) {
+            // Show panels
+            document.getElementById('route-summary').classList.remove('hidden');
+            document.getElementById('route-details').classList.remove('hidden');
+            
+            // Update summary
+            document.getElementById('route-distance').textContent = route.distance;
+            document.getElementById('route-time').textContent = route.duration;
+            
+            const statusEl = document.getElementById('route-status');
+            if (route.isLegal) {
+                statusEl.textContent = '✅ Legal';
+                statusEl.className = 'text-2xl font-bold text-green-600';
+            } else {
+                statusEl.textContent = '❌ Illegal';
+                statusEl.className = 'text-2xl font-bold text-red-600';
+            }
+            
+            // Display segments
+            const segmentsEl = document.getElementById('route-segments');
+            segmentsEl.innerHTML = route.segments.map((segment, index) => {
+                const indicator = routingSystem.getVisualIndicator(segment.legality.status);
+                return `
+                    <div class="route-segment p-3 border rounded ${indicator.borderClass} ${indicator.bgClass}">
+                        <div class="flex items-start">
+                            <span class="text-lg mr-2">${indicator.icon}</span>
+                            <div class="flex-1">
+                                <div class="font-medium ${indicator.textClass}">${segment.name}</div>
+                                <div class="text-xs text-gray-600 mt-1">
+                                    ${segment.distance} mi • ${segment.instruction}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Show warnings if needed
+            if (!route.isLegal || route.hasCautions) {
+                document.getElementById('route-warnings').classList.remove('hidden');
+                const warningList = document.getElementById('warning-list');
+                warningList.innerHTML = '';
+                
+                if (!route.isLegal) {
+                    warningList.innerHTML += `
+                        <div class="p-2 bg-red-50 text-red-700 rounded">
+                            This route contains ${route.illegalCount} illegal road segment(s) for your vehicle
+                        </div>
+                    `;
+                }
+                
+                if (route.hasCautions) {
+                    warningList.innerHTML += `
+                        <div class="p-2 bg-yellow-50 text-yellow-700 rounded">
+                            ${route.cautionCount} road segment(s) require checking local regulations
+                        </div>
+                    `;
+                }
+            } else {
+                document.getElementById('route-warnings').classList.add('hidden');
+            }
+        }
+        
+        function displayRouteReport(report) {
+            const recList = document.getElementById('recommendation-list');
+            recList.innerHTML = report.recommendations.map(rec => `
+                <div class="p-2 bg-blue-50 text-blue-700 rounded">• ${rec}</div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

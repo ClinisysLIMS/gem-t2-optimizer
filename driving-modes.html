@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEM Driving Modes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .mode-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        .mode-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.15);
+        }
+        .mode-card.active {
+            border-color: var(--mode-color);
+            box-shadow: 0 8px 25px -5px var(--mode-color-alpha);
+        }
+        .mode-card.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .mode-card.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        .feature-pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin: 2px;
+        }
+        .settings-comparison {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+        .change-indicator {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        .increase { color: #22c55e; }
+        .decrease { color: #ef4444; }
+        .unchanged { color: #6b7280; }
+        .usage-timeline {
+            height: 200px;
+            overflow-y: auto;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 16px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 9px;
+            top: 14px;
+            width: 2px;
+            height: calc(100% + 2px);
+            background: #e5e7eb;
+        }
+        .timeline-item:last-child::after {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-green-700 text-white p-4 no-print">
+        <div class="container mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold">🎯 GEM Driving Modes</h1>
+                <p class="text-sm opacity-90">Specialized controller settings for every scenario</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="accessories-config.html" class="text-sm hover:underline">🔧 Accessories</a>
+                <a href="index-new.html" class="text-sm hover:underline">← Back to Optimizer</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Current Mode Status -->
+        <div id="current-mode-status" class="bg-white rounded-lg shadow p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div id="current-mode-icon" class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-2xl">
+                        🚗
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold" id="current-mode-name">Default Mode</h2>
+                        <p class="text-sm text-gray-600" id="current-mode-description">Standard operation with factory settings</p>
+                        <p class="text-xs text-gray-500" id="current-mode-time">No active mode</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="deactivate-mode" onclick="deactivateCurrentMode()" 
+                            class="hidden px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50">
+                        Deactivate
+                    </button>
+                    <button onclick="showModeRecommendations()" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        💡 Get Recommendations
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Mode Selection -->
+        <div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-8">
+            <!-- Mode cards will be dynamically populated here -->
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Left Column: Mode Details -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Mode Information Panel -->
+                <div id="mode-info-panel" class="hidden bg-white rounded-lg shadow p-6">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="flex items-center space-x-4">
+                            <div id="selected-mode-icon" class="w-16 h-16 rounded-full flex items-center justify-center text-3xl" 
+                                 style="background: var(--mode-color-light);">
+                            </div>
+                            <div>
+                                <h3 id="selected-mode-name" class="text-2xl font-bold"></h3>
+                                <p id="selected-mode-description" class="text-gray-600"></p>
+                                <p id="selected-mode-usecase" class="text-sm text-gray-500 mt-1"></p>
+                            </div>
+                        </div>
+                        <button id="activate-mode-btn" onclick="activateSelectedMode()" 
+                                class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium">
+                            Activate Mode
+                        </button>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-gray-800 mb-3">Features</h4>
+                        <div id="mode-features" class="flex flex-wrap gap-2">
+                            <!-- Features will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Controller Settings Comparison -->
+                    <div class="mb-6">
+                        <h4 class="font-semibold text-gray-800 mb-3">Controller Settings Changes</h4>
+                        <div class="settings-comparison bg-gray-50 rounded-lg p-4">
+                            <div id="settings-comparison" class="space-y-1">
+                                <!-- Settings comparison will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Impact Analysis -->
+                    <div id="impact-analysis" class="grid md:grid-cols-3 gap-4">
+                        <!-- Impact analysis will be populated here -->
+                    </div>
+
+                    <!-- Tips and Warnings -->
+                    <div class="mt-6">
+                        <div id="mode-tips" class="bg-blue-50 rounded-lg p-4 mb-4">
+                            <h5 class="font-medium text-blue-900 mb-2">💡 Tips</h5>
+                            <div id="tips-list" class="space-y-1 text-sm text-blue-800">
+                                <!-- Tips will be populated here -->
+                            </div>
+                        </div>
+
+                        <div id="mode-warnings" class="hidden bg-yellow-50 rounded-lg p-4">
+                            <h5 class="font-medium text-yellow-900 mb-2">⚠️ Warnings</h5>
+                            <div id="warnings-list" class="space-y-1 text-sm text-yellow-800">
+                                <!-- Warnings will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Mode Creator -->
+                <div id="custom-mode-creator" class="hidden bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-bold mb-4">Create Custom Mode</h3>
+                    <form id="custom-mode-form">
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Mode Name</label>
+                                <input type="text" id="custom-mode-name" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Base Mode</label>
+                                <select id="custom-base-mode" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <!-- Base modes will be populated here -->
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea id="custom-mode-description" rows="2"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+                        </div>
+
+                        <div class="mb-6">
+                            <h4 class="font-medium text-gray-800 mb-3">Controller Adjustments</h4>
+                            <div id="custom-settings-grid" class="grid md:grid-cols-2 gap-4">
+                                <!-- Custom settings will be populated here -->
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="hideCustomModeCreator()" 
+                                    class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                Create Custom Mode
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Sidebar -->
+            <div class="space-y-6">
+                <!-- Mode History -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">📈 Recent Usage</h3>
+                    <div id="mode-history" class="usage-timeline">
+                        <p class="text-sm text-gray-500">No mode history available</p>
+                    </div>
+                </div>
+
+                <!-- Usage Statistics -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">📊 Usage Stats</h3>
+                    <div id="usage-stats" class="space-y-3">
+                        <p class="text-sm text-gray-500">No usage data available</p>
+                    </div>
+                </div>
+
+                <!-- Power Impact -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">⚡ Power Management</h3>
+                    <div id="power-management">
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Accessory Usage</span>
+                                    <span id="accessory-power">0W</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div id="accessory-power-bar" class="bg-blue-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span>Range Impact</span>
+                                    <span id="range-impact-value">0%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div id="range-impact-bar" class="bg-red-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">⚡ Quick Actions</h3>
+                    <div class="space-y-2">
+                        <button onclick="showCustomModeCreator()" 
+                                class="w-full py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            ➕ Create Custom Mode
+                        </button>
+                        <button onclick="exportModeSettings()" 
+                                class="w-full py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            📄 Export Settings
+                        </button>
+                        <button onclick="scheduleModeSwitch()" 
+                                class="w-full py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            ⏰ Schedule Mode
+                        </button>
+                        <button onclick="resetToDefault()" 
+                                class="w-full py-2 px-4 border border-red-300 text-red-600 rounded-md text-sm font-medium hover:bg-red-50">
+                            🔄 Reset to Default
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mode Recommendations Modal -->
+    <div id="recommendations-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-lg font-bold">💡 Mode Recommendations</h3>
+                <button onclick="closeRecommendationsModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="recommendations-content">
+                <!-- Recommendations will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Mode Activation Confirmation -->
+    <div id="activation-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-bold mb-4">Activate Driving Mode</h3>
+            <div id="activation-content">
+                <!-- Activation content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/driving-modes.js"></script>
+    <script src="js/accessories-manager.js"></script>
+    <script src="js/ai-assistant.js"></script>
+    <script src="js/ai-ui-integration.js"></script>
+    <script>
+        let drivingModes;
+        let accessoriesManager;
+        let selectedModeId = null;
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            drivingModes = new DrivingModesManager();
+            accessoriesManager = new AccessoriesManager();
+            
+            // Render initial UI
+            renderModeCards();
+            updateCurrentModeStatus();
+            updateModeHistory();
+            updateUsageStats();
+            updatePowerManagement();
+            
+            // Setup custom mode form
+            setupCustomModeForm();
+        });
+        
+        /**
+         * Render mode cards grid
+         */
+        function renderModeCards() {
+            const container = document.querySelector('.grid.lg\\:grid-cols-4');
+            const allModes = drivingModes.getAllModes();
+            
+            container.innerHTML = Object.entries(allModes).map(([id, mode]) => {
+                const isActive = drivingModes.currentMode?.id === id;
+                const vehicleData = JSON.parse(localStorage.getItem('gem-vehicle-data') || '{}');
+                const compatibility = drivingModes.getModeImpactAnalysis(id, vehicleData)?.compatibility;
+                const isCompatible = !compatibility || compatibility.compatible;
+                
+                return `
+                    <div class="mode-card bg-white rounded-lg shadow p-6 ${isActive ? 'active' : ''} ${!isCompatible ? 'disabled' : ''}"
+                         style="--mode-color: ${mode.color}; --mode-color-alpha: ${mode.color}40; --mode-color-light: ${mode.color}20;"
+                         onclick="${isCompatible ? `selectMode('${id}')` : `showCompatibilityIssues('${id}')`}">
+                        
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-3xl">${mode.icon}</span>
+                            ${isActive ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Active</span>' : ''}
+                            ${!isCompatible ? '<span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Incompatible</span>' : ''}
+                        </div>
+                        
+                        <h3 class="font-bold text-lg mb-2" style="color: ${mode.color};">${mode.name}</h3>
+                        <p class="text-sm text-gray-600 mb-4">${mode.description}</p>
+                        
+                        <div class="mb-4">
+                            <div class="text-xs text-gray-500 mb-1">Speed Range</div>
+                            <div class="text-sm font-medium">
+                                ${typeof mode.settings.maxSpeed === 'number' ? 
+                                    `Up to ${mode.settings.maxSpeed} MPH` : 
+                                    mode.settings.maxSpeed === 'maximum' ? 'Maximum Available' : 'Variable'
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-1">
+                            ${mode.features.slice(0, 2).map(feature => 
+                                `<span class="feature-pill bg-gray-100 text-gray-700">${feature}</span>`
+                            ).join('')}
+                            ${mode.features.length > 2 ? 
+                                `<span class="feature-pill bg-gray-100 text-gray-500">+${mode.features.length - 2}</span>` : ''
+                            }
+                        </div>
+                        
+                        ${mode.isCustom ? `
+                            <div class="mt-3 pt-3 border-t">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-500">Custom Mode</span>
+                                    <button onclick="event.stopPropagation(); deleteCustomMode('${id}')" 
+                                            class="text-red-600 hover:text-red-800 text-xs">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        /**
+         * Select a mode for detailed view
+         */
+        function selectMode(modeId) {
+            selectedModeId = modeId;
+            const mode = drivingModes.getAllModes()[modeId];
+            const panel = document.getElementById('mode-info-panel');
+            
+            // Update panel content
+            document.getElementById('selected-mode-icon').textContent = mode.icon;
+            document.getElementById('selected-mode-name').textContent = mode.name;
+            document.getElementById('selected-mode-description').textContent = mode.description;
+            document.getElementById('selected-mode-usecase').textContent = mode.useCase || '';
+            
+            // Set CSS variables for styling
+            panel.style.setProperty('--mode-color', mode.color);
+            panel.style.setProperty('--mode-color-light', mode.color + '20');
+            
+            // Update features
+            const featuresContainer = document.getElementById('mode-features');
+            featuresContainer.innerHTML = mode.features.map(feature => 
+                `<span class="feature-pill" style="background: ${mode.color}20; color: ${mode.color};">${feature}</span>`
+            ).join('');
+            
+            // Update settings comparison
+            updateSettingsComparison(mode);
+            
+            // Update impact analysis
+            updateImpactAnalysis(modeId);
+            
+            // Update tips and warnings
+            updateTipsAndWarnings(mode);
+            
+            // Show panel
+            panel.classList.remove('hidden');
+            
+            // Hide custom mode creator if visible
+            document.getElementById('custom-mode-creator').classList.add('hidden');
+        }
+        
+        /**
+         * Update settings comparison
+         */
+        function updateSettingsComparison(mode) {
+            const container = document.getElementById('settings-comparison');
+            const defaultSettings = drivingModes.getDefaultSettings().controllerSettings;
+            const modeSettings = mode.controllerAdjustments;
+            
+            const functionNames = {
+                1: 'MPH Scaling',
+                3: 'Acceleration Pot Gain',
+                4: 'Max Armature Current',
+                6: 'Acceleration Rate',
+                7: 'Deceleration Rate',
+                8: 'Max Field Current',
+                9: 'Regen Current',
+                10: 'Map Select',
+                11: 'Turf Mode',
+                12: 'Motor Temp Limit',
+                20: 'MPH Overspeed'
+            };
+            
+            container.innerHTML = Object.entries(modeSettings).map(([func, value]) => {
+                const defaultValue = defaultSettings[func];
+                const change = value - defaultValue;
+                const changePercent = defaultValue > 0 ? Math.round((change / defaultValue) * 100) : 0;
+                
+                let changeClass = 'unchanged';
+                let changeText = 'No change';
+                
+                if (change > 0) {
+                    changeClass = 'increase';
+                    changeText = `+${changePercent}%`;
+                } else if (change < 0) {
+                    changeClass = 'decrease';
+                    changeText = `${changePercent}%`;
+                }
+                
+                return `
+                    <div class="setting-row">
+                        <span class="text-sm text-gray-700">F.${func} ${functionNames[func] || 'Unknown'}</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-500">${defaultValue} → ${value}</span>
+                            <span class="change-indicator ${changeClass}">${changeText}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        /**
+         * Update impact analysis
+         */
+        function updateImpactAnalysis(modeId) {
+            const vehicleData = JSON.parse(localStorage.getItem('gem-vehicle-data') || '{}');
+            const analysis = drivingModes.getModeImpactAnalysis(modeId, vehicleData);
+            const container = document.getElementById('impact-analysis');
+            
+            if (!analysis) {
+                container.innerHTML = '<p class="text-sm text-gray-500">Analysis not available</p>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <h5 class="font-medium text-blue-900 mb-2">Performance</h5>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Top Speed:</span>
+                            <span class="${analysis.performance.topSpeed.change >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                ${analysis.performance.topSpeed.change >= 0 ? '+' : ''}${analysis.performance.topSpeed.change.toFixed(1)}%
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Acceleration:</span>
+                            <span class="${analysis.performance.acceleration.change >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                ${analysis.performance.acceleration.change >= 0 ? '+' : ''}${analysis.performance.acceleration.change.toFixed(1)}%
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Power:</span>
+                            <span class="${analysis.performance.power.change >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                ${analysis.performance.power.change >= 0 ? '+' : ''}${analysis.performance.power.change.toFixed(1)}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-50 rounded-lg p-4">
+                    <h5 class="font-medium text-yellow-900 mb-2">Efficiency</h5>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Range:</span>
+                            <span class="${analysis.efficiency.estimatedRange.change >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                ${analysis.efficiency.estimatedRange.change >= 0 ? '+' : ''}${analysis.efficiency.estimatedRange.change.toFixed(1)}%
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Regeneration:</span>
+                            <span class="${analysis.efficiency.regeneration.change >= 0 ? 'text-green-600' : 'text-red-600'}">
+                                ${analysis.efficiency.regeneration.change >= 0 ? '+' : ''}${analysis.efficiency.regeneration.change.toFixed(1)}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-green-50 rounded-lg p-4">
+                    <h5 class="font-medium text-green-900 mb-2">Safety</h5>
+                    <div class="text-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <span>Safety Level:</span>
+                            <span class="px-2 py-1 rounded-full text-xs font-medium
+                                ${analysis.safety.level === 'high' ? 'bg-green-100 text-green-800' :
+                                  analysis.safety.level === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'}">
+                                ${analysis.safety.level.toUpperCase()}
+                            </span>
+                        </div>
+                        <div class="space-y-1">
+                            ${analysis.safety.features.map(feature => 
+                                `<div class="text-xs text-green-700">• ${feature}</div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        /**
+         * Update tips and warnings
+         */
+        function updateTipsAndWarnings(mode) {
+            const tipsContainer = document.getElementById('tips-list');
+            const warningsContainer = document.getElementById('warnings-list');
+            const warningsSection = document.getElementById('mode-warnings');
+            
+            // Update tips
+            if (mode.tips && mode.tips.length > 0) {
+                tipsContainer.innerHTML = mode.tips.map(tip => 
+                    `<div>• ${tip}</div>`
+                ).join('');
+            } else {
+                tipsContainer.innerHTML = '<div>No specific tips for this mode</div>';
+            }
+            
+            // Update warnings
+            const vehicleData = JSON.parse(localStorage.getItem('gem-vehicle-data') || '{}');
+            const analysis = drivingModes.getModeImpactAnalysis(selectedModeId, vehicleData);
+            
+            let warnings = [];
+            if (analysis?.compatibility?.warnings) {
+                warnings = warnings.concat(analysis.compatibility.warnings);
+            }
+            if (analysis?.compatibility?.issues) {
+                warnings = warnings.concat(analysis.compatibility.issues);
+            }
+            
+            if (warnings.length > 0) {
+                warningsContainer.innerHTML = warnings.map(warning => 
+                    `<div>• ${warning}</div>`
+                ).join('');
+                warningsSection.classList.remove('hidden');
+            } else {
+                warningsSection.classList.add('hidden');
+            }
+        }
+        
+        /**
+         * Activate selected mode
+         */
+        function activateSelectedMode() {
+            if (!selectedModeId) return;
+            
+            const mode = drivingModes.getAllModes()[selectedModeId];
+            
+            // Show confirmation modal for modes with security requirements
+            if (mode.security) {
+                showActivationModal(selectedModeId, mode);
+                return;
+            }
+            
+            try {
+                const result = drivingModes.activateMode(selectedModeId);
+                
+                if (result.success) {
+                    showNotification(`${result.mode} activated successfully!`, 'success');
+                    updateCurrentModeStatus();
+                    updateModeHistory();
+                    renderModeCards(); // Re-render to show active state
+                } else {
+                    showNotification('Failed to activate mode: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Error activating mode: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * Show activation modal for modes requiring confirmation
+         */
+        function showActivationModal(modeId, mode) {
+            const modal = document.getElementById('activation-modal');
+            const content = document.getElementById('activation-content');
+            
+            content.innerHTML = `
+                <div class="mb-4">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <span class="text-3xl">${mode.icon}</span>
+                        <div>
+                            <h4 class="font-medium">${mode.name}</h4>
+                            <p class="text-sm text-gray-600">${mode.description}</p>
+                        </div>
+                    </div>
+                    
+                    ${mode.security ? `
+                        <div class="bg-yellow-50 rounded-lg p-3 mb-4">
+                            <h5 class="font-medium text-yellow-900 mb-2">Security Features Active</h5>
+                            <div class="text-sm text-yellow-800 space-y-1">
+                                ${mode.security.speedLimit ? `<div>• Speed limited to ${mode.security.speedLimit} MPH</div>` : ''}
+                                ${mode.security.timeLimit ? `<div>• Session limited to ${mode.security.timeLimit} minutes</div>` : ''}
+                                ${mode.security.geofence ? `<div>• Geofence restrictions apply</div>` : ''}
+                                ${mode.security.logging ? `<div>• Activity will be logged</div>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <p class="text-sm text-gray-600 mb-4">
+                        Activate this mode? This will change your controller settings and may affect vehicle performance.
+                    </p>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeActivationModal()" 
+                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button onclick="confirmModeActivation('${modeId}')" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        Activate Mode
+                    </button>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+        
+        /**
+         * Confirm mode activation
+         */
+        function confirmModeActivation(modeId) {
+            closeActivationModal();
+            
+            try {
+                const result = drivingModes.activateMode(modeId, {
+                    confirmed: true,
+                    timestamp: new Date()
+                });
+                
+                if (result.success) {
+                    showNotification(`${result.mode} activated successfully!`, 'success');
+                    updateCurrentModeStatus();
+                    updateModeHistory();
+                    renderModeCards();
+                }
+            } catch (error) {
+                showNotification('Error activating mode: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * Deactivate current mode
+         */
+        function deactivateCurrentMode() {
+            const result = drivingModes.deactivateMode();
+            
+            if (result.success) {
+                showNotification(result.message, 'success');
+                updateCurrentModeStatus();
+                updateModeHistory();
+                renderModeCards();
+            } else {
+                showNotification(result.message, 'info');
+            }
+        }
+        
+        /**
+         * Update current mode status
+         */
+        function updateCurrentModeStatus() {
+            const currentMode = drivingModes.currentMode;
+            const statusSection = document.getElementById('current-mode-status');
+            
+            if (currentMode) {
+                const mode = currentMode.mode;
+                document.getElementById('current-mode-icon').textContent = mode.icon;
+                document.getElementById('current-mode-name').textContent = mode.name;
+                document.getElementById('current-mode-description').textContent = mode.description;
+                
+                const activatedTime = new Date(currentMode.activatedAt);
+                const duration = Math.floor((new Date() - activatedTime) / 60000); // minutes
+                document.getElementById('current-mode-time').textContent = 
+                    `Active for ${duration} minute${duration !== 1 ? 's' : ''}`;
+                
+                document.getElementById('deactivate-mode').classList.remove('hidden');
+                
+                // Update status section styling
+                statusSection.className = 'bg-white rounded-lg shadow p-6 mb-8 border-l-4';
+                statusSection.style.borderLeftColor = mode.color;
+            } else {
+                document.getElementById('current-mode-icon').textContent = '🚗';
+                document.getElementById('current-mode-name').textContent = 'Default Mode';
+                document.getElementById('current-mode-description').textContent = 'Standard operation with factory settings';
+                document.getElementById('current-mode-time').textContent = 'No active mode';
+                
+                document.getElementById('deactivate-mode').classList.add('hidden');
+                
+                // Reset status section styling
+                statusSection.className = 'bg-white rounded-lg shadow p-6 mb-8';
+                statusSection.style.borderLeftColor = '';
+            }
+        }
+        
+        /**
+         * Update mode history
+         */
+        function updateModeHistory() {
+            const history = drivingModes.modeHistory.slice(0, 5); // Show last 5
+            const container = document.getElementById('mode-history');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500">No mode history available</p>';
+                return;
+            }
+            
+            container.innerHTML = history.map(entry => {
+                const mode = drivingModes.getAllModes()[entry.mode];
+                const duration = entry.duration ? 
+                    `${Math.floor(entry.duration / 60000)} min` : 
+                    'Active';
+                
+                return `
+                    <div class="timeline-item">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-lg">${mode?.icon || '🚗'}</span>
+                                <div>
+                                    <p class="text-sm font-medium">${mode?.name || entry.mode}</p>
+                                    <p class="text-xs text-gray-500">${entry.activatedAt.toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <span class="text-xs text-gray-500">${duration}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        /**
+         * Update usage statistics
+         */
+        function updateUsageStats() {
+            const stats = drivingModes.getModeUsageStats();
+            const container = document.getElementById('usage-stats');
+            
+            if (Object.keys(stats).length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500">No usage data available</p>';
+                return;
+            }
+            
+            const sortedStats = Object.entries(stats)
+                .sort(([,a], [,b]) => b.count - a.count)
+                .slice(0, 3);
+            
+            container.innerHTML = sortedStats.map(([modeId, stat]) => {
+                const mode = drivingModes.getAllModes()[modeId];
+                const avgDuration = stat.totalDuration > 0 ? 
+                    Math.floor(stat.totalDuration / stat.count / 60000) : 0;
+                
+                return `
+                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div class="flex items-center space-x-2">
+                            <span>${mode?.icon || '🚗'}</span>
+                            <div>
+                                <p class="text-sm font-medium">${mode?.name || modeId}</p>
+                                <p class="text-xs text-gray-500">${stat.count} uses • ${avgDuration} min avg</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        /**
+         * Update power management display
+         */
+        function updatePowerManagement() {
+            const totalImpact = accessoriesManager.calculateTotalImpact();
+            const currentMode = drivingModes.currentMode;
+            
+            // Calculate mode-specific power requirements
+            let modePowerRequirements = { adjustedPower: 0 };
+            if (currentMode) {
+                modePowerRequirements = accessoriesManager.getPowerRequirementsForMode(
+                    currentMode.id.replace('Mode', '').toLowerCase(),
+                    {}
+                );
+            }
+            
+            const accessoryPower = modePowerRequirements.adjustedPower;
+            const maxPower = 1000; // Assume 1000W max for visualization
+            
+            document.getElementById('accessory-power').textContent = accessoryPower.toFixed(0) + 'W';
+            document.getElementById('accessory-power-bar').style.width = 
+                Math.min((accessoryPower / maxPower) * 100, 100) + '%';
+            
+            document.getElementById('range-impact-value').textContent = 
+                '-' + totalImpact.rangeReduction.toFixed(1) + '%';
+            document.getElementById('range-impact-bar').style.width = 
+                Math.min((totalImpact.rangeReduction / 40) * 100, 100) + '%';
+        }
+        
+        /**
+         * Show mode recommendations
+         */
+        function showModeRecommendations() {
+            const modal = document.getElementById('recommendations-modal');
+            const content = document.getElementById('recommendations-content');
+            
+            // Get context for recommendations
+            const context = {
+                weather: { temperature: 70 }, // Default
+                location: '',
+                event: '',
+                time: new Date()
+            };
+            
+            const recommendations = drivingModes.getModeRecommendations(context);
+            
+            if (recommendations.length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-gray-500">No specific recommendations at this time.</p>
+                        <p class="text-sm text-gray-400 mt-2">
+                            Recommendations are based on time, weather, location, and usage patterns.
+                        </p>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        ${recommendations.map(rec => {
+                            const mode = drivingModes.getAllModes()[rec.mode];
+                            return `
+                                <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                                     onclick="selectMode('${rec.mode}'); closeRecommendationsModal();">
+                                    <div class="flex items-start justify-between mb-2">
+                                        <div class="flex items-center space-x-3">
+                                            <span class="text-2xl">${mode.icon}</span>
+                                            <div>
+                                                <h4 class="font-medium">${mode.name}</h4>
+                                                <p class="text-sm text-gray-600">${rec.reason}</p>
+                                            </div>
+                                        </div>
+                                        <span class="px-2 py-1 bg-${rec.priority === 'high' ? 'red' : rec.priority === 'medium' ? 'yellow' : 'blue'}-100 
+                                                     text-${rec.priority === 'high' ? 'red' : rec.priority === 'medium' ? 'yellow' : 'blue'}-800 
+                                                     text-xs rounded-full capitalize">
+                                            ${rec.priority}
+                                        </span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+            
+            modal.classList.remove('hidden');
+        }
+        
+        /**
+         * Show custom mode creator
+         */
+        function showCustomModeCreator() {
+            const creator = document.getElementById('custom-mode-creator');
+            const panel = document.getElementById('mode-info-panel');
+            
+            // Hide mode panel and show creator
+            panel.classList.add('hidden');
+            creator.classList.remove('hidden');
+            
+            // Populate base mode options
+            const baseSelect = document.getElementById('custom-base-mode');
+            const predefinedModes = Object.entries(drivingModes.modes);
+            
+            baseSelect.innerHTML = predefinedModes.map(([id, mode]) => 
+                `<option value="${id}">${mode.name}</option>`
+            ).join('');
+            
+            // Setup custom settings grid
+            setupCustomSettingsGrid();
+        }
+        
+        /**
+         * Hide custom mode creator
+         */
+        function hideCustomModeCreator() {
+            document.getElementById('custom-mode-creator').classList.add('hidden');
+        }
+        
+        /**
+         * Setup custom mode form
+         */
+        function setupCustomModeForm() {
+            const form = document.getElementById('custom-mode-form');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                createCustomMode();
+            });
+        }
+        
+        /**
+         * Setup custom settings grid
+         */
+        function setupCustomSettingsGrid() {
+            const grid = document.getElementById('custom-settings-grid');
+            const functionNames = {
+                1: 'MPH Scaling',
+                3: 'Acceleration Pot Gain',
+                4: 'Max Armature Current',
+                6: 'Acceleration Rate',
+                7: 'Deceleration Rate',
+                8: 'Max Field Current',
+                9: 'Regen Current',
+                10: 'Map Select',
+                11: 'Turf Mode',
+                12: 'Motor Temp Limit',
+                20: 'MPH Overspeed'
+            };
+            
+            grid.innerHTML = Object.entries(functionNames).map(([func, name]) => `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        F.${func} ${name}
+                    </label>
+                    <input type="number" id="custom-setting-${func}" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                           placeholder="Default">
+                </div>
+            `).join('');
+        }
+        
+        /**
+         * Create custom mode
+         */
+        function createCustomMode() {
+            const name = document.getElementById('custom-mode-name').value;
+            const baseMode = document.getElementById('custom-base-mode').value;
+            const description = document.getElementById('custom-mode-description').value;
+            
+            // Collect custom settings
+            const customSettings = {};
+            const functionNumbers = [1, 3, 4, 6, 7, 8, 9, 10, 11, 12, 20];
+            
+            functionNumbers.forEach(func => {
+                const input = document.getElementById(`custom-setting-${func}`);
+                if (input.value) {
+                    customSettings[func] = parseInt(input.value);
+                }
+            });
+            
+            const modifications = {
+                controllerAdjustments: customSettings,
+                accessorySettings: {} // Could be extended
+            };
+            
+            try {
+                const result = drivingModes.createCustomMode(name, baseMode, modifications);
+                
+                if (result.success) {
+                    showNotification(`Custom mode "${name}" created successfully!`, 'success');
+                    
+                    // Reset form
+                    document.getElementById('custom-mode-form').reset();
+                    hideCustomModeCreator();
+                    
+                    // Re-render mode cards
+                    renderModeCards();
+                } else {
+                    showNotification('Failed to create custom mode', 'error');
+                }
+            } catch (error) {
+                showNotification('Error creating custom mode: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * Export mode settings
+         */
+        function exportModeSettings() {
+            const config = drivingModes.exportConfiguration();
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gem-driving-modes-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Mode settings exported successfully!', 'success');
+        }
+        
+        /**
+         * Reset to default mode
+         */
+        function resetToDefault() {
+            if (!confirm('This will deactivate the current mode and return to default settings. Continue?')) {
+                return;
+            }
+            
+            deactivateCurrentMode();
+        }
+        
+        /**
+         * Close modals
+         */
+        function closeRecommendationsModal() {
+            document.getElementById('recommendations-modal').classList.add('hidden');
+        }
+        
+        function closeActivationModal() {
+            document.getElementById('activation-modal').classList.add('hidden');
+        }
+        
+        /**
+         * Show notification
+         */
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            } text-white transform translate-x-full transition-transform`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(full)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Placeholder functions for features not yet implemented
+        function scheduleModeSwitch() {
+            showNotification('Mode scheduling feature coming soon!', 'info');
+        }
+        
+        function showCompatibilityIssues(modeId) {
+            const vehicleData = JSON.parse(localStorage.getItem('gem-vehicle-data') || '{}');
+            const analysis = drivingModes.getModeImpactAnalysis(modeId, vehicleData);
+            
+            if (analysis?.compatibility?.issues) {
+                alert('Compatibility Issues:\n' + analysis.compatibility.issues.join('\n'));
+            }
+        }
+        
+        function deleteCustomMode(modeId) {
+            if (confirm('Are you sure you want to delete this custom mode?')) {
+                // Implementation would go here
+                showNotification('Custom mode deleted', 'success');
+                renderModeCards();
+            }
+        }
+    </script>
+</body>
+</html>
