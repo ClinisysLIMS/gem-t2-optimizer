@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Configuration Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">MCP Configuration Test</h1>
+        
+        <!-- Status Display -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Current MCP Status</h2>
+            <div id="status-display" class="bg-gray-50 p-4 rounded">
+                Loading...
+            </div>
+        </div>
+        
+        <!-- Test Buttons -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Test MCP Functions</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button onclick="showConfig()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    Show Config
+                </button>
+                <button onclick="testOptimization()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Test Optimization
+                </button>
+                <button onclick="testWeather()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Test Weather
+                </button>
+                <button onclick="testTrip()" class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">
+                    Test Trip Analysis
+                </button>
+            </div>
+        </div>
+        
+        <!-- Results Display -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">Test Results</h2>
+            <div id="results-display" class="bg-gray-50 p-4 rounded">
+                Click a test button to see results...
+            </div>
+        </div>
+    </div>
+
+    <!-- Load MCP Configuration Scripts -->
+    <script src="js/mcp-config.js"></script>
+    <script src="js/mcp-config-ui.js"></script>
+    
+    <script>
+        let mcpConfig, mcpConfigUI;
+        
+        // Initialize when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait for components to be ready
+            setTimeout(() => {
+                mcpConfig = window.mcpConfig;
+                mcpConfigUI = window.mcpConfigUI;
+                updateStatusDisplay();
+                
+                // Listen for config updates
+                window.addEventListener('mcpConfigUpdated', () => {
+                    updateStatusDisplay();
+                });
+            }, 100);
+        });
+        
+        function updateStatusDisplay() {
+            const statusDiv = document.getElementById('status-display');
+            const status = mcpConfig.getStatus();
+            
+            statusDiv.innerHTML = `
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="font-medium">Connection Status:</span>
+                        <span class="text-${getStatusColor(status.connectionStatus)}-600">${status.connectionStatus}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Mode:</span>
+                        <span>${status.isLocal ? 'Local' : 'Remote'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Server URL:</span>
+                        <span>${status.config.serverUrl || 'Not configured'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Has API Key:</span>
+                        <span>${status.config.hasApiKey ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Local Fallback:</span>
+                        <span>${status.config.enableLocalFallback ? 'Enabled' : 'Disabled'}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getStatusColor(status) {
+            switch (status) {
+                case 'connected': return 'green';
+                case 'local': return 'blue';
+                case 'local_fallback': return 'yellow';
+                case 'error': return 'red';
+                default: return 'gray';
+            }
+        }
+        
+        function showConfig() {
+            if (mcpConfigUI) {
+                mcpConfigUI.show();
+            } else {
+                alert('MCP Config UI not ready');
+            }
+        }
+        
+        async function testOptimization() {
+            const resultsDiv = document.getElementById('results-display');
+            resultsDiv.innerHTML = '<div class="text-blue-600">Testing optimization...</div>';
+            
+            try {
+                const testData = {
+                    vehicleData: {
+                        vehicle: { model: 'e4', motorCondition: 'good' },
+                        battery: { type: 'lead', voltage: 72, capacity: 150 },
+                        wheel: { tireDiameter: 22, gearRatio: 8.91 }
+                    },
+                    priorities: { speed: 7, acceleration: 6, hillClimbing: 8, range: 5, regen: 6 }
+                };
+                
+                const result = await mcpConfig.callTool('optimize_controller', testData);
+                
+                resultsDiv.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="font-medium text-green-600">✅ Optimization Test Successful</div>
+                        <div class="text-sm"><strong>Source:</strong> ${result.source}</div>
+                        <div class="text-sm"><strong>Method:</strong> ${result.analysis?.method || 'unknown'}</div>
+                        <div class="text-sm"><strong>Settings:</strong> ${Object.keys(result.optimizedSettings).length} functions</div>
+                        <div class="text-sm"><strong>Confidence:</strong> ${(result.analysis?.confidence * 100).toFixed(1)}%</div>
+                        <div class="text-xs mt-2 bg-gray-100 p-2 rounded">
+                            <strong>Settings:</strong> ${JSON.stringify(result.optimizedSettings, null, 2)}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="text-red-600">❌ Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testWeather() {
+            const resultsDiv = document.getElementById('results-display');
+            resultsDiv.innerHTML = '<div class="text-blue-600">Testing weather...</div>';
+            
+            try {
+                const result = await mcpConfig.callTool('get_weather', {
+                    location: 'San Francisco, CA',
+                    date: new Date().toISOString()
+                });
+                
+                resultsDiv.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="font-medium text-green-600">✅ Weather Test Successful</div>
+                        <div class="text-sm"><strong>Source:</strong> ${result.source}</div>
+                        <div class="text-sm"><strong>Temperature:</strong> ${result.weather.temperature}°F</div>
+                        <div class="text-sm"><strong>Conditions:</strong> ${result.weather.conditions}</div>
+                        <div class="text-sm"><strong>Humidity:</strong> ${result.weather.humidity}%</div>
+                        <div class="text-sm"><strong>Wind:</strong> ${result.weather.windSpeed} mph</div>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="text-red-600">❌ Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testTrip() {
+            const resultsDiv = document.getElementById('results-display');
+            resultsDiv.innerHTML = '<div class="text-blue-600">Testing trip analysis...</div>';
+            
+            try {
+                const result = await mcpConfig.callTool('analyze_trip', {
+                    destination: 'Monterey, CA',
+                    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Next week
+                    vehicleModel: 'e4'
+                });
+                
+                resultsDiv.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="font-medium text-green-600">✅ Trip Analysis Test Successful</div>
+                        <div class="text-sm"><strong>Source:</strong> ${result.source}</div>
+                        <div class="text-sm"><strong>Destination:</strong> ${result.analysis.destination}</div>
+                        <div class="text-sm"><strong>Distance:</strong> ${result.analysis.estimatedDistance}</div>
+                        <div class="text-sm"><strong>Terrain:</strong> ${result.analysis.terrainDifficulty}</div>
+                        <div class="text-sm"><strong>Weather:</strong> ${result.analysis.weatherConditions}</div>
+                        <div class="text-xs mt-2">
+                            <strong>Recommendations:</strong>
+                            <ul class="list-disc list-inside mt-1">
+                                ${result.analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="text-red-600">❌ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

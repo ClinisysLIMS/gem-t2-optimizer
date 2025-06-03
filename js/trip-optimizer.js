@@ -7,6 +7,7 @@ class TripOptimizer {
         this.optimizer = optimizer || new GEMOptimizer();
         this.weatherService = window.weatherService || new WeatherService();
         this.terrainService = window.terrainService || new TerrainService();
+        this.apiIntegration = window.apiIntegration || null;
         
         // Weight factors for different optimization aspects
         this.weights = {

@@ -54,32 +54,37 @@ class EnhancedPDFAnalyzer {
         
         this.functionDatabase = {
             1: { name: 'MPH Scaling', aliases: ['Speed Scaling', 'Top Speed'], range: [50, 150] },
-            2: { name: 'RPM Scaling', aliases: ['Motor RPM'], range: [1000, 8000] },
-            3: { name: 'Acceleration Pot Gain', aliases: ['Accel Gain', 'Pot Gain'], range: [5, 50] },
+            2: { name: 'Reserved', aliases: [], range: [0, 255] },
+            3: { name: 'Controlled Acceleration', aliases: ['Acceleration Pot Gain', 'Accel Gain', 'Pot Gain'], range: [5, 50] },
             4: { name: 'Max Armature Current', aliases: ['Max Current', 'Armature Current'], range: [100, 350] },
-            5: { name: 'Acceleration Pot Dead Zone', aliases: ['Dead Zone'], range: [1, 15] },
-            6: { name: 'Acceleration Rate', aliases: ['Accel Rate'], range: [10, 100] },
-            7: { name: 'Deceleration Rate', aliases: ['Decel Rate'], range: [10, 100] },
-            8: { name: 'Max Field Current', aliases: ['Field Current'], range: [100, 350] },
-            9: { name: 'Regeneration Current', aliases: ['Regen Current', 'Regen'], range: [50, 300] },
-            10: { name: 'Map Select', aliases: ['Map Selection'], range: [50, 150] },
-            11: { name: 'Turf Mode', aliases: ['Turf Setting'], range: [5, 40] },
-            12: { name: 'Motor Temperature Limit', aliases: ['Temp Limit', 'Temperature'], range: [3, 12] },
-            13: { name: 'Controller Temperature Limit', aliases: ['Controller Temp'], range: [3, 12] },
-            14: { name: 'Fault Detection', aliases: ['Fault Mode'], range: [0, 3] },
-            15: { name: 'PWM Frequency', aliases: ['PWM Freq'], range: [1, 20] },
-            16: { name: 'Motor Rotation Direction', aliases: ['Rotation'], range: [0, 1] },
-            17: { name: 'Brake Interlock', aliases: ['Brake Lock'], range: [0, 1] },
-            18: { name: 'Reverse Beeper', aliases: ['Reverse Alarm'], range: [0, 1] },
-            19: { name: 'Low Voltage Cutoff', aliases: ['LVC', 'Low Voltage'], range: [40, 80] },
+            5: { name: 'Plug Current', aliases: ['Acceleration Pot Dead Zone', 'Dead Zone'], range: [1, 15] },
+            6: { name: 'Armature Accel Rate', aliases: ['Acceleration Rate', 'Accel Rate'], range: [10, 100] },
+            7: { name: 'Minimum Field Current', aliases: ['Min Field', 'Deceleration Rate', 'Decel Rate'], range: [10, 100] },
+            8: { name: 'Maximum Field Current', aliases: ['Max Field', 'Field Current'], range: [100, 350] },
+            9: { name: 'Regen Armature Current', aliases: ['Regeneration Current', 'Regen Current', 'Regen'], range: [50, 300] },
+            10: { name: 'Regen Max Field Current', aliases: ['Map Select', 'Map Selection'], range: [50, 150] },
+            11: { name: 'Turf Speed Limit', aliases: ['Turf Mode', 'Turf Setting'], range: [5, 40] },
+            12: { name: 'Reverse Speed Limit', aliases: ['Motor Temperature Limit', 'Temp Limit', 'Temperature'], range: [3, 12] },
+            13: { name: 'Reserved', aliases: ['Controller Temperature Limit', 'Controller Temp'], range: [0, 255] },
+            14: { name: 'IR Compensation', aliases: ['Fault Detection', 'Fault Mode'], range: [0, 20] },
+            15: { name: 'Battery Volts', aliases: ['PWM Frequency', 'PWM Freq'], range: [48, 96] },
+            16: { name: 'Low Battery Volts', aliases: ['Motor Rotation Direction', 'Rotation'], range: [0, 100] },
+            17: { name: 'Pack Over Temp', aliases: ['Brake Interlock', 'Brake Lock'], range: [0, 255] },
+            18: { name: 'Reserved', aliases: ['Reverse Beeper', 'Reverse Alarm'], range: [0, 255] },
+            19: { name: 'Field Ramp Rate', aliases: ['Low Voltage Cutoff', 'LVC', 'Low Voltage'], range: [1, 20] },
             20: { name: 'MPH Overspeed', aliases: ['Overspeed'], range: [1, 15] },
-            21: { name: 'Economy Mode', aliases: ['Eco Mode'], range: [0, 1] },
-            22: { name: 'Motor Type', aliases: ['Motor Config'], range: [0, 5] },
-            23: { name: 'Battery Type', aliases: ['Battery Config'], range: [0, 10] },
-            24: { name: 'Field Weakening', aliases: ['Field Weak'], range: [0, 100] },
-            25: { name: 'Speed Limiting', aliases: ['Speed Limit'], range: [0, 1] },
-            26: { name: 'Diagnostic Mode', aliases: ['Diagnostics'], range: [0, 1] }
+            21: { name: 'Handbrake', aliases: ['Economy Mode', 'Eco Mode'], range: [0, 1] },
+            22: { name: 'Odometer Calibration', aliases: ['Motor Type', 'Motor Config'], range: [0, 255] },
+            23: { name: 'Error Compensation', aliases: ['Battery Type', 'Battery Config'], range: [0, 255] },
+            24: { name: 'Field Weakening Start', aliases: ['Field Weakening', 'Field Weak'], range: [0, 100] },
+            25: { name: 'Pedal Enable', aliases: ['Speed Limiting', 'Speed Limit'], range: [0, 1] },
+            26: { name: 'Ratio Field to Arm', aliases: ['Diagnostic Mode', 'Diagnostics'], range: [0, 10] }
         };
+        
+        // Initialize functions 27-128 with generic names
+        for (let i = 27; i <= 128; i++) {
+            this.functionDatabase[i] = { name: `Function ${i}`, aliases: [], range: [0, 255] };
+        }
         
         this.confidenceWeights = {
             exactFunctionMatch: 1.0,
@@ -507,11 +512,15 @@ class EnhancedPDFAnalyzer {
      * Utility functions
      */
     isValidFunction(func, value) {
-        if (func < 1 || func > 26) return false;
-        if (value < 0 || value > 1000) return false;
+        if (func < 1 || func > 128) return false;
+        if (value < 0 || value > 999) return false;
         
         const functionData = this.functionDatabase[func];
         if (functionData && functionData.range) {
+            // Be more lenient with range validation for unknown functions
+            if (func > 26) {
+                return true; // Accept any valid value for functions 27-128
+            }
             return value >= functionData.range[0] && value <= functionData.range[1];
         }
         
@@ -694,7 +703,8 @@ class EnhancedPDFAnalyzer {
     
     async detectModifications(settings) {
         const defaults = {
-            1: 100, 3: 15, 4: 245, 6: 60, 7: 70, 8: 245, 9: 225, 10: 100, 11: 11, 12: 7, 20: 5
+            1: 100, 3: 15, 4: 245, 5: 5, 6: 60, 7: 70, 8: 245, 9: 225, 10: 100, 11: 11, 12: 11, 
+            14: 5, 15: 72, 19: 8, 20: 5, 22: 22, 23: 0, 24: 55, 26: 1
         };
         
         const modifications = [];
@@ -753,7 +763,7 @@ class EnhancedPDFAnalyzer {
             while ((match = pattern.exec(text)) !== null) {
                 const func = parseInt(match[1]);
                 const value = parseInt(match[2]);
-                if (func >= 1 && func <= 26 && value >= 0 && value <= 1000) {
+                if (func >= 1 && func <= 128 && value >= 0 && value <= 999) {
                     basicSettings[func] = value;
                 }
             }

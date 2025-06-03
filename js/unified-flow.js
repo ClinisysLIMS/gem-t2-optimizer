@@ -33,6 +33,11 @@ class UnifiedFlowController {
         if (typeof TripOptimizer !== 'undefined' && this.optimizer) {
             this.tripOptimizer = new TripOptimizer(this.optimizer);
         }
+        
+        // Listen for Firebase profile events
+        window.addEventListener('authStateChanged', (e) => {
+            this.handleAuthStateChange(e.detail.user);
+        });
     }
 
     /**
@@ -69,6 +74,37 @@ class UnifiedFlowController {
         document.getElementById('current-speed')?.addEventListener('input', (e) => {
             this.vehicleData.currentSpeed = parseInt(e.target.value) || 25;
             this.updateVehicleClassification();
+            this.validateStep1();
+            this.saveData();
+        });
+
+        // Battery & Drivetrain Configuration
+        document.getElementById('battery-voltage')?.addEventListener('change', (e) => {
+            this.vehicleData.batteryVoltage = parseInt(e.target.value);
+            this.validateStep1();
+            this.saveData();
+        });
+
+        document.getElementById('battery-type')?.addEventListener('change', (e) => {
+            this.vehicleData.batteryType = e.target.value;
+            this.validateStep1();
+            this.saveData();
+        });
+
+        document.getElementById('battery-capacity')?.addEventListener('input', (e) => {
+            this.vehicleData.batteryCapacity = parseInt(e.target.value);
+            this.validateStep1();
+            this.saveData();
+        });
+
+        document.getElementById('tire-diameter')?.addEventListener('input', (e) => {
+            this.vehicleData.tireDiameter = parseFloat(e.target.value);
+            this.validateStep1();
+            this.saveData();
+        });
+
+        document.getElementById('gear-ratio')?.addEventListener('input', (e) => {
+            this.vehicleData.gearRatio = e.target.value;
             this.validateStep1();
             this.saveData();
         });
@@ -160,7 +196,9 @@ class UnifiedFlowController {
      * Validate Step 1 (Vehicle Information)
      */
     validateStep1() {
-        const required = ['model', 'year', 'controller', 'motorType', 'currentSpeed'];
+        const required = ['model', 'year', 'controller', 'motorType', 'currentSpeed', 
+                         'batteryVoltage', 'batteryType', 'batteryCapacity', 
+                         'tireDiameter', 'gearRatio'];
         const isValid = required.every(field => this.vehicleData[field]);
         
         const continueBtn = document.getElementById('continue-to-planning');
@@ -208,19 +246,38 @@ class UnifiedFlowController {
         
         const resultDiv = document.getElementById('classification-result');
         if (resultDiv) {
-            resultDiv.innerHTML = `
+            let content = `
                 <span class="font-semibold">${classification.icon} ${classification.name}</span>
                 <p class="text-xs text-gray-600 mt-1">
                     Speed: ${speed} MPH | ${classification.requirements}
                 </p>
-                ${classification.warning ? 
-                    `<p class="text-xs text-red-600 mt-1 font-medium">${classification.note}</p>` : 
-                    ''}
             `;
+            
+            if (classification.info) {
+                content += `
+                    <div class="mt-2 text-xs space-y-1">
+                        <p class="text-blue-700 font-medium">${classification.note}</p>
+                        <p class="text-gray-600">${classification.guidance}</p>
+                        <a href="${classification.legalLink}" target="_blank" rel="noopener noreferrer" 
+                           class="text-blue-600 hover:text-blue-800 underline inline-flex items-center">
+                            Check local laws
+                            <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                        </a>
+                    </div>
+                `;
+            } else if (classification.warning) {
+                content += `<p class="text-xs text-red-600 mt-1 font-medium">${classification.note}</p>`;
+            }
+            
+            resultDiv.innerHTML = content;
             
             const container = document.getElementById('vehicle-classification');
             if (container) {
                 container.className = `p-4 rounded-lg ${
+                    classification.info ? 'bg-blue-50' : 
                     classification.warning ? 'bg-red-50' : 'bg-gray-50'
                 }`;
             }
@@ -268,6 +325,8 @@ class UnifiedFlowController {
                     settings = format.original;
                 } else if (format.type === 'sentry-export') {
                     settings = format.settings;
+                } else if (format.type === 'ge-controller') {
+                    settings = format.data.settings;
                 }
                 
                 this.pdfSettings = settings;
@@ -291,7 +350,26 @@ class UnifiedFlowController {
                 this.analyzePDFSettings(settings);
                 
             } else {
-                throw new Error('No valid settings found in PDF');
+                // Check if we have fallback data
+                if (result.fallback && result.fallback.length > 0) {
+                    // Use fallback data
+                    const fallbackFormat = result.fallback[0];
+                    this.pdfSettings = fallbackFormat.settings;
+                    
+                    if (resultDiv && contentDiv) {
+                        resultDiv.classList.remove('hidden');
+                        resultDiv.classList.replace('bg-green-50', 'bg-yellow-50');
+                        contentDiv.innerHTML = `
+                            <h4 class="font-medium text-yellow-900 mb-2">⚠️ Limited Analysis</h4>
+                            <p class="text-sm text-yellow-700">Using fallback parser - found ${Object.keys(fallbackFormat.settings).length} settings</p>
+                            <p class="text-xs mt-1 text-yellow-600">Some settings may be missing or inaccurate</p>
+                        `;
+                    }
+                    
+                    this.analyzePDFSettings(fallbackFormat.settings);
+                } else {
+                    throw new Error('No valid settings found in PDF');
+                }
             }
             
         } catch (error) {
@@ -299,10 +377,22 @@ class UnifiedFlowController {
             if (resultDiv && contentDiv) {
                 resultDiv.classList.remove('hidden');
                 resultDiv.classList.replace('bg-green-50', 'bg-red-50');
-                contentDiv.innerHTML = `
-                    <h4 class="font-medium text-red-900 mb-2">❌ Analysis Failed</h4>
-                    <p class="text-sm text-red-700">${error.message}</p>
-                `;
+                
+                let errorContent = `<h4 class="font-medium text-red-900 mb-2">❌ Analysis Failed</h4>`;
+                errorContent += `<p class="text-sm text-red-700 mb-2">${error.message}</p>`;
+                
+                // Add suggestions if available
+                if (result && result.suggestions) {
+                    errorContent += `<div class="mt-3 text-xs text-red-600">
+                        <p class="font-medium mb-1">Tips:</p>
+                        <ul class="list-disc list-inside space-y-1">`;
+                    result.suggestions.forEach(suggestion => {
+                        errorContent += `<li>${suggestion}</li>`;
+                    });
+                    errorContent += `</ul></div>`;
+                }
+                
+                contentDiv.innerHTML = errorContent;
             }
             this.restoreUploadArea();
         }
@@ -547,15 +637,21 @@ class UnifiedFlowController {
                 optimizedSettings = await this.optimizeTripSettings();
             } else {
                 // Use standard optimization
-                optimizedSettings = this.optimizer.optimizeSettings(
+                optimizedSettings = this.optimizer.optimizeByMode(
                     baseSettings,
                     this.tripData.optimizationMode || profile,
                     this.vehicleData
                 );
             }
             
+            // Store optimized settings for sharing
+            this.lastOptimizedSettings = optimizedSettings;
+            
             // Display results
             this.displayResults(optimizedSettings);
+            
+            // Save trip to history if user is authenticated
+            await this.saveTripToHistory(this.tripData, optimizedSettings);
             
         } catch (error) {
             console.error('Optimization error:', error);
@@ -669,6 +765,11 @@ class UnifiedFlowController {
                         ← Modify Settings
                     </button>
                     <div class="space-x-3">
+                        <button onclick="unifiedFlow.shareWithCommunity()" 
+                                class="px-4 py-2 border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50" 
+                                data-auth-required style="display: none;">
+                            🌟 Share with Community
+                        </button>
                         <button onclick="unifiedFlow.exportSettings()" 
                                 class="px-4 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-50">
                             📄 Export PDF
@@ -899,6 +1000,21 @@ class UnifiedFlowController {
         if (this.vehicleData.currentSpeed) {
             document.getElementById('current-speed').value = this.vehicleData.currentSpeed;
         }
+        if (this.vehicleData.batteryVoltage) {
+            document.getElementById('battery-voltage').value = this.vehicleData.batteryVoltage;
+        }
+        if (this.vehicleData.batteryType) {
+            document.getElementById('battery-type').value = this.vehicleData.batteryType;
+        }
+        if (this.vehicleData.batteryCapacity) {
+            document.getElementById('battery-capacity').value = this.vehicleData.batteryCapacity;
+        }
+        if (this.vehicleData.tireDiameter) {
+            document.getElementById('tire-diameter').value = this.vehicleData.tireDiameter;
+        }
+        if (this.vehicleData.gearRatio) {
+            document.getElementById('gear-ratio').value = this.vehicleData.gearRatio;
+        }
         
         this.validateStep1();
         this.validateCompatibility();
@@ -924,6 +1040,140 @@ class UnifiedFlowController {
         if (this.tripData.cargo) {
             document.getElementById('cargo').value = this.tripData.cargo;
         }
+    }
+    
+    /**
+     * Handle Firebase authentication state changes
+     */
+    handleAuthStateChange(user) {
+        if (user) {
+            console.log('User authenticated:', user.email);
+            this.enableAutoSave();
+        } else {
+            console.log('User signed out');
+            this.disableAutoSave();
+        }
+    }
+    
+    /**
+     * Enable auto-save to Firebase when user is authenticated
+     */
+    enableAutoSave() {
+        this.autoSaveEnabled = true;
+        this.setupAutoSaveListeners();
+        console.log('Auto-save to Firebase enabled');
+    }
+    
+    /**
+     * Disable auto-save when user is not authenticated
+     */
+    disableAutoSave() {
+        this.autoSaveEnabled = false;
+        console.log('Auto-save to Firebase disabled');
+    }
+    
+    /**
+     * Setup auto-save listeners for form changes
+     */
+    setupAutoSaveListeners() {
+        if (!this.autoSaveEnabled) return;
+        
+        // Auto-save vehicle data changes
+        const vehicleFields = [
+            'vehicle-model', 'vehicle-year', 'controller-type', 'motor-type',
+            'current-speed', 'battery-voltage', 'battery-type', 'battery-capacity',
+            'tire-diameter', 'gear-ratio'
+        ];
+        
+        vehicleFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('change', () => this.debouncedAutoSave());
+            }
+        });
+    }
+    
+    /**
+     * Debounced auto-save to prevent excessive saves
+     */
+    debouncedAutoSave() {
+        if (!this.autoSaveEnabled) return;
+        
+        clearTimeout(this.autoSaveTimeout);
+        this.autoSaveTimeout = setTimeout(() => {
+            this.autoSaveCurrentState();
+        }, 2000); // 2 second delay
+    }
+    
+    /**
+     * Auto-save current state to Firebase
+     */
+    async autoSaveCurrentState() {
+        if (!this.autoSaveEnabled || !window.firebaseProfileManager) return;
+        
+        try {
+            const profileName = `Auto-saved ${new Date().toLocaleString()}`;
+            const hasData = this.vehicleData.model && this.vehicleData.year;
+            
+            if (hasData) {
+                // Save as temporary profile
+                await window.firebaseProfileManager.saveCurrentProfile(profileName, 'Auto-saved configuration');
+            }
+        } catch (error) {
+            console.warn('Auto-save failed:', error);
+        }
+    }
+    
+    /**
+     * Save trip result to history
+     */
+    async saveTripToHistory(tripData, settings) {
+        if (!window.firebaseProfileManager) return;
+        
+        const tripHistory = {
+            vehicleData: this.vehicleData,
+            tripData: tripData,
+            settings: settings,
+            optimization: this.tripData.optimizationMode || 'balanced',
+            createdAt: new Date(),
+            summary: {
+                model: this.vehicleData.model,
+                year: this.vehicleData.year,
+                destination: tripData.destination || 'Unknown',
+                settingsCount: Object.keys(settings).length
+            }
+        };
+        
+        try {
+            await window.firebaseProfileManager.saveTripHistory(tripHistory);
+            console.log('Trip saved to history');
+        } catch (error) {
+            console.error('Failed to save trip history:', error);
+        }
+    }
+    
+    /**
+     * Share current configuration with the community
+     */
+    shareWithCommunity() {
+        if (!window.firebaseManager?.isAuthenticated()) {
+            this.showNotification('Please sign in to share with the community', 'warning');
+            return;
+        }
+        
+        // Store current optimization data for sharing
+        const sharingData = {
+            vehicleData: this.vehicleData,
+            tripData: this.tripData,
+            controllerSettings: this.lastOptimizedSettings || {},
+            optimizationMode: this.tripData.optimizationMode || 'balanced'
+        };
+        
+        // Store in session storage for the community page to pick up
+        sessionStorage.setItem('pendingCommunityShare', JSON.stringify(sharingData));
+        
+        // Navigate to community page with share modal
+        window.location.href = 'community.html?share=true';
     }
 }
 

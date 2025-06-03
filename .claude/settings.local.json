@@ -15,7 +15,9 @@
       "Bash(ls:*)",
       "Bash(git remote add:*)",
       "Bash(git push:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git commit:*)",
+      "Bash(python3:*)"
     ],
     "deny": []
   }

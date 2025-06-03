@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preset Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Preset Functionality Test</h1>
+        
+        <div id="preset-container" class="grid md:grid-cols-3 gap-4 mb-8">
+            <!-- Presets will be inserted here -->
+        </div>
+        
+        <div id="results" class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-bold mb-4">Optimization Results</h2>
+            <div id="results-content">Click a preset to see results...</div>
+        </div>
+    </div>
+
+    <!-- Load the required JavaScript files -->
+    <script src="js/optimizer.js"></script>
+    <script src="js/presets.js"></script>
+    
+    <script>
+        // Initialize the components
+        const optimizer = new GEMOptimizer();
+        const presetsManager = new PresetsManager(optimizer);
+        
+        // Display preset cards
+        const container = document.getElementById('preset-container');
+        container.innerHTML = presetsManager.getPresetCardsHTML();
+        
+        // Global preset selection handler
+        window.handlePresetSelection = function(presetName, isInteractive) {
+            console.log('Preset selected:', presetName, 'Interactive:', isInteractive);
+            
+            const resultsDiv = document.getElementById('results-content');
+            resultsDiv.innerHTML = '<div class="text-blue-600">Optimizing...</div>';
+            
+            setTimeout(() => {
+                try {
+                    // Get the preset
+                    const preset = presetsManager.getPreset(presetName);
+                    if (!preset) {
+                        resultsDiv.innerHTML = '<div class="text-red-600">Preset not found!</div>';
+                        return;
+                    }
+                    
+                    // Create default input data
+                    const defaultInputData = {
+                        vehicle: { model: 'e4', motorCondition: 'good' },
+                        battery: { type: 'lead', voltage: 72, capacity: 150, age: 'good' },
+                        wheel: { tireDiameter: 22, gearRatio: 8.91 },
+                        environment: { terrain: 'mixed', vehicleLoad: 'medium', temperatureRange: 'mild', hillGrade: 10 },
+                        priorities: { speed: 5, acceleration: 5, hillClimbing: 5, range: 5, regen: 5 }
+                    };
+                    
+                    // Merge with preset input data
+                    const mergedInputData = presetsManager.getMergedInputData(presetName, defaultInputData);
+                    
+                    // Run optimization
+                    const results = optimizer.optimizeSettings(mergedInputData);
+                    
+                    // Override with preset settings if available
+                    if (preset.settings) {
+                        Object.keys(preset.settings).forEach(funcNum => {
+                            results.optimizedSettings[funcNum] = preset.settings[funcNum];
+                        });
+                    }
+                    
+                    // Display results
+                    const settingsHTML = Object.entries(results.optimizedSettings)
+                        .map(([func, value]) => `<div>F.${func}: ${value}</div>`)
+                        .join('');
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="text-green-600 font-bold mb-2">✅ ${preset.name} Applied Successfully!</div>
+                        <div class="text-sm text-gray-600 mb-4">${preset.description}</div>
+                        <div class="bg-gray-50 p-3 rounded text-sm">
+                            <strong>Optimized Settings:</strong><br>
+                            ${settingsHTML}
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Optimization error:', error);
+                    resultsDiv.innerHTML = `<div class="text-red-600">Error: ${error.message}</div>`;
+                }
+            }, 500);
+        };
+        
+        console.log('Available presets:', presetsManager.getPresetNames());
+    </script>
+</body>
+</html>

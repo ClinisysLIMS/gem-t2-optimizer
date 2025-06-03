@@ -56,6 +56,20 @@ class PDFParser {
             // Consolidate results
             const consolidatedResults = this.consolidateFormats(allFormats);
             
+            // Check if we found any valid settings
+            if (consolidatedResults.length === 0) {
+                const errorDetails = [];
+                if (pdf.numPages === 0) {
+                    errorDetails.push('PDF appears to be empty');
+                } else {
+                    errorDetails.push(`Analyzed ${pdf.numPages} page(s) but couldn't find controller settings`);
+                    errorDetails.push('Expected format: F.No. column with function numbers (1-128) and values');
+                    errorDetails.push('Supported formats: GE Controller Reference Guide, Sentry Export, Optimization Reports');
+                }
+                
+                throw new Error(errorDetails.join('. '));
+            }
+            
             return {
                 success: true,
                 formats: consolidatedResults,
@@ -66,10 +80,20 @@ class PDFParser {
             
         } catch (error) {
             console.error('PDF parsing error:', error);
+            
+            // Try fallback parsing
+            const fallbackResult = await this.tryFallbackParsing(file);
+            
             return {
                 success: false,
                 error: error.message,
-                fallback: this.tryFallbackParsing(file)
+                fallback: fallbackResult,
+                suggestions: [
+                    'Ensure PDF contains GE Controller settings in table format',
+                    'Look for "F.No." column with function numbers and values',
+                    'Check that the PDF is not password protected or corrupted',
+                    'Verify the PDF contains controller function settings (1-128)'
+                ]
             };
         }
     }
@@ -520,33 +544,12 @@ class PDFParser {
      * @returns {Array} Formatted settings array
      */
     formatSettings(settings) {
-        const functionNames = {
-            1: 'MPH Scaling',
-            3: 'Controlled Acceleration',
-            4: 'Max Armature Current',
-            5: 'Plug Current',
-            6: 'Armature Accel Rate',
-            7: 'Minimum Field Current',
-            8: 'Maximum Field Current',
-            9: 'Regen Armature Current',
-            10: 'Regen Max Field Current',
-            11: 'Turf Speed Limit',
-            12: 'Reverse Speed Limit',
-            14: 'IR Compensation',
-            15: 'Battery Volts',
-            19: 'Field Ramp Rate',
-            20: 'MPH Overspeed',
-            22: 'Odometer Calibration',
-            23: 'Error Compensation',
-            24: 'Field Weakening Start',
-            26: 'Ratio Field to Arm'
-        };
+        const functionNames = this.geFunctionNames;
         
         return Object.entries(settings)
-            .filter(([func]) => functionNames[func])
             .map(([func, value]) => ({
                 function: parseInt(func),
-                name: functionNames[func],
+                name: functionNames[func] || `Function ${func}`,
                 value: value
             }))
             .sort((a, b) => a.function - b.function);

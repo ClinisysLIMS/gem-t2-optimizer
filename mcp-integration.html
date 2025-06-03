@@ -100,6 +100,111 @@
             </div>
         </div>
 
+        <!-- MCP Configuration Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-semibold">MCP Server Configuration</h2>
+                <div id="mcp-status-indicator" class="flex items-center">
+                    <span id="mcp-status-icon" class="text-lg mr-2">🔵</span>
+                    <span id="mcp-status-text" class="text-sm text-gray-600">Local Mode</span>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Current Status -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-medium text-gray-800 mb-3">Current Configuration</h3>
+                    <div id="mcp-current-config" class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Mode:</span>
+                            <span id="config-mode" class="font-medium">Local Calculations</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Server:</span>
+                            <span id="config-server" class="font-medium">Not configured</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">AI Features:</span>
+                            <span id="config-features" class="font-medium">Basic</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Status:</span>
+                            <span id="config-status" class="font-medium text-blue-600">Ready</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Configuration Actions -->
+                <div class="space-y-4">
+                    <button id="open-mcp-config" 
+                            class="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                        ⚙️ Configure MCP Server
+                    </button>
+                    
+                    <button id="test-mcp-tools" 
+                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                        🧪 Test MCP Tools
+                    </button>
+                    
+                    <div class="text-center">
+                        <button id="toggle-mode" 
+                                class="text-sm text-gray-600 hover:text-gray-800 underline">
+                            Switch to Remote Mode
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features Comparison -->
+            <div class="mt-6 overflow-x-auto">
+                <h3 class="font-medium text-gray-800 mb-3">Feature Comparison</h3>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Feature</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Local Mode</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">MCP Mode</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-4 py-2 text-sm text-gray-900">Controller Optimization</td>
+                            <td class="px-4 py-2 text-center text-green-500">✅</td>
+                            <td class="px-4 py-2 text-center text-green-500">✅</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 text-sm text-gray-900">Real-time Weather Data</td>
+                            <td class="px-4 py-2 text-center text-red-500">❌</td>
+                            <td class="px-4 py-2 text-center text-green-500">✅</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 text-sm text-gray-900">Terrain Analysis</td>
+                            <td class="px-4 py-2 text-center text-yellow-500">⚠️</td>
+                            <td class="px-4 py-2 text-center text-green-500">✅</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 text-sm text-gray-900">Traffic Integration</td>
+                            <td class="px-4 py-2 text-center text-red-500">❌</td>
+                            <td class="px-4 py-2 text-center text-green-500">✅</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 text-sm text-gray-900">AI Chat Assistant</td>
+                            <td class="px-4 py-2 text-center text-yellow-500">⚠️</td>
+                            <td class="px-4 py-2 text-center text-green-500">✅</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 text-sm text-gray-900">Trip Planning</td>
+                            <td class="px-4 py-2 text-center text-yellow-500">⚠️</td>
+                            <td class="px-4 py-2 text-center text-green-500">✅</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-xs text-gray-500 mt-2">
+                    ✅ Full support | ⚠️ Basic/Limited | ❌ Not available
+                </p>
+            </div>
+        </div>
+
         <!-- Info Box -->
         <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mt-8">
             <div class="flex">
@@ -111,16 +216,19 @@
                 <div class="ml-3">
                     <h3 class="text-sm font-medium text-blue-800">About MCP Integration</h3>
                     <p class="mt-2 text-sm text-blue-700">
-                        This demo simulates how an AI assistant with MCP (Model Context Protocol) access 
-                        could help optimize your GEM settings through natural language. In a real implementation, 
-                        the AI would call the MCP server tools to analyze your requirements and generate 
-                        optimized settings.
+                        The Model Context Protocol (MCP) enables AI assistants to access external tools and real-time data.
+                        The GEM Optimizer works in both local mode (basic calculations) and MCP mode (enhanced with real-time data).
+                        Configure your MCP server above to unlock advanced features like weather integration, traffic analysis, and enhanced AI assistance.
                     </p>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Load MCP Configuration Scripts -->
+    <script src="js/mcp-config.js"></script>
+    <script src="js/mcp-config-ui.js"></script>
+    
     <script>
         // Simulated MCP responses for demo purposes
         const simulatedResponses = {
@@ -363,6 +471,219 @@
         document.getElementById('open-optimizer').addEventListener('click', () => {
             window.location.href = 'gem-optimizer.html';
         });
+
+        // MCP Configuration Integration
+        let mcpConfigUI;
+
+        // Initialize MCP functionality when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait for MCP components to be ready
+            setTimeout(() => {
+                if (window.mcpConfigUI) {
+                    mcpConfigUI = window.mcpConfigUI;
+                    setupMCPIntegration();
+                }
+            }, 100);
+        });
+
+        function setupMCPIntegration() {
+            // Configure MCP button
+            document.getElementById('open-mcp-config')?.addEventListener('click', () => {
+                mcpConfigUI.show();
+            });
+
+            // Test MCP tools button
+            document.getElementById('test-mcp-tools')?.addEventListener('click', () => {
+                testMCPTools();
+            });
+
+            // Toggle mode button
+            document.getElementById('toggle-mode')?.addEventListener('click', () => {
+                toggleMCPMode();
+            });
+
+            // Listen for MCP config updates
+            window.addEventListener('mcpConfigUpdated', (event) => {
+                updateMCPStatus(event.detail);
+            });
+
+            // Initial status update
+            updateMCPStatus(mcpConfigUI.getStatus());
+        }
+
+        function updateMCPStatus(status) {
+            const statusIcon = document.getElementById('mcp-status-icon');
+            const statusText = document.getElementById('mcp-status-text');
+            const configMode = document.getElementById('config-mode');
+            const configServer = document.getElementById('config-server');
+            const configFeatures = document.getElementById('config-features');
+            const configStatus = document.getElementById('config-status');
+            const toggleBtn = document.getElementById('toggle-mode');
+
+            // Update status indicator
+            if (statusIcon && statusText) {
+                switch (status.connectionStatus) {
+                    case 'connected':
+                        statusIcon.textContent = '🟢';
+                        statusText.textContent = 'Connected';
+                        break;
+                    case 'local':
+                        statusIcon.textContent = '🔵';
+                        statusText.textContent = 'Local Mode';
+                        break;
+                    case 'local_fallback':
+                        statusIcon.textContent = '🟡';
+                        statusText.textContent = 'Local Fallback';
+                        break;
+                    case 'error':
+                        statusIcon.textContent = '🔴';
+                        statusText.textContent = 'Error';
+                        break;
+                    default:
+                        statusIcon.textContent = '⚫';
+                        statusText.textContent = 'Unknown';
+                }
+            }
+
+            // Update config details
+            if (configMode) {
+                configMode.textContent = status.isLocal ? 'Local Calculations' : 'MCP Server';
+            }
+
+            if (configServer) {
+                configServer.textContent = status.config.serverUrl || 'Not configured';
+            }
+
+            if (configFeatures) {
+                configFeatures.textContent = status.isLocal ? 'Basic' : 'Enhanced';
+            }
+
+            if (configStatus) {
+                const statusTexts = {
+                    'connected': 'Connected',
+                    'local': 'Ready',
+                    'local_fallback': 'Fallback Active',
+                    'error': 'Error'
+                };
+                const statusColors = {
+                    'connected': 'text-green-600',
+                    'local': 'text-blue-600',
+                    'local_fallback': 'text-yellow-600',
+                    'error': 'text-red-600'
+                };
+                
+                configStatus.textContent = statusTexts[status.connectionStatus] || 'Unknown';
+                configStatus.className = `font-medium ${statusColors[status.connectionStatus] || 'text-gray-600'}`;
+            }
+
+            // Update toggle button
+            if (toggleBtn) {
+                toggleBtn.textContent = status.isLocal ? 'Switch to Remote Mode' : 'Switch to Local Mode';
+            }
+        }
+
+        async function testMCPTools() {
+            const button = document.getElementById('test-mcp-tools');
+            const originalText = button.textContent;
+            
+            button.textContent = '🧪 Testing...';
+            button.disabled = true;
+
+            try {
+                // Test basic optimization tool
+                const testData = {
+                    vehicleData: {
+                        vehicle: { model: 'e4', motorCondition: 'good' },
+                        battery: { type: 'lead', voltage: 72, capacity: 150 },
+                        wheel: { tireDiameter: 22, gearRatio: 8.91 }
+                    },
+                    priorities: { speed: 5, acceleration: 5, hillClimbing: 5, range: 5, regen: 5 }
+                };
+
+                const result = await window.mcpConfig.callTool('optimize_controller', testData);
+                
+                if (result.success) {
+                    alert(`MCP Tools Test Successful!\n\nSource: ${result.source}\nSettings: ${Object.keys(result.optimizedSettings).length} functions optimized\nMethod: ${result.analysis?.method || 'unknown'}`);
+                } else {
+                    alert('MCP Tools Test Failed: ' + (result.error || 'Unknown error'));
+                }
+
+            } catch (error) {
+                alert('MCP Tools Test Error: ' + error.message);
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+
+        function toggleMCPMode() {
+            const status = mcpConfigUI.getStatus();
+            
+            if (status.isLocal) {
+                // Try to switch to remote mode
+                if (status.config.serverUrl) {
+                    // Test connection first
+                    window.mcpConfig.testConnection()
+                        .then(() => {
+                            updateMCPStatus(mcpConfigUI.getStatus());
+                        })
+                        .catch(() => {
+                            alert('Cannot switch to remote mode: Connection failed');
+                        });
+                } else {
+                    alert('Please configure MCP server first');
+                    mcpConfigUI.show();
+                }
+            } else {
+                // Switch to local mode
+                window.mcpConfig.resetToLocal();
+                updateMCPStatus(mcpConfigUI.getStatus());
+            }
+        }
+
+        // Update the ask AI functionality to use MCP
+        async function askAI() {
+            const query = document.getElementById('user-query').value.trim();
+            
+            if (!query) {
+                alert('Please enter a question');
+                return;
+            }
+
+            const responseSection = document.getElementById('response-section');
+            const aiResponse = document.getElementById('ai-response');
+            const settingsDisplay = document.getElementById('settings-display');
+            const actionButtons = document.getElementById('action-buttons');
+            
+            // Show loading
+            responseSection.classList.remove('hidden');
+            aiResponse.innerHTML = '<div class="text-blue-600">🤖 AI Assistant is thinking...</div>';
+
+            try {
+                // Use MCP to get response (or fallback to simulated)
+                let response;
+                
+                if (window.mcpConfig && !window.mcpConfig.isLocal) {
+                    // Try MCP call
+                    try {
+                        response = await window.mcpConfig.callTool('analyze_query', { query: query });
+                    } catch (error) {
+                        console.warn('MCP call failed, using simulation:', error);
+                        response = getSimulatedResponse(query);
+                    }
+                } else {
+                    response = getSimulatedResponse(query);
+                }
+
+                displayAIResponse(response, query);
+                
+            } catch (error) {
+                aiResponse.innerHTML = `<div class="text-red-600">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Update button event listener
+        document.getElementById('ask-ai').addEventListener('click', askAI);
     </script>
 </body>
 </html>

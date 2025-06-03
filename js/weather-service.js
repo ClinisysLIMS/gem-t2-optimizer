@@ -76,6 +76,23 @@ class WeatherService {
      * @returns {Promise<Object>} Coordinates and location info
      */
     async geocodeLocation(location) {
+        // Try API integration layer first if available
+        if (window.apiIntegration && !this.isConfigured()) {
+            try {
+                const weather = await window.apiIntegration.getWeather(location);
+                return {
+                    name: location,
+                    country: 'US',
+                    state: '',
+                    lat: 0, // Placeholder
+                    lon: 0, // Placeholder
+                    isFallback: true
+                };
+            } catch (error) {
+                console.warn('API integration fallback failed:', error);
+            }
+        }
+        
         if (!this.isConfigured()) {
             throw new Error('Weather API key not configured');
         }

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GE Controller Reference Guide - GEM T2 Optimizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        .function-card {
+            transition: all 0.3s ease;
+        }
+        .function-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        .search-highlight {
+            background-color: #fef3c7;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        @media (max-width: 768px) {
+            .mobile-scroll {
+                -webkit-overflow-scrolling: touch;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="sticky-nav bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-gray-900">GEM T2 Optimizer</h1>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="index-new.html" class="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium">Optimizer</a>
+                    <a href="weekend-planner.html" class="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium">Weekend Planner</a>
+                    <a href="reference-guide.html" class="text-green-600 px-3 py-2 text-sm font-medium border-b-2 border-green-600">Reference Guide</a>
+                    <a href="accessories-config.html" class="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium">Accessories</a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="p-2 rounded-md text-gray-700 hover:bg-gray-100">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="index-new.html" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Optimizer</a>
+                <a href="weekend-planner.html" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Weekend Planner</a>
+                <a href="reference-guide.html" class="block px-3 py-2 text-green-600 bg-green-50 rounded-md font-medium">Reference Guide</a>
+                <a href="accessories-config.html" class="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md">Accessories</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">GE Controller Settings Reference Guide</h2>
+            <p class="text-gray-600">Complete reference for all 128 controller functions, error codes, and usage notes</p>
+            
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">128</div>
+                    <div class="text-xs text-gray-600">Total Functions</div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600">26</div>
+                    <div class="text-xs text-gray-600">Active Functions</div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div class="text-2xl font-bold text-orange-600">15</div>
+                    <div class="text-xs text-gray-600">Error Codes</div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600">5</div>
+                    <div class="text-xs text-gray-600">Categories</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" id="search-input" 
+                               placeholder="Search functions, descriptions, or error codes..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <select id="category-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="all">All Categories</option>
+                        <option value="speed">Speed Control</option>
+                        <option value="motor">Motor Protection</option>
+                        <option value="battery">Battery Management</option>
+                        <option value="safety">Safety Features</option>
+                        <option value="diagnostic">Diagnostic</option>
+                    </select>
+                    <button id="reset-filters" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        Reset
+                    </button>
+                </div>
+            </div>
+            <div id="search-results" class="mt-2 text-sm text-gray-600"></div>
+        </div>
+
+        <!-- Quick Navigation -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6 mobile-scroll">
+            <h3 class="font-semibold text-gray-900 mb-3">Quick Navigation</h3>
+            <div class="flex flex-wrap gap-2">
+                <button class="quick-nav-btn px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm hover:bg-green-200" data-section="commonly-used">
+                    Commonly Used
+                </button>
+                <button class="quick-nav-btn px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200" data-section="speed-functions">
+                    Speed Functions
+                </button>
+                <button class="quick-nav-btn px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm hover:bg-orange-200" data-section="motor-functions">
+                    Motor Functions
+                </button>
+                <button class="quick-nav-btn px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm hover:bg-purple-200" data-section="battery-functions">
+                    Battery Functions
+                </button>
+                <button class="quick-nav-btn px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm hover:bg-red-200" data-section="error-codes">
+                    Error Codes
+                </button>
+            </div>
+        </div>
+
+        <!-- Functions List -->
+        <div id="functions-container" class="space-y-6">
+            <!-- Commonly Used Functions -->
+            <section id="commonly-used" class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <span class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">★</span>
+                    Commonly Used Functions
+                </h3>
+                <div id="common-functions-grid" class="grid gap-4">
+                    <!-- Functions will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- All Functions -->
+            <section id="all-functions" class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">All Controller Functions (1-128)</h3>
+                <div id="functions-grid" class="space-y-4">
+                    <!-- Functions will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Error Codes -->
+            <section id="error-codes" class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <span class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-bold mr-3">!</span>
+                    Error Codes & Troubleshooting
+                </h3>
+                <div id="error-codes-grid" class="space-y-4">
+                    <!-- Error codes will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Usage Notes -->
+            <section id="usage-notes" class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Important Usage Notes</h3>
+                <div class="space-y-4">
+                    <div class="border-l-4 border-yellow-400 bg-yellow-50 p-4">
+                        <h4 class="font-semibold text-yellow-900 mb-2">⚡ Safety First</h4>
+                        <ul class="text-sm text-yellow-800 space-y-1">
+                            <li>• Always turn off key switch before programming</li>
+                            <li>• Save current settings before making changes</li>
+                            <li>• Test changes at low speed in safe area</li>
+                            <li>• Keep factory defaults documented</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="border-l-4 border-blue-400 bg-blue-50 p-4">
+                        <h4 class="font-semibold text-blue-900 mb-2">💡 Programming Tips</h4>
+                        <ul class="text-sm text-blue-800 space-y-1">
+                            <li>• Function changes take effect immediately</li>
+                            <li>• Some functions require power cycle to activate</li>
+                            <li>• Use small incremental changes for testing</li>
+                            <li>• Document all changes for future reference</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="border-l-4 border-green-400 bg-green-50 p-4">
+                        <h4 class="font-semibold text-green-900 mb-2">🔧 Maintenance</h4>
+                        <ul class="text-sm text-green-800 space-y-1">
+                            <li>• Check motor brushes when adjusting motor functions</li>
+                            <li>• Monitor battery voltage after changing battery settings</li>
+                            <li>• Verify tire pressure when modifying speed functions</li>
+                            <li>• Keep controller connections clean and tight</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="hidden fixed bottom-4 right-4 bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition-opacity">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
+
+    <!-- JavaScript -->
+    <script src="js/reference-guide.js"></script>
+</body>
+</html>

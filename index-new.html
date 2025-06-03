@@ -13,15 +13,99 @@
     <!-- Header -->
     <header class="bg-green-700 text-white p-4 no-print">
         <div class="container mx-auto">
-            <h1 class="text-2xl font-bold">🚗⚡ GEM T2 Smart Optimizer</h1>
-            <p class="text-sm opacity-90">AI-Powered Weekend Planning & Controller Optimization</p>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold">🚗⚡ GEM T2 Smart Optimizer</h1>
+                    <p class="text-sm opacity-90">AI-Powered Weekend Planning & Controller Optimization</p>
+                </div>
+                <nav class="hidden md:flex space-x-4">
+                    <a href="user-guide.html" class="text-sm hover:underline">📚 User Guide</a>
+                    <a href="community.html" class="text-sm hover:underline">🌟 Community</a>
+                    <a href="weekend-planner.html" class="text-sm hover:underline">Weekend Planner</a>
+                    <a href="reference-guide.html" class="text-sm hover:underline">Reference Guide</a>
+                    <a href="accessories-config.html" class="text-sm hover:underline">Accessories</a>
+                </nav>
+            </div>
         </div>
     </header>
 
     <main class="container mx-auto px-4 py-8">
+        <!-- MCP Integration Banner -->
+        <div class="max-w-4xl mx-auto mb-6">
+            <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold mb-2 flex items-center">
+                            <span class="mr-2">🤖</span>
+                            Enhanced with Model Context Protocol (MCP)
+                        </h2>
+                        <p class="text-sm opacity-90">
+                            Experience AI-powered optimization with advanced context awareness for superior results
+                        </p>
+                    </div>
+                    <button id="enable-mcp" class="bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                        Configure MCP
+                    </button>
+                </div>
+                <div class="mt-4 flex items-center space-x-6 text-sm">
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        Real-time Analysis
+                    </div>
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        Smart Recommendations
+                    </div>
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        Enhanced Accuracy
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Flow Container -->
         <div id="main-flow" class="max-w-4xl mx-auto">
             
+            <!-- Welcome Section -->
+            <section id="welcome-section" class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-3">Welcome to the Future of GEM Optimization</h2>
+                    <p class="text-lg text-gray-600">Get started with AI-powered controller optimization in 3 simple steps</p>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
+                        <div class="text-blue-600 text-2xl mb-2">1️⃣</div>
+                        <h3 class="font-semibold text-blue-900 mb-1">Vehicle Info</h3>
+                        <p class="text-sm text-blue-700">Enter your GEM details for personalized optimization</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
+                        <div class="text-green-600 text-2xl mb-2">2️⃣</div>
+                        <h3 class="font-semibold text-green-900 mb-1">Trip Planning</h3>
+                        <p class="text-sm text-green-700">Choose your usage pattern or plan a weekend trip</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
+                        <div class="text-purple-600 text-2xl mb-2">3️⃣</div>
+                        <h3 class="font-semibold text-purple-900 mb-1">Get Results</h3>
+                        <p class="text-sm text-purple-700">Receive AI-optimized settings with safety analysis</p>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="document.getElementById('vehicle-info-section').scrollIntoView({behavior: 'smooth'})" 
+                            class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                        Get Started →
+                    </button>
+                </div>
+            </section>
+
             <!-- Step 1: Vehicle Information (Mandatory) -->
             <section id="vehicle-info-section" class="bg-white rounded-lg shadow-lg p-6 mb-8">
                 <div class="mb-6">
@@ -142,6 +226,75 @@
                             <div id="classification-result" class="text-sm">
                                 <span class="font-semibold">Golf Cart</span>
                                 <p class="text-xs text-gray-600 mt-1">Speed: ≤25 MPH | Local roads only</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Battery & Drivetrain Details -->
+                    <div class="space-y-4">
+                        <h3 class="font-semibold text-gray-800 mb-3">Battery & Drivetrain Configuration</h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="battery-voltage" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Battery Voltage *
+                                </label>
+                                <select id="battery-voltage" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                    <option value="">Select voltage...</option>
+                                    <option value="48">48V</option>
+                                    <option value="60">60V</option>
+                                    <option value="72">72V</option>
+                                    <option value="82">82V</option>
+                                    <option value="96">96V</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="battery-type" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Battery Type *
+                                </label>
+                                <select id="battery-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                    <option value="">Select type...</option>
+                                    <option value="lead-acid">Lead Acid (Flooded)</option>
+                                    <option value="agm">AGM (Absorbed Glass Mat)</option>
+                                    <option value="gel">Gel</option>
+                                    <option value="lithium">Lithium (LiFePO4)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="battery-capacity" class="block text-sm font-medium text-gray-700 mb-1">
+                                Battery Capacity *
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="battery-capacity" min="50" max="500" step="5" placeholder="105" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                <span class="text-sm text-gray-600">Ah</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Total amp-hours at the 20-hour rate</p>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="tire-diameter" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Tire Diameter *
+                                </label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="number" id="tire-diameter" min="18" max="26" step="0.5" placeholder="22.5" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                    <span class="text-sm text-gray-600">inches</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Overall diameter when inflated</p>
+                            </div>
+                            
+                            <div>
+                                <label for="gear-ratio" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Gear Ratio *
+                                </label>
+                                <input type="text" id="gear-ratio" placeholder="10.35:1" pattern="[0-9]+\.?[0-9]*:1"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                                <p class="text-xs text-gray-500 mt-1">e.g., 10.35:1 or 12.44:1</p>
                             </div>
                         </div>
                     </div>
@@ -348,7 +501,20 @@
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
     </script>
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/firebase-profile-manager.js"></script>
+    <script src="js/community-manager.js"></script>
+    
     <script src="js/secure-storage.js"></script>
+    <script src="js/api-manager.js"></script>
+    <script src="js/fallback-calculations.js"></script>
+    <script src="js/fallback-system.js"></script>
+    <script src="js/api-integration.js"></script>
+    <script src="js/mcp-config.js"></script>
     <script src="js/weather-service.js"></script>
     <script src="js/terrain-service.js"></script>
     <script src="js/optimizer.js"></script>

@@ -52,6 +52,12 @@ class ValidationSystem {
                     message: 'Vehicle model is required'
                 });
             }
+            if (!inputData.vehicle.motorCondition) {
+                this.errors.push({
+                    field: 'vehicle.motorCondition',
+                    message: 'Motor condition is required'
+                });
+            }
         }
         
         // If battery section exists, validate its required fields
@@ -62,6 +68,18 @@ class ValidationSystem {
                     message: 'Battery voltage is required'
                 });
             }
+            if (!inputData.battery.type) {
+                this.errors.push({
+                    field: 'battery.type',
+                    message: 'Battery type is required'
+                });
+            }
+            if (!inputData.battery.capacity) {
+                this.errors.push({
+                    field: 'battery.capacity',
+                    message: 'Battery capacity is required'
+                });
+            }
         }
         
         // If wheel section exists, validate its required fields
@@ -70,6 +88,12 @@ class ValidationSystem {
                 this.errors.push({
                     field: 'wheel.tireDiameter',
                     message: 'Tire diameter is required'
+                });
+            }
+            if (!inputData.wheel.gearRatio) {
+                this.errors.push({
+                    field: 'wheel.gearRatio',
+                    message: 'Gear ratio is required'
                 });
             }
         }
@@ -128,10 +152,10 @@ class ValidationSystem {
                     field: 'battery.voltage',
                     message: 'Battery voltage must be a number'
                 });
-            } else if (voltage < 48 || voltage > 100) {
+            } else if (voltage < 36 || voltage > 120) {
                 this.warnings.push({
                     field: 'battery.voltage',
-                    message: 'Battery voltage seems unusual (expected 48-100V)'
+                    message: 'Battery voltage seems unusual (expected 36-120V)'
                 });
             }
         }
@@ -145,12 +169,20 @@ class ValidationSystem {
                     field: 'battery.capacity',
                     message: 'Battery capacity must be a number'
                 });
-            } else if (capacity < 50 || capacity > 300) {
+            } else if (capacity < 50 || capacity > 500) {
                 this.warnings.push({
                     field: 'battery.capacity',
-                    message: 'Battery capacity seems unusual (expected 50-300 Ah)'
+                    message: 'Battery capacity seems unusual (expected 50-500 Ah)'
                 });
             }
+        }
+        
+        // Validate battery type
+        if (batteryConfig.type && !['lead', 'agm', 'lithium'].includes(batteryConfig.type)) {
+            this.errors.push({
+                field: 'battery.type',
+                message: 'Battery type must be Lead Acid, AGM, or Lithium'
+            });
         }
         
         // Validate lithium compatibility
@@ -158,6 +190,14 @@ class ValidationSystem {
             this.warnings.push({
                 field: 'battery.voltage',
                 message: 'Lithium batteries typically have higher voltage (80-100V)'
+            });
+        }
+        
+        // Validate AGM compatibility
+        if (batteryConfig.type === 'agm' && batteryConfig.voltage > 96) {
+            this.warnings.push({
+                field: 'battery.voltage',
+                message: 'AGM batteries typically use standard voltage systems (48-96V)'
             });
         }
     }
@@ -176,10 +216,10 @@ class ValidationSystem {
                     field: 'wheel.tireDiameter',
                     message: 'Tire diameter must be a number'
                 });
-            } else if (diameter < 20 || diameter > 26) {
+            } else if (diameter < 18 || diameter > 28) {
                 this.warnings.push({
                     field: 'wheel.tireDiameter',
-                    message: 'Tire diameter seems unusual (expected 20-26 inches)'
+                    message: 'Tire diameter seems unusual (expected 18-28 inches)'
                 });
             }
         }
@@ -193,10 +233,10 @@ class ValidationSystem {
                     field: 'wheel.gearRatio',
                     message: 'Gear ratio must be a number'
                 });
-            } else if (ratio < 5 || ratio > 15) {
+            } else if (ratio < 4 || ratio > 20) {
                 this.warnings.push({
                     field: 'wheel.gearRatio',
-                    message: 'Gear ratio seems unusual (expected 5-15)'
+                    message: 'Gear ratio seems unusual (expected 4-20)'
                 });
             }
         }

@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Guide - GEM T2 Controller Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'gem-green': '#10B981',
+                        'gem-blue': '#3B82F6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-gem-green text-white p-4 sticky top-0 z-50 shadow-lg">
+        <div class="container mx-auto">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold">📚 GEM T2 Optimizer User Guide</h1>
+                    <p class="text-sm opacity-90 hidden md:block">Complete step-by-step instructions</p>
+                </div>
+                <nav class="flex space-x-2 md:space-x-4">
+                    <a href="index-new.html" class="text-sm hover:underline">← Back to App</a>
+                    <a href="community.html" class="text-sm hover:underline">Community</a>
+                    <a href="reference-guide.html" class="text-sm hover:underline">Reference</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <!-- Sidebar Navigation -->
+            <div class="lg:w-1/4">
+                <div class="bg-white rounded-lg shadow-lg p-6 sticky top-24">
+                    <h2 class="text-lg font-semibold mb-4">📋 Quick Navigation</h2>
+                    <nav class="space-y-2">
+                        <a href="#getting-started" class="nav-link block px-3 py-2 text-sm rounded hover:bg-gray-100">Getting Started</a>
+                        <a href="#pdf-upload" class="nav-link block px-3 py-2 text-sm rounded hover:bg-gray-100">1. PDF Upload</a>
+                        <a href="#vehicle-info" class="nav-link block px-3 py-2 text-sm rounded hover:bg-gray-100">2. Vehicle Information</a>
+                        <a href="#trip-planner" class="nav-link block px-3 py-2 text-sm rounded hover:bg-gray-100">3. Trip Planner</a>
+                        <a href="#optimization-results" class="nav-link block px-3 py-2 text-sm rounded hover:bg-gray-100">4. Understanding Results</a>
+                        <a href="#applying-settings" class="nav-link block px-3 py-2 text-sm rounded hover:bg-gray-100">5. Applying Settings</a>
+                        <a href="#community-features" class="nav-link block px-3 py-2 text-sm rounded hover:bg-gray-100">Community Features</a>
+                        <a href="#troubleshooting" class="nav-link block px-3 py-2 text-sm rounded hover:bg-gray-100">Troubleshooting</a>
+                        <a href="#safety" class="nav-link block px-3 py-2 text-sm rounded hover:bg-gray-100">Safety Guidelines</a>
+                    </nav>
+                    
+                    <!-- Quick Help -->
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <h3 class="font-semibold text-blue-900 mb-2">Need Quick Help?</h3>
+                        <p class="text-sm text-blue-700 mb-3">Use the AI assistant in the main app for real-time guidance.</p>
+                        <a href="index-new.html" class="inline-block bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700">
+                            Open AI Assistant
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lg:w-3/4">
+                
+                <!-- Getting Started -->
+                <section id="getting-started" class="mb-12">
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">🚀 Getting Started</h2>
+                        
+                        <div class="grid md:grid-cols-3 gap-6 mb-8">
+                            <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                                <div class="text-4xl mb-4">📱</div>
+                                <h3 class="font-semibold text-blue-900 mb-2">Easy to Use</h3>
+                                <p class="text-sm text-blue-700">Simple 3-step process works on any device</p>
+                            </div>
+                            <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                                <div class="text-4xl mb-4">🤖</div>
+                                <h3 class="font-semibold text-green-900 mb-2">AI Powered</h3>
+                                <p class="text-sm text-green-700">Smart optimization based on your specific vehicle</p>
+                            </div>
+                            <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                                <div class="text-4xl mb-4">🛡️</div>
+                                <h3 class="font-semibold text-purple-900 mb-2">Safety First</h3>
+                                <p class="text-sm text-purple-700">Built-in safety checks and warnings</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-yellow-800">Important Safety Notice</h3>
+                                    <p class="mt-1 text-sm text-yellow-700">
+                                        Controller modifications can affect vehicle safety and warranty. Always read safety guidelines and consult a professional if uncertain.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mb-4">System Requirements</h3>
+                        <div class="grid md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <h4 class="font-medium mb-2">Software Requirements</h4>
+                                <ul class="space-y-1 text-sm text-gray-600">
+                                    <li>✅ Modern web browser (Chrome, Firefox, Safari, Edge)</li>
+                                    <li>✅ Internet connection for AI features</li>
+                                    <li>✅ PDF reader for exporting results</li>
+                                    <li>✅ Sentry software for programming (recommended)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">Hardware Requirements</h4>
+                                <ul class="space-y-1 text-sm text-gray-600">
+                                    <li>✅ Computer or mobile device</li>
+                                    <li>✅ Programming cable (for controller access)</li>
+                                    <li>✅ Basic tools for controller access</li>
+                                    <li>✅ Multimeter (recommended)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-green-900 mb-2">Quick Start Tips</h4>
+                            <ul class="space-y-1 text-sm text-green-700">
+                                <li>• Have your current controller settings PDF ready (if available)</li>
+                                <li>• Know your GEM model, year, and motor type</li>
+                                <li>• Plan to spend 30-60 minutes for complete optimization</li>
+                                <li>• Consider your intended use (daily driving, weekend trips, etc.)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PDF Upload Section -->
+                <section id="pdf-upload" class="mb-12">
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-blue-100 rounded-full p-3 mr-4">
+                                <span class="text-blue-600 text-xl font-bold">1</span>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900">📄 Uploading Existing Settings via PDF</h2>
+                                <p class="text-gray-600">Import your current controller settings for baseline optimization</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid lg:grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Why Upload Current Settings?</h3>
+                                <div class="space-y-3 text-sm text-gray-700">
+                                    <div class="flex items-start">
+                                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>Use existing configuration as starting point</span>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>Make incremental improvements</span>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>Preserve working settings</span>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>Compare old vs. new settings</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Supported PDF Formats</h3>
+                                <div class="space-y-3">
+                                    <div class="border border-gray-200 rounded-lg p-3">
+                                        <div class="font-medium text-sm">Sentry Software Exports</div>
+                                        <div class="text-xs text-gray-600">Most common format, best compatibility</div>
+                                    </div>
+                                    <div class="border border-gray-200 rounded-lg p-3">
+                                        <div class="font-medium text-sm">GE Controller Documentation</div>
+                                        <div class="text-xs text-gray-600">Reference guide PDFs with function tables</div>
+                                    </div>
+                                    <div class="border border-gray-200 rounded-lg p-3">
+                                        <div class="font-medium text-sm">Custom Reports</div>
+                                        <div class="text-xs text-gray-600">From other optimization tools</div>
+                                    </div>
+                                    <div class="border border-gray-200 rounded-lg p-3">
+                                        <div class="font-medium text-sm">Scanned Documents</div>
+                                        <div class="text-xs text-gray-600">Clear, readable controller displays</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8">
+                            <h3 class="text-lg font-semibold mb-4">Upload Process</h3>
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="text-center p-4 border border-gray-200 rounded-lg">
+                                    <div class="text-3xl mb-2">📁</div>
+                                    <div class="font-medium mb-1">Step 1: Locate Upload Area</div>
+                                    <div class="text-sm text-gray-600">Find the "Current Settings" section in Vehicle Information</div>
+                                </div>
+                                <div class="text-center p-4 border border-gray-200 rounded-lg">
+                                    <div class="text-3xl mb-2">⬆️</div>
+                                    <div class="font-medium mb-1">Step 2: Upload PDF</div>
+                                    <div class="text-sm text-gray-600">Drag & drop or click to select your PDF file</div>
+                                </div>
+                                <div class="text-center p-4 border border-gray-200 rounded-lg">
+                                    <div class="text-3xl mb-2">🤖</div>
+                                    <div class="font-medium mb-1">Step 3: AI Analysis</div>
+                                    <div class="text-sm text-gray-600">Wait 10-30 seconds for automatic extraction</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-900 mb-2">💡 Pro Tips for Best Results</h4>
+                            <ul class="space-y-1 text-sm text-blue-700">
+                                <li>• Use PDFs exported directly from Sentry software when possible</li>
+                                <li>• Ensure text is selectable (not just an image)</li>
+                                <li>• Keep file size under 10MB for faster processing</li>
+                                <li>• Include function descriptions if available in your PDF</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Vehicle Information Section -->
+                <section id="vehicle-info" class="mb-12">
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-green-100 rounded-full p-3 mr-4">
+                                <span class="text-green-600 text-xl font-bold">2</span>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900">🚗 Entering Vehicle Information</h2>
+                                <p class="text-gray-600">Accurate specifications ensure safe and effective optimization</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid lg:grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Required Information</h3>
+                                <div class="space-y-4">
+                                    <div class="border-l-4 border-blue-500 pl-4">
+                                        <h4 class="font-medium">Basic Vehicle Details</h4>
+                                        <ul class="text-sm text-gray-600 mt-1">
+                                            <li>• Vehicle Model (e2, e4, e6, eS, eL, eM, elXD)</li>
+                                            <li>• Model Year (affects controller compatibility)</li>
+                                            <li>• Controller Type (T2, T4, T1, or Unknown)</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="border-l-4 border-green-500 pl-4">
+                                        <h4 class="font-medium">Motor Configuration</h4>
+                                        <ul class="text-sm text-gray-600 mt-1">
+                                            <li>• Motor Type (DC/AC, Stock/Upgraded)</li>
+                                            <li>• Power Rating (typically 3.5HP stock)</li>
+                                            <li>• Current Top Speed (for classification)</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="border-l-4 border-purple-500 pl-4">
+                                        <h4 class="font-medium">Battery & Drivetrain</h4>
+                                        <ul class="text-sm text-gray-600 mt-1">
+                                            <li>• Battery Voltage (48V-96V)</li>
+                                            <li>• Battery Type (Lead Acid, AGM, Gel, Lithium)</li>
+                                            <li>• Battery Capacity (Ah rating)</li>
+                                            <li>• Tire Diameter and Gear Ratio</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Vehicle Classification</h3>
+                                <div class="space-y-3">
+                                    <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                        <div class="font-medium text-green-900">Golf Cart (≤19 MPH)</div>
+                                        <div class="text-sm text-green-700">Local roads only, no license required</div>
+                                    </div>
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                        <div class="font-medium text-blue-900">LSV (20-25 MPH)</div>
+                                        <div class="text-sm text-blue-700">Some public roads, may require license</div>
+                                    </div>
+                                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                        <div class="font-medium text-orange-900">Street Legal (>25 MPH)</div>
+                                        <div class="text-sm text-orange-700">Special permits may be required</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                    <h4 class="font-semibold text-yellow-900 mb-2">⚠️ Important Notes</h4>
+                                    <ul class="space-y-1 text-sm text-yellow-700">
+                                        <li>• Check local regulations for your area</li>
+                                        <li>• Speed modifications may affect insurance</li>
+                                        <li>• Consider legal implications before optimization</li>
+                                        <li>• Consult dealer about warranty impact</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8">
+                            <h3 class="text-lg font-semibold mb-4">AI Assistance Features</h3>
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="text-2xl mb-2">🤖</div>
+                                    <h4 class="font-medium mb-2">Auto-Fill Suggestions</h4>
+                                    <p class="text-sm text-gray-600">AI suggests compatible configurations based on model and year</p>
+                                </div>
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="text-2xl mb-2">✅</div>
+                                    <h4 class="font-medium mb-2">Real-Time Validation</h4>
+                                    <p class="text-sm text-gray-600">Instant feedback on field entries with error checking</p>
+                                </div>
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="text-2xl mb-2">🔍</div>
+                                    <h4 class="font-medium mb-2">Compatibility Checks</h4>
+                                    <p class="text-sm text-gray-600">Automatic verification of component combinations</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Trip Planner Section -->
+                <section id="trip-planner" class="mb-12">
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-purple-100 rounded-full p-3 mr-4">
+                                <span class="text-purple-600 text-xl font-bold">3</span>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900">🗺️ Using the Trip Planner</h2>
+                                <p class="text-gray-600">Optimize settings based on your intended use</p>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold mb-4">Quick Action Modes</h3>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-green-400 transition-colors cursor-pointer">
+                                <div class="text-3xl mb-2">🏠</div>
+                                <h4 class="font-semibold mb-1">Daily Commute</h4>
+                                <p class="text-sm text-gray-600">Optimizes for efficiency and range</p>
+                                <div class="mt-2 text-xs text-green-600">Best for: Regular transportation</div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-green-400 transition-colors cursor-pointer">
+                                <div class="text-3xl mb-2">🌲</div>
+                                <h4 class="font-semibold mb-1">Weekend Outing</h4>
+                                <p class="text-sm text-gray-600">Opens comprehensive trip planner</p>
+                                <div class="mt-2 text-xs text-green-600">Best for: Recreational trips</div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-green-400 transition-colors cursor-pointer">
+                                <div class="text-3xl mb-2">🏁</div>
+                                <h4 class="font-semibold mb-1">Max Performance</h4>
+                                <p class="text-sm text-gray-600">Prioritizes speed and acceleration</p>
+                                <div class="mt-2 text-xs text-green-600">Best for: Events and rallies</div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-green-400 transition-colors cursor-pointer">
+                                <div class="text-3xl mb-2">🔧</div>
+                                <h4 class="font-semibold mb-1">Accessories</h4>
+                                <p class="text-sm text-gray-600">Accounts for additional equipment</p>
+                                <div class="mt-2 text-xs text-green-600">Best for: Modified vehicles</div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-green-400 transition-colors cursor-pointer">
+                                <div class="text-3xl mb-2">🎯</div>
+                                <h4 class="font-semibold mb-1">Driving Modes</h4>
+                                <p class="text-sm text-gray-600">Special scenarios and conditions</p>
+                                <div class="mt-2 text-xs text-green-600">Best for: Specific situations</div>
+                            </div>
+                            
+                            <div class="border border-gray-200 rounded-lg p-4 hover:border-green-400 transition-colors cursor-pointer">
+                                <div class="text-3xl mb-2">📱</div>
+                                <h4 class="font-semibold mb-1">Mobile Routes</h4>
+                                <p class="text-sm text-gray-600">GPS-based optimization</p>
+                                <div class="mt-2 text-xs text-green-600">Best for: On-the-go planning</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-blue-900 mb-4">Weekend Trip Planner Features</h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="font-medium text-blue-900 mb-2">Trip Details</h4>
+                                    <ul class="space-y-1 text-sm text-blue-700">
+                                        <li>• Destination planning with route analysis</li>
+                                        <li>• Date selection for weather forecasting</li>
+                                        <li>• Trip type optimization</li>
+                                        <li>• Passenger and cargo considerations</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-blue-900 mb-2">Advanced Features</h4>
+                                    <ul class="space-y-1 text-sm text-blue-700">
+                                        <li>• Real-time weather integration</li>
+                                        <li>• Terrain analysis and warnings</li>
+                                        <li>• Charging station mapping</li>
+                                        <li>• Range estimation and planning</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Optimization Results -->
+                <section id="optimization-results" class="mb-12">
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">📊 Understanding Optimization Results</h2>
+                        
+                        <div class="space-y-8">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Results Overview</h3>
+                                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                    <h4 class="font-medium mb-2">Controller Settings Table</h4>
+                                    <div class="grid grid-cols-5 gap-2 text-sm font-medium text-gray-700 mb-2">
+                                        <div>Function</div>
+                                        <div>Description</div>
+                                        <div>Current</div>
+                                        <div>Optimized</div>
+                                        <div>Change</div>
+                                    </div>
+                                    <div class="grid grid-cols-5 gap-2 text-sm text-gray-600 py-2 border-t">
+                                        <div>F.1</div>
+                                        <div>Max Forward Current</div>
+                                        <div>255</div>
+                                        <div>280</div>
+                                        <div class="text-green-600">🔼 +25</div>
+                                    </div>
+                                    <div class="grid grid-cols-5 gap-2 text-sm text-gray-600 py-2 border-t">
+                                        <div>F.14</div>
+                                        <div>IR Compensation</div>
+                                        <div>120</div>
+                                        <div>95</div>
+                                        <div class="text-red-600">🔽 -25</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Change Indicators</h3>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div class="space-y-3">
+                                        <div class="flex items-center">
+                                            <span class="text-green-600 text-lg mr-2">🔼</span>
+                                            <span class="font-medium mr-2">Green Arrow:</span>
+                                            <span class="text-sm text-gray-600">Increased for better performance</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="text-red-600 text-lg mr-2">🔽</span>
+                                            <span class="font-medium mr-2">Red Arrow:</span>
+                                            <span class="text-sm text-gray-600">Decreased for safety/efficiency</span>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center">
+                                            <span class="text-gray-500 text-lg mr-2">➖</span>
+                                            <span class="font-medium mr-2">Gray Dash:</span>
+                                            <span class="text-sm text-gray-600">No change recommended</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="text-yellow-600 text-lg mr-2">⚠️</span>
+                                            <span class="font-medium mr-2">Warning:</span>
+                                            <span class="text-sm text-gray-600">Significant change requiring attention</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Safety Analysis</h3>
+                                <div class="grid md:grid-cols-3 gap-4">
+                                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                        <div class="font-medium text-green-900 mb-2">✅ Approved Changes</div>
+                                        <p class="text-sm text-green-700">Safe modifications within normal parameters</p>
+                                    </div>
+                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                        <div class="font-medium text-yellow-900 mb-2">⚠️ Caution Changes</div>
+                                        <p class="text-sm text-yellow-700">Require monitoring and gradual implementation</p>
+                                    </div>
+                                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                        <div class="font-medium text-red-900 mb-2">🚫 Critical Warnings</div>
+                                        <p class="text-sm text-red-700">Approaching limits, expert consultation recommended</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Performance Predictions</h3>
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h4 class="font-medium mb-3">Efficiency Mode Results</h4>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between">
+                                                <span>🔋 Range:</span>
+                                                <span class="text-green-600">+15-25% increase</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>⚡ Energy Use:</span>
+                                                <span class="text-green-600">10-20% reduction</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>🌡️ Heat:</span>
+                                                <span class="text-green-600">Reduced temperature</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium mb-3">Performance Mode Results</h4>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between">
+                                                <span>🚀 Acceleration:</span>
+                                                <span class="text-blue-600">20-30% improvement</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>🏔️ Hill Climbing:</span>
+                                                <span class="text-blue-600">Better on >8% grades</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>⚡ Responsiveness:</span>
+                                                <span class="text-blue-600">Improved throttle</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Applying Settings -->
+                <section id="applying-settings" class="mb-12">
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">⚙️ Applying Settings to Your GEM Controller</h2>
+                        
+                        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-red-800">⚠️ SAFETY FIRST</h3>
+                                    <p class="mt-1 text-sm text-red-700">
+                                        Always follow proper safety procedures when working with electrical systems. If you're not comfortable with these procedures, consult a qualified GEM technician.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-8">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Pre-Application Safety Checklist</h3>
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h4 class="font-medium mb-3">Safety Preparations</h4>
+                                        <div class="space-y-2">
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-2">
+                                                <span class="text-sm">Vehicle parked on level ground</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-2">
+                                                <span class="text-sm">Parking brake engaged</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-2">
+                                                <span class="text-sm">Key removed and charger disconnected</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-2">
+                                                <span class="text-sm">Safety equipment ready</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-2">
+                                                <span class="text-sm">Original settings backed up</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium mb-3">Required Tools</h4>
+                                        <ul class="space-y-1 text-sm text-gray-600">
+                                            <li>• Programming interface (Sentry software + cable)</li>
+                                            <li>• Laptop/computer with software installed</li>
+                                            <li>• Printed copy of optimization results</li>
+                                            <li>• Multimeter for voltage verification</li>
+                                            <li>• Basic tools for controller access</li>
+                                            <li>• Fire extinguisher nearby</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Programming Process</h3>
+                                <div class="space-y-4">
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <h4 class="font-medium mb-2">Step 1: Access Controller</h4>
+                                        <p class="text-sm text-gray-600 mb-2">Controller location varies by model:</p>
+                                        <ul class="text-sm text-gray-600 space-y-1">
+                                            <li>• <strong>e2/e4/e6:</strong> Under driver's seat</li>
+                                            <li>• <strong>eS/eL/eM:</strong> Under hood or behind panel</li>
+                                            <li>• <strong>elXD:</strong> Rear cargo area</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <h4 class="font-medium mb-2">Step 2: Connect Programming Interface</h4>
+                                        <p class="text-sm text-gray-600">Locate programming port and connect cable securely between controller and laptop.</p>
+                                    </div>
+                                    
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <h4 class="font-medium mb-2">Step 3: Backup Current Settings</h4>
+                                        <p class="text-sm text-gray-600">CRITICAL: Always save current settings first. File → Save → "Original_Settings_[Date]"</p>
+                                    </div>
+                                    
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <h4 class="font-medium mb-2">Step 4: Program Functions</h4>
+                                        <p class="text-sm text-gray-600">Navigate to each function, enter new values carefully, and verify each change.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Testing Protocol</h3>
+                                <div class="grid md:grid-cols-3 gap-4">
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-blue-900 mb-2">Phase 1: Stationary</h4>
+                                        <ul class="text-sm text-blue-700 space-y-1">
+                                            <li>• Check warning lights</li>
+                                            <li>• Test horn and lights</li>
+                                            <li>• Verify display functions</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-green-900 mb-2">Phase 2: Low Speed</h4>
+                                        <ul class="text-sm text-green-700 space-y-1">
+                                            <li>• Walking speed tests</li>
+                                            <li>• Forward/reverse operation</li>
+                                            <li>• Steering and braking</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-purple-900 mb-2">Phase 3: Normal Use</h4>
+                                        <ul class="text-sm text-purple-700 space-y-1">
+                                            <li>• Gradual acceleration</li>
+                                            <li>• Full throttle (open area)</li>
+                                            <li>• Hill climbing test</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Community Features -->
+                <section id="community-features" class="mb-12">
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">🌟 Community Features</h2>
+                        
+                        <p class="text-gray-600 mb-6">Connect with other GEM owners to share successful configurations and learn from community experiences.</p>
+                        
+                        <div class="grid md:grid-cols-2 gap-6 mb-8">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Sharing Your Success</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-start">
+                                        <span class="text-green-500 text-xl mr-3">📤</span>
+                                        <div>
+                                            <h4 class="font-medium">Share Configurations</h4>
+                                            <p class="text-sm text-gray-600">Upload your optimized settings with detailed descriptions</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <span class="text-blue-500 text-xl mr-3">🏷️</span>
+                                        <div>
+                                            <h4 class="font-medium">Categorize by Use</h4>
+                                            <p class="text-sm text-gray-600">Routes, events, weather conditions, or general use</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <span class="text-purple-500 text-xl mr-3">💬</span>
+                                        <div>
+                                            <h4 class="font-medium">Add Context</h4>
+                                            <p class="text-sm text-gray-600">Include vehicle specs, route details, and usage notes</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Learning from Others</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-start">
+                                        <span class="text-orange-500 text-xl mr-3">🔍</span>
+                                        <div>
+                                            <h4 class="font-medium">Smart Search</h4>
+                                            <p class="text-sm text-gray-600">Filter by vehicle model, route type, or conditions</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <span class="text-yellow-500 text-xl mr-3">⭐</span>
+                                        <div>
+                                            <h4 class="font-medium">Community Ratings</h4>
+                                            <p class="text-sm text-gray-600">See what works best based on user feedback</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <span class="text-red-500 text-xl mr-3">⬇️</span>
+                                        <div>
+                                            <h4 class="font-medium">One-Click Apply</h4>
+                                            <p class="text-sm text-gray-600">Download and apply community configurations</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold text-purple-900 mb-4">Getting Started with Community</h3>
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="text-center">
+                                    <div class="text-3xl mb-2">👤</div>
+                                    <h4 class="font-medium mb-1">Create Account</h4>
+                                    <p class="text-sm text-gray-600">Sign up to share and bookmark configurations</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-3xl mb-2">🔍</div>
+                                    <h4 class="font-medium mb-1">Explore Content</h4>
+                                    <p class="text-sm text-gray-600">Browse configurations by category and rating</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-3xl mb-2">🤝</div>
+                                    <h4 class="font-medium mb-1">Contribute</h4>
+                                    <p class="text-sm text-gray-600">Share your successful optimizations</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Troubleshooting -->
+                <section id="troubleshooting" class="mb-12">
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">🔧 Troubleshooting</h2>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Common Issues</h3>
+                                <div class="space-y-4">
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-red-600 mb-2">PDF Upload: "No valid settings found"</h4>
+                                        <div class="text-sm text-gray-600">
+                                            <p class="mb-2"><strong>Solutions:</strong></p>
+                                            <ul class="space-y-1 ml-4">
+                                                <li>• Ensure PDF contains function numbers (F.1, F.2, etc.)</li>
+                                                <li>• Check that text is selectable, not just an image</li>
+                                                <li>• Try the "Enhanced PDF Analyzer" for complex formats</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-yellow-600 mb-2">Vehicle Info: "Incompatible combination"</h4>
+                                        <div class="text-sm text-gray-600">
+                                            <p class="mb-2"><strong>Solutions:</strong></p>
+                                            <ul class="space-y-1 ml-4">
+                                                <li>• Verify actual vehicle specifications</li>
+                                                <li>• Check controller model number on physical unit</li>
+                                                <li>• Contact dealer for confirmation if uncertain</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-blue-600 mb-2">Optimization: "Insufficient data"</h4>
+                                        <div class="text-sm text-gray-600">
+                                            <p class="mb-2"><strong>Solutions:</strong></p>
+                                            <ul class="space-y-1 ml-4">
+                                                <li>• Complete all required vehicle information</li>
+                                                <li>• Verify motor and battery specifications</li>
+                                                <li>• Upload current settings PDF for baseline</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Getting Help</h3>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-blue-900 mb-2">Built-in Resources</h4>
+                                        <ul class="space-y-1 text-sm text-blue-700">
+                                            <li>• AI Assistant (real-time chat help)</li>
+                                            <li>• Tooltips (hover over ? icons)</li>
+                                            <li>• Reference Guide (complete documentation)</li>
+                                            <li>• Community Q&A</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-green-900 mb-2">External Support</h4>
+                                        <ul class="space-y-1 text-sm text-green-700">
+                                            <li>• User forums and discussion boards</li>
+                                            <li>• Video tutorials (step-by-step guides)</li>
+                                            <li>• Professional technician assistance</li>
+                                            <li>• GEM dealer network support</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Safety Guidelines -->
+                <section id="safety" class="mb-12">
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">🛡️ Safety Guidelines</h2>
+                        
+                        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                            <h3 class="font-medium text-red-800 mb-2">Critical Safety Principles</h3>
+                            <ul class="space-y-1 text-sm text-red-700">
+                                <li>• Always prioritize safety over performance gains</li>
+                                <li>• When in doubt, consult a qualified professional</li>
+                                <li>• Never exceed manufacturer safety limits</li>
+                                <li>• Monitor vehicle performance after any changes</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">Before Changes</h3>
+                                <ul class="space-y-2 text-sm text-gray-600">
+                                    <li>✅ Read all instructions completely</li>
+                                    <li>✅ Understand modification risks</li>
+                                    <li>✅ Backup original settings</li>
+                                    <li>✅ Have emergency contact ready</li>
+                                    <li>✅ Check warranty implications</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">During Changes</h3>
+                                <ul class="space-y-2 text-sm text-gray-600">
+                                    <li>⚡ Ensure vehicle is powered off</li>
+                                    <li>🔧 Use proper programming tools</li>
+                                    <li>📋 Double-check each setting</li>
+                                    <li>🔄 Verify changes before applying</li>
+                                    <li>⏱️ Take your time, don't rush</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4">After Changes</h3>
+                                <ul class="space-y-2 text-sm text-gray-600">
+                                    <li>🐌 Start with gradual testing</li>
+                                    <li>🌡️ Monitor temperature levels</li>
+                                    <li>👂 Listen for unusual sounds</li>
+                                    <li>📊 Track performance metrics</li>
+                                    <li>🔍 Regular safety inspections</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-yellow-900 mb-2">⚠️ Stop Immediately If You Notice:</h3>
+                            <div class="grid md:grid-cols-2 gap-4 text-sm text-yellow-700">
+                                <ul class="space-y-1">
+                                    <li>• Excessive heat from motor or controller</li>
+                                    <li>• Unusual sounds (grinding, squealing, arcing)</li>
+                                    <li>• Erratic or unpredictable behavior</li>
+                                </ul>
+                                <ul class="space-y-1">
+                                    <li>• Smoke or burning smells</li>
+                                    <li>• Reduced range or performance</li>
+                                    <li>• Any safety-related concerns</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white p-6 mt-12">
+        <div class="container mx-auto text-center">
+            <p class="text-sm">© 2024 GEM T2 Smart Optimizer User Guide</p>
+            <p class="text-xs text-gray-400 mt-2">
+                Always follow manufacturer guidelines and local regulations. This guide is for educational purposes.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Highlight active navigation item
+        const observerOptions = {
+            rootMargin: '-20% 0px -70% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    const navLink = document.querySelector(`a[href="#${id}"]`);
+                    
+                    // Remove active class from all nav links
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('bg-gem-green', 'text-white');
+                        link.classList.add('hover:bg-gray-100');
+                    });
+                    
+                    // Add active class to current nav link
+                    if (navLink) {
+                        navLink.classList.add('bg-gem-green', 'text-white');
+                        navLink.classList.remove('hover:bg-gray-100');
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections
+        document.querySelectorAll('section[id]').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Mobile menu toggle (if needed)
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.lg\\:w-1\\/4');
+            sidebar.classList.toggle('hidden');
+        }
+
+        // Add mobile menu button for smaller screens
+        if (window.innerWidth < 1024) {
+            const header = document.querySelector('header .container');
+            const mobileButton = document.createElement('button');
+            mobileButton.innerHTML = '📋 Guide Menu';
+            mobileButton.className = 'lg:hidden bg-white bg-opacity-20 px-3 py-2 rounded text-sm';
+            mobileButton.onclick = toggleMobileMenu;
+            header.appendChild(mobileButton);
+        }
+    </script>
+</body>
+</html>

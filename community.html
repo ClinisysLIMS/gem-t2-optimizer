@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Hub - GEM T2 Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-green-700 text-white p-4 no-print">
+        <div class="container mx-auto">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold">🌟 GEM Community Hub</h1>
+                    <p class="text-sm opacity-90">Share and discover optimization settings from the community</p>
+                </div>
+                <nav class="hidden md:flex space-x-4">
+                    <a href="index-new.html" class="text-sm hover:underline">← Back to Optimizer</a>
+                    <a href="weekend-planner.html" class="text-sm hover:underline">Weekend Planner</a>
+                    <a href="reference-guide.html" class="text-sm hover:underline">Reference Guide</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Authentication Notice -->
+        <div data-guest-only class="max-w-4xl mx-auto mb-6">
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-lg">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-900">Join the Community</h3>
+                        <p class="text-sm text-blue-700 mt-1">
+                            Sign in to share your own configurations, rate and comment on others, and save your favorites.
+                        </p>
+                        <button id="guest-sign-in" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                            Sign In to Participate
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Back Message -->
+        <div data-auth-required class="hidden max-w-4xl mx-auto mb-6">
+            <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-medium text-green-900">Welcome back, <span data-user-info="displayName"></span>!</h3>
+                        <p class="text-sm text-green-700">Ready to share or discover new optimization settings?</p>
+                    </div>
+                    <button id="share-config-btn" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
+                        📤 Share Configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="max-w-7xl mx-auto grid lg:grid-cols-4 gap-6">
+            
+            <!-- Sidebar -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Search & Filters -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-lg font-semibold mb-4">🔍 Search & Filter</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Search Input -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                            <input type="text" id="search-input" placeholder="Routes, events, conditions..." 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        
+                        <!-- Category Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <select id="category-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">All Categories</option>
+                                <option value="route">Specific Routes</option>
+                                <option value="event">Events & Rallies</option>
+                                <option value="condition">Weather/Terrain</option>
+                                <option value="general">General Use</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Vehicle Model Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Model</label>
+                            <select id="model-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">All Models</option>
+                                <option value="e2">e2 (2-passenger)</option>
+                                <option value="e4">e4 (4-passenger)</option>
+                                <option value="e6">e6 (6-passenger)</option>
+                                <option value="eS">eS (Utility)</option>
+                                <option value="eL">eL (Utility)</option>
+                                <option value="eM">eM (Mighty Mite)</option>
+                                <option value="elXD">elXD (Extra Duty)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Sort Options -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                            <select id="sort-filter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="recent">Most Recent</option>
+                                <option value="rating">Highest Rated</option>
+                                <option value="popular">Most Downloaded</option>
+                                <option value="views">Most Viewed</option>
+                            </select>
+                        </div>
+                        
+                        <button id="apply-filters" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700">
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- My Activity (Auth Required) -->
+                <div data-auth-required class="hidden bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-lg font-semibold mb-4">📋 My Activity</h2>
+                    
+                    <div class="space-y-3">
+                        <button id="my-configurations" class="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <div class="font-medium">My Shared Configs</div>
+                            <div class="text-sm text-gray-600" id="my-configs-count">Loading...</div>
+                        </button>
+                        
+                        <button id="my-bookmarks" class="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <div class="font-medium">Bookmarked</div>
+                            <div class="text-sm text-gray-600" id="my-bookmarks-count">Loading...</div>
+                        </button>
+                        
+                        <button id="my-downloads" class="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <div class="font-medium">Downloaded</div>
+                            <div class="text-sm text-gray-600">View history</div>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Community Stats -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-lg font-semibold mb-4">📊 Community Stats</h2>
+                    
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Configurations</span>
+                            <span class="font-medium" id="total-configs">Loading...</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Downloads</span>
+                            <span class="font-medium" id="total-downloads">Loading...</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Active Contributors</span>
+                            <span class="font-medium" id="active-contributors">Loading...</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Featured This Week</span>
+                            <span class="font-medium" id="featured-count">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content Area -->
+            <div class="lg:col-span-3">
+                <!-- Tab Navigation -->
+                <div class="bg-white rounded-lg shadow-lg mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                            <button class="tab-button active py-4 px-1 border-b-2 border-green-500 font-medium text-sm text-green-600" data-tab="browse">
+                                Browse All
+                            </button>
+                            <button class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="featured">
+                                Featured
+                            </button>
+                            <button class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="recent">
+                                Latest
+                            </button>
+                            <button class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="top-rated">
+                                Top Rated
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="loading-state" class="text-center py-12">
+                    <div class="spinner mx-auto mb-4"></div>
+                    <p class="text-gray-600">Loading community configurations...</p>
+                </div>
+                
+                <!-- Configurations Grid -->
+                <div id="configurations-grid" class="hidden">
+                    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6" id="config-cards">
+                        <!-- Configuration cards will be inserted here -->
+                    </div>
+                    
+                    <!-- Load More Button -->
+                    <div class="text-center mt-8">
+                        <button id="load-more-btn" class="hidden bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300">
+                            Load More Configurations
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="empty-state" class="hidden text-center py-12">
+                    <div class="text-6xl mb-4">🔍</div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No configurations found</h3>
+                    <p class="text-gray-600 mb-4">Try adjusting your search or filters</p>
+                    <button id="clear-filters" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                        Clear All Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Share Configuration Modal -->
+    <div id="share-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold">📤 Share Your Configuration</h3>
+                <button id="close-share-modal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="share-form" class="space-y-6">
+                <!-- Basic Info -->
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                        <input type="text" id="share-title" placeholder="e.g., Optimal Beach Route Settings" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                        <select id="share-category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                            <option value="">Select category...</option>
+                            <option value="route">Specific Route</option>
+                            <option value="event">Event/Rally</option>
+                            <option value="condition">Weather/Terrain</option>
+                            <option value="general">General Use</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <textarea id="share-description" rows="3" placeholder="Describe when and how to use these settings..." 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required></textarea>
+                </div>
+                
+                <!-- Tags -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                    <input type="text" id="share-tags" placeholder="beach, sand, efficiency, hills (separate with commas)" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <p class="text-xs text-gray-500 mt-1">Add relevant tags to help others find your configuration</p>
+                </div>
+                
+                <!-- Route/Event Specific Info -->
+                <div id="route-info" class="hidden">
+                    <h4 class="font-medium mb-3">Route Information</h4>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Starting Location</label>
+                            <input type="text" id="route-start" placeholder="e.g., Catalina Island Ferry Terminal" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Distance</label>
+                            <input type="text" id="route-distance" placeholder="e.g., 15 miles round trip" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="event-info" class="hidden">
+                    <h4 class="font-medium mb-3">Event Information</h4>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Event Name</label>
+                            <input type="text" id="event-name" placeholder="e.g., Annual Golf Cart Rally" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+                            <select id="event-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Select type...</option>
+                                <option value="rally">Rally/Parade</option>
+                                <option value="race">Race/Competition</option>
+                                <option value="tour">Tour/Sightseeing</option>
+                                <option value="utility">Utility Work</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="condition-info" class="hidden">
+                    <h4 class="font-medium mb-3">Condition Details</h4>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Terrain</label>
+                            <select id="condition-terrain" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Select terrain...</option>
+                                <option value="flat">Flat</option>
+                                <option value="hilly">Hilly</option>
+                                <option value="steep">Steep Hills</option>
+                                <option value="mixed">Mixed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Surface</label>
+                            <select id="condition-surface" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Select surface...</option>
+                                <option value="paved">Paved</option>
+                                <option value="gravel">Gravel</option>
+                                <option value="sand">Sand</option>
+                                <option value="dirt">Dirt</option>
+                                <option value="mixed">Mixed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Weather</label>
+                            <select id="condition-weather" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Select weather...</option>
+                                <option value="clear">Clear</option>
+                                <option value="hot">Hot</option>
+                                <option value="cold">Cold</option>
+                                <option value="wet">Wet/Rain</option>
+                                <option value="windy">Windy</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vehicle Data Selection -->
+                <div>
+                    <h4 class="font-medium mb-3">Vehicle Configuration</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm text-gray-700">Use current vehicle configuration</span>
+                            <button type="button" id="load-current-vehicle" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                Load Current
+                            </button>
+                        </div>
+                        <div id="vehicle-summary" class="text-sm text-gray-600">
+                            No vehicle data loaded
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Selection -->
+                <div>
+                    <h4 class="font-medium mb-3">Controller Settings</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm text-gray-700">Share optimization results</span>
+                            <button type="button" id="load-current-settings" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                                Load Latest
+                            </button>
+                        </div>
+                        <div id="settings-summary" class="text-sm text-gray-600">
+                            No settings loaded
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Buttons -->
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700">
+                        📤 Share with Community
+                    </button>
+                    <button type="button" id="cancel-share" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Configuration Detail Modal -->
+    <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div id="detail-content">
+                <!-- Content will be dynamically loaded -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-gray-800 text-white p-4 mt-12 no-print">
+        <div class="container mx-auto text-center text-sm">
+            <p>© 2024 GEM T2 Smart Optimizer Community. Share responsibly and drive safely.</p>
+            <p class="mt-1">Always test configurations in a safe environment before regular use.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/firebase-profile-manager.js"></script>
+    <script src="js/community-manager.js"></script>
+    <script src="js/community-ui.js"></script>
+    
+    <style>
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #10B981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .tab-button.active {
+            border-color: #10B981;
+            color: #059669;
+        }
+        
+        .rating-stars {
+            color: #fbbf24;
+        }
+        
+        .config-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .config-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</body>
+</html>

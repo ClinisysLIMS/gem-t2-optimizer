@@ -152,15 +152,22 @@ class UIController {
      * @param {string} presetName - Name of the preset
      */
     selectPreset(presetName) {
+        console.log('Applying preset:', presetName);
+        
         // Update UI
         document.querySelectorAll('.preset-card').forEach(card => {
             card.classList.remove('selected');
         });
-        document.querySelector(`[data-preset="${presetName}"]`).classList.add('selected');
+        document.querySelector(`[data-preset="${presetName}"]`)?.classList.add('selected');
         
         // Get preset configuration
         const preset = this.presetsManager.getPreset(presetName);
-        if (!preset) return;
+        if (!preset) {
+            console.error('Preset not found:', presetName);
+            return;
+        }
+        
+        console.log('Preset configuration:', preset);
         
         // Check if this preset requires trip planning
         if (preset.requiresTripPlanning) {
@@ -178,25 +185,38 @@ class UIController {
         
         // Run optimization
         setTimeout(() => {
-            const results = this.optimizer.optimizeSettings(this.inputData, this.importedSettings);
+            console.log('Running optimization with input data:', this.inputData);
             
-            // Override with preset settings if available
-            if (preset.settings) {
-                Object.keys(preset.settings).forEach(funcNum => {
-                    results.optimizedSettings[funcNum] = preset.settings[funcNum];
-                });
+            try {
+                const results = this.optimizer.optimizeSettings(this.inputData, this.importedSettings);
+                console.log('Optimization completed:', results);
+                
+                // Override with preset settings if available
+                if (preset.settings) {
+                    console.log('Applying preset settings:', preset.settings);
+                    Object.keys(preset.settings).forEach(funcNum => {
+                        results.optimizedSettings[funcNum] = preset.settings[funcNum];
+                    });
+                }
+                
+                console.log('Final optimized settings:', results.optimizedSettings);
+                
+                // For weekend-outing preset, use trip-optimized settings if available
+                if (presetName === 'weekend-outing' && this.tripOptimizedSettings) {
+                    Object.keys(this.tripOptimizedSettings).forEach(funcNum => {
+                        results.optimizedSettings[funcNum] = this.tripOptimizedSettings[funcNum];
+                    });
+                    // Clear the trip settings after use
+                    this.tripOptimizedSettings = null;
+                }
+                
+                this.showResults(results);
+                
+            } catch (error) {
+                console.error('Optimization error:', error);
+                // Show error message to user
+                this.showErrorMessage('Optimization failed: ' + error.message);
             }
-            
-            // For weekend-outing preset, use trip-optimized settings if available
-            if (presetName === 'weekend-outing' && this.tripOptimizedSettings) {
-                Object.keys(this.tripOptimizedSettings).forEach(funcNum => {
-                    results.optimizedSettings[funcNum] = this.tripOptimizedSettings[funcNum];
-                });
-                // Clear the trip settings after use
-                this.tripOptimizedSettings = null;
-            }
-            
-            this.showResults(results);
         }, 1000);
     }
     
@@ -370,14 +390,33 @@ class UIController {
         
         switch (currentSection) {
             case 'vehicle':
+                // Collect all critical vehicle data from the consolidated form
+                const batteryVoltage = document.getElementById('battery-voltage')?.value;
+                const customVoltage = document.getElementById('custom-voltage')?.value;
+                const gearRatio = document.getElementById('gear-ratio')?.value;
+                const customGearRatio = document.getElementById('custom-gear-ratio')?.value;
+                
                 data.vehicle = {
                     model: document.getElementById('vehicle-model')?.value,
                     topSpeed: document.getElementById('top-speed')?.value,
                     motorCondition: document.getElementById('motor-condition')?.value
                 };
+                
+                data.battery = {
+                    type: document.getElementById('battery-type')?.value,
+                    voltage: batteryVoltage === 'custom' ? customVoltage : batteryVoltage,
+                    capacity: document.getElementById('battery-capacity')?.value,
+                    age: 'good' // Default since we removed this field from step 1
+                };
+                
+                data.wheel = {
+                    tireDiameter: document.getElementById('tire-diameter')?.value,
+                    gearRatio: gearRatio === 'custom' ? customGearRatio : gearRatio
+                };
                 break;
                 
             case 'battery':
+                // This case is now handled in vehicle section
                 data.battery = {
                     type: document.getElementById('battery-type')?.value,
                     voltage: document.getElementById('battery-voltage')?.value,
@@ -387,6 +426,7 @@ class UIController {
                 break;
                 
             case 'wheel':
+                // This case is now handled in vehicle section
                 data.wheel = {
                     tireDiameter: document.getElementById('tire-diameter')?.value,
                     gearRatio: document.getElementById('gear-ratio')?.value || '8.91'
@@ -1075,6 +1115,8 @@ class UIController {
      * @param {boolean} isInteractive - Whether this is an interactive preset
      */
     handlePresetSelection(presetName, isInteractive) {
+        console.log('Preset selection triggered:', presetName, 'Interactive:', isInteractive);
+        
         if (isInteractive && presetName === 'weekend-outing') {
             // Launch trip planner for Weekend Outing preset
             this.launchTripPlanner();
@@ -1133,5 +1175,30 @@ class UIController {
                 mainForm.insertBefore(introDiv, mainForm.firstChild);
             }
         }
+    }
+    
+    /**
+     * Show error message to user
+     * @param {string} message - Error message to display
+     */
+    showErrorMessage(message) {
+        // Create error notification
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 max-w-md';
+        errorDiv.innerHTML = `
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(errorDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
     }
 }

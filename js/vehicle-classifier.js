@@ -32,12 +32,12 @@ class VehicleClassifier {
                 color: 'purple'
             },
             'modified': {
-                name: 'Modified/Non-Compliant',
+                name: 'Street Legal Status',
                 minSpeed: 26,
-                requirements: 'May not be street legal, check local laws',
-                features: 'Varies by modification',
-                icon: '⚠️',
-                color: 'red'
+                requirements: 'Exceeds LSV speed limits',
+                features: 'Enhanced performance capabilities',
+                icon: 'ℹ️',
+                color: 'orange'
             }
         };
 
@@ -125,8 +125,10 @@ class VehicleClassifier {
         } else {
             return {
                 ...this.classifications['modified'],
-                note: `Speed exceeds LSV limit (${speed} MPH) - Check local regulations`,
-                warning: true
+                note: `Based on ${speed} MPH speed, your vehicle exceeds LSV limits (25 MPH max)`,
+                guidance: 'Suggested routes will follow local speed limits. Please verify local regulations for your area.',
+                legalLink: 'https://www.nhtsa.gov/laws-regulations/low-speed-vehicles',
+                info: true
             };
         }
     }

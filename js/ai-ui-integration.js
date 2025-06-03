@@ -977,7 +977,6 @@ class AIUIIntegration {
         `;
         document.head.appendChild(style);
     }
-}
 
     /**
      * Additional utility functions for comprehensive analysis

@@ -16,13 +16,17 @@
                 <p class="text-sm opacity-90">Smart route planning with legal road filtering</p>
             </div>
             <div class="flex items-center space-x-4">
+                <nav class="hidden md:flex space-x-4 mr-4">
+                    <a href="index-new.html" class="text-sm hover:underline">Optimizer</a>
+                    <a href="reference-guide.html" class="text-sm hover:underline">Reference Guide</a>
+                    <a href="accessories-config.html" class="text-sm hover:underline">Accessories</a>
+                </nav>
                 <a href="mobile-route-map.html" class="lg:hidden bg-green-600 px-3 py-1 rounded text-sm hover:bg-green-500">
                     📱 Mobile Map
                 </a>
                 <a href="route-map.html" class="hidden lg:inline bg-green-600 px-3 py-1 rounded text-sm hover:bg-green-500">
                     🗺️ Interactive Map
                 </a>
-                <a href="index-new.html" class="text-sm hover:underline">← Back to Optimizer</a>
             </div>
         </div>
     </header>
@@ -184,6 +188,15 @@
     </footer>
 
     <!-- Scripts -->
+    <script src="js/secure-storage.js"></script>
+    <script src="js/api-manager.js"></script>
+    <script src="js/fallback-calculations.js"></script>
+    <script src="js/fallback-system.js"></script>
+    <script src="js/api-integration.js"></script>
+    <script src="js/mcp-config.js"></script>
+    <script src="js/weather-service.js"></script>
+    <script src="js/terrain-service.js"></script>
+    <script src="js/trip-planner.js"></script>
     <script src="js/weekend-planner.js"></script>
     <script>
         // Initialize planner with vehicle data

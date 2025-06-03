@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fallback System Test - GEM Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Fallback System Test</h1>
+        
+        <!-- Test Controls -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Test Controls</h2>
+            
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                    <input type="text" id="test-location" value="Beach Resort San Diego" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                    <input type="date" id="test-date" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Location</label>
+                    <input type="text" id="test-start" value="Golf Course Community" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">End Location</label>
+                    <input type="text" id="test-end" value="Mountain View Park" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+            </div>
+            
+            <div class="flex gap-4 mb-6">
+                <label class="flex items-center">
+                    <input type="checkbox" id="force-local" class="mr-2" checked>
+                    <span class="text-sm">Force Local Mode (No APIs)</span>
+                </label>
+                
+                <label class="flex items-center">
+                    <input type="checkbox" id="show-details" class="mr-2" checked>
+                    <span class="text-sm">Show Detailed Results</span>
+                </label>
+            </div>
+            
+            <div class="flex gap-4">
+                <button onclick="testWeather()" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    Test Weather
+                </button>
+                <button onclick="testTerrain()" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                    Test Terrain
+                </button>
+                <button onclick="testTraffic()" 
+                        class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">
+                    Test Traffic
+                </button>
+                <button onclick="testElevation()" 
+                        class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                    Test Elevation
+                </button>
+                <button onclick="testRoute()" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                    Test Route
+                </button>
+                <button onclick="testComplete()" 
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    Test Complete Analysis
+                </button>
+            </div>
+        </div>
+        
+        <!-- Results Display -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Test Results</h2>
+            <div id="results" class="space-y-4">
+                <p class="text-gray-500">Run a test to see results...</p>
+            </div>
+        </div>
+        
+        <!-- API Status -->
+        <div class="mt-6 bg-gray-100 rounded-lg p-4">
+            <h3 class="font-semibold mb-2">System Status</h3>
+            <div id="status" class="text-sm space-y-1">
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="js/secure-storage.js"></script>
+    <script src="js/api-manager.js"></script>
+    <script src="js/fallback-calculations.js"></script>
+    <script src="js/fallback-system.js"></script>
+    <script src="js/api-integration.js"></script>
+    <script src="js/mcp-config.js"></script>
+    <script src="js/weather-service.js"></script>
+    <script src="js/terrain-service.js"></script>
+    
+    <script>
+        // Initialize date to today
+        document.getElementById('test-date').value = new Date().toISOString().split('T')[0];
+        
+        // Update status on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus();
+        });
+        
+        function updateStatus() {
+            const statusDiv = document.getElementById('status');
+            let html = '';
+            
+            // Check fallback calculations
+            if (window.fallbackCalculations) {
+                html += '<p class="text-green-600">✅ Fallback Calculations: Loaded</p>';
+            } else {
+                html += '<p class="text-red-600">❌ Fallback Calculations: Not loaded</p>';
+            }
+            
+            // Check API integration
+            if (window.apiIntegration) {
+                const status = window.apiIntegration.getStatus();
+                html += `<p class="${status.localOnly ? 'text-yellow-600' : 'text-green-600'}">
+                    ${status.localOnly ? '⚠️' : '✅'} API Integration: ${status.localOnly ? 'Local Mode' : 'API Mode'}
+                </p>`;
+                
+                if (status.apiConfigured.length > 0) {
+                    html += `<p class="text-sm text-gray-600 ml-4">Configured APIs: ${status.apiConfigured.join(', ')}</p>`;
+                }
+            } else {
+                html += '<p class="text-red-600">❌ API Integration: Not loaded</p>';
+            }
+            
+            // Check MCP config
+            if (window.mcpConfig) {
+                const mcpStatus = window.mcpConfig.getStatus();
+                html += `<p class="${mcpStatus.isLocal ? 'text-yellow-600' : 'text-green-600'}">
+                    ${mcpStatus.isLocal ? '⚠️' : '✅'} MCP: ${mcpStatus.connectionStatus}
+                </p>`;
+            }
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        function displayResults(title, data) {
+            const resultsDiv = document.getElementById('results');
+            const showDetails = document.getElementById('show-details').checked;
+            
+            let html = `<div class="border-l-4 border-blue-500 pl-4">
+                <h3 class="font-semibold text-lg mb-2">${title}</h3>`;
+            
+            if (showDetails) {
+                html += `<pre class="bg-gray-50 p-3 rounded text-xs overflow-x-auto">${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+                html += `<div class="space-y-2">`;
+                
+                // Summary based on data type
+                if (data.temperature !== undefined) {
+                    // Weather data
+                    html += `
+                        <p><strong>Temperature:</strong> ${data.temperature}°F</p>
+                        <p><strong>Conditions:</strong> ${data.conditions}</p>
+                        <p><strong>Wind Speed:</strong> ${data.windSpeed} mph</p>
+                        <p><strong>Source:</strong> ${data.source}</p>
+                        <p><strong>Confidence:</strong> ${(data.confidence * 100).toFixed(0)}%</p>
+                    `;
+                } else if (data.terrain) {
+                    // Terrain data
+                    html += `
+                        <p><strong>Type:</strong> ${data.terrain.type}</p>
+                        <p><strong>Difficulty:</strong> ${(data.terrain.difficulty * 100).toFixed(0)}%</p>
+                        <p><strong>Grade:</strong> ${data.terrain.grade}%</p>
+                        <p><strong>Surface:</strong> ${data.terrain.surface}</p>
+                    `;
+                } else if (data.congestionLevel) {
+                    // Traffic data
+                    html += `
+                        <p><strong>Congestion:</strong> ${data.congestionLevel}</p>
+                        <p><strong>Delay:</strong> ${data.estimatedDelay} minutes</p>
+                        <p><strong>Recommendations:</strong></p>
+                        <ul class="list-disc list-inside ml-4">
+                            ${data.recommendations.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    `;
+                } else if (data.elevations) {
+                    // Elevation data
+                    html += `
+                        <p><strong>Total Ascent:</strong> ${data.totalAscent}m</p>
+                        <p><strong>Total Descent:</strong> ${data.totalDescent}m</p>
+                        <p><strong>Max Grade:</strong> ${data.maxGrade}%</p>
+                        <p><strong>Difficulty:</strong> ${data.difficulty}</p>
+                    `;
+                } else if (data.distance) {
+                    // Route data
+                    html += `
+                        <p><strong>Distance:</strong> ${data.distance.text}</p>
+                        <p><strong>Duration:</strong> ${data.duration.text}</p>
+                        <p><strong>Energy Use:</strong> ${data.efficiency.energyConsumption} kWh</p>
+                        <p><strong>Suitability:</strong> ${data.route.suitability}</p>
+                    `;
+                }
+                
+                html += `</div>`;
+            }
+            
+            html += `</div>`;
+            resultsDiv.innerHTML = html;
+        }
+        
+        async function testWeather() {
+            const location = document.getElementById('test-location').value;
+            const date = new Date(document.getElementById('test-date').value);
+            const forceLocal = document.getElementById('force-local').checked;
+            
+            if (forceLocal && window.apiIntegration) {
+                window.apiIntegration.forceLocalMode(true);
+            }
+            
+            try {
+                let result;
+                if (window.apiIntegration) {
+                    result = await window.apiIntegration.getWeather(location, date);
+                } else if (window.fallbackCalculations) {
+                    result = window.fallbackCalculations.estimateWeather(location, date);
+                } else {
+                    throw new Error('No weather service available');
+                }
+                
+                displayResults('Weather Test Results', result);
+            } catch (error) {
+                displayResults('Weather Test Error', { error: error.message });
+            } finally {
+                if (forceLocal && window.apiIntegration) {
+                    window.apiIntegration.forceLocalMode(false);
+                }
+            }
+        }
+        
+        async function testTerrain() {
+            const location = document.getElementById('test-location').value;
+            const forceLocal = document.getElementById('force-local').checked;
+            
+            if (forceLocal && window.apiIntegration) {
+                window.apiIntegration.forceLocalMode(true);
+            }
+            
+            try {
+                let result;
+                if (window.apiIntegration) {
+                    result = await window.apiIntegration.getTerrain(location);
+                } else if (window.fallbackCalculations) {
+                    result = { terrain: window.fallbackCalculations.estimateTerrain(location) };
+                } else {
+                    throw new Error('No terrain service available');
+                }
+                
+                displayResults('Terrain Test Results', result);
+            } catch (error) {
+                displayResults('Terrain Test Error', { error: error.message });
+            } finally {
+                if (forceLocal && window.apiIntegration) {
+                    window.apiIntegration.forceLocalMode(false);
+                }
+            }
+        }
+        
+        async function testTraffic() {
+            const location = document.getElementById('test-location').value;
+            const dateTime = new Date(document.getElementById('test-date').value);
+            dateTime.setHours(14); // 2 PM
+            const forceLocal = document.getElementById('force-local').checked;
+            
+            if (forceLocal && window.apiIntegration) {
+                window.apiIntegration.forceLocalMode(true);
+            }
+            
+            try {
+                let result;
+                if (window.apiIntegration) {
+                    result = await window.apiIntegration.getTraffic(location, dateTime);
+                } else if (window.fallbackCalculations) {
+                    result = window.fallbackCalculations.estimateTraffic(location, dateTime);
+                } else {
+                    throw new Error('No traffic service available');
+                }
+                
+                displayResults('Traffic Test Results', result);
+            } catch (error) {
+                displayResults('Traffic Test Error', { error: error.message });
+            } finally {
+                if (forceLocal && window.apiIntegration) {
+                    window.apiIntegration.forceLocalMode(false);
+                }
+            }
+        }
+        
+        async function testElevation() {
+            const start = document.getElementById('test-start').value;
+            const end = document.getElementById('test-end').value;
+            const forceLocal = document.getElementById('force-local').checked;
+            
+            if (forceLocal && window.apiIntegration) {
+                window.apiIntegration.forceLocalMode(true);
+            }
+            
+            try {
+                let result;
+                if (window.apiIntegration) {
+                    result = await window.apiIntegration.getElevationProfile(start, end, 5);
+                } else if (window.fallbackCalculations) {
+                    result = window.fallbackCalculations.estimateElevationProfile(start, end, 5);
+                } else {
+                    throw new Error('No elevation service available');
+                }
+                
+                displayResults('Elevation Test Results', result);
+            } catch (error) {
+                displayResults('Elevation Test Error', { error: error.message });
+            } finally {
+                if (forceLocal && window.apiIntegration) {
+                    window.apiIntegration.forceLocalMode(false);
+                }
+            }
+        }
+        
+        async function testRoute() {
+            const start = document.getElementById('test-start').value;
+            const end = document.getElementById('test-end').value;
+            const forceLocal = document.getElementById('force-local').checked;
+            
+            if (forceLocal && window.apiIntegration) {
+                window.apiIntegration.forceLocalMode(true);
+            }
+            
+            try {
+                let result;
+                if (window.apiIntegration) {
+                    result = await window.apiIntegration.optimizeRoute(start, end, { comfort: true });
+                } else if (window.fallbackCalculations) {
+                    result = window.fallbackCalculations.optimizeRoute(start, end, { comfort: true });
+                } else {
+                    throw new Error('No route service available');
+                }
+                
+                displayResults('Route Test Results', result);
+            } catch (error) {
+                displayResults('Route Test Error', { error: error.message });
+            } finally {
+                if (forceLocal && window.apiIntegration) {
+                    window.apiIntegration.forceLocalMode(false);
+                }
+            }
+        }
+        
+        async function testComplete() {
+            const start = document.getElementById('test-start').value;
+            const destination = document.getElementById('test-location').value;
+            const date = new Date(document.getElementById('test-date').value);
+            const forceLocal = document.getElementById('force-local').checked;
+            
+            if (forceLocal && window.apiIntegration) {
+                window.apiIntegration.forceLocalMode(true);
+            }
+            
+            try {
+                let result;
+                if (window.apiIntegration) {
+                    result = await window.apiIntegration.analyzeTripConditions({
+                        start: start,
+                        destination: destination,
+                        date: date,
+                        vehicleConfig: {
+                            model: 'e4',
+                            batteryAge: 2,
+                            motorCondition: 'good'
+                        },
+                        preferences: {
+                            comfort: true,
+                            scenic: true
+                        }
+                    });
+                } else {
+                    throw new Error('API integration not available');
+                }
+                
+                displayResults('Complete Trip Analysis', result);
+            } catch (error) {
+                displayResults('Complete Analysis Error', { error: error.message });
+            } finally {
+                if (forceLocal && window.apiIntegration) {
+                    window.apiIntegration.forceLocalMode(false);
+                }
+                updateStatus();
+            }
+        }
+    </script>
+</body>
+</html>

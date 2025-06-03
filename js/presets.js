@@ -35,6 +35,61 @@ class PresetsManager {
                     }
                 }
             },
+            'max-performance': {
+                name: '🚀 Max Performance',
+                description: 'Absolute maximum speed and acceleration - use with caution',
+                features: [
+                    'Top speed: +25-30%',
+                    'Acceleration: +35%',
+                    'Best for: Experienced users only'
+                ],
+                settings: {
+                    3: 12,   // Very fast controlled acceleration
+                    6: 40,   // Very fast armature acceleration
+                    7: 51,   // Minimum field current for maximum speed
+                    11: 150, // Very high turf speed limit
+                    20: 50,  // Maximum top speed limit
+                    24: 30   // Very early field weakening
+                },
+                inputData: {
+                    priorities: {
+                        speed: 10,
+                        acceleration: 10,
+                        hillClimbing: 2,
+                        range: 2,
+                        regen: 4
+                    }
+                }
+            },
+            'daily-commute': {
+                name: '🚗 Daily Commute',
+                description: 'Balanced efficiency and reliability for daily use',
+                features: [
+                    'Range: +10-15%',
+                    'Smooth operation',
+                    'Best for: Regular commuting'
+                ],
+                settings: {
+                    3: 20,   // Moderate controlled acceleration
+                    4: 240,  // Slightly reduced max current for efficiency
+                    6: 60,   // Smooth armature acceleration
+                    7: 68,   // Higher minimum field current for stability
+                    9: 230,  // Good regen for stop-and-go traffic
+                    10: 205, // Higher regen field current
+                    19: 10,  // Smooth regen engagement
+                    24: 55,  // Balanced field weakening
+                    26: 4    // Good field ratio
+                },
+                inputData: {
+                    priorities: {
+                        range: 8,
+                        regen: 7,
+                        speed: 5,
+                        acceleration: 4,
+                        hillClimbing: 5
+                    }
+                }
+            },
             'hill-climber': {
                 name: '⛰️ Hill Climber',
                 description: 'Optimized for steep terrain and heavy loads',

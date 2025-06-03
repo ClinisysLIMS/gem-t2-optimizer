@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Test - GEM T2 Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">Firebase Authentication & Profile Test</h1>
+        
+        <!-- Authentication Status -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Authentication Status</h2>
+            <div id="auth-status" class="mb-4">
+                <p class="text-gray-600">Initializing...</p>
+            </div>
+            
+            <!-- Guest UI -->
+            <div id="guest-ui" class="hidden">
+                <button id="test-signin" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mr-2">
+                    Test Sign In
+                </button>
+                <button id="test-signup" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Test Sign Up
+                </button>
+            </div>
+            
+            <!-- Authenticated UI -->
+            <div id="auth-ui" class="hidden">
+                <p class="text-green-600 mb-4">✅ Signed in successfully!</p>
+                <button id="test-signout" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                    Sign Out
+                </button>
+            </div>
+        </div>
+        
+        <!-- Profile Management Test -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Profile Management Test</h2>
+            
+            <div id="profile-test" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Test Profile Name</label>
+                    <input type="text" id="test-profile-name" value="Test GEM e4" class="w-full px-3 py-2 border rounded">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="save-test-profile" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50" disabled>
+                        Save Test Profile
+                    </button>
+                    <button id="load-profiles" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50" disabled>
+                        Load Profiles
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Profile List -->
+            <div id="profiles-display" class="mt-6 hidden">
+                <h3 class="font-medium mb-2">Saved Profiles:</h3>
+                <div id="profiles-list" class="space-y-2"></div>
+            </div>
+        </div>
+        
+        <!-- Console Output -->
+        <div class="bg-gray-900 text-green-400 rounded-lg p-4">
+            <h2 class="text-lg font-semibold mb-4 text-white">Console Output</h2>
+            <div id="console-output" class="font-mono text-sm h-64 overflow-y-auto">
+                <p>Initializing Firebase test...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/firebase-profile-manager.js"></script>
+    
+    <script>
+        // Test interface
+        class FirebaseTest {
+            constructor() {
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.log('Firebase test interface initialized');
+                
+                // Wait for Firebase to initialize
+                setTimeout(() => {
+                    this.checkFirebaseStatus();
+                }, 2000);
+                
+                // Listen for auth state changes
+                window.addEventListener('authStateChanged', (e) => {
+                    this.handleAuthStateChange(e.detail.user);
+                });
+            }
+            
+            setupEventListeners() {
+                document.getElementById('test-signin')?.addEventListener('click', () => this.testSignIn());
+                document.getElementById('test-signup')?.addEventListener('click', () => this.testSignUp());
+                document.getElementById('test-signout')?.addEventListener('click', () => this.testSignOut());
+                document.getElementById('save-test-profile')?.addEventListener('click', () => this.testSaveProfile());
+                document.getElementById('load-profiles')?.addEventListener('click', () => this.testLoadProfiles());
+            }
+            
+            checkFirebaseStatus() {
+                if (typeof window.firebaseManager !== 'undefined') {
+                    this.log('✅ Firebase Manager found');
+                    if (window.firebaseManager.initialized) {
+                        this.log('✅ Firebase initialized successfully');
+                        this.updateAuthStatus();
+                    } else {
+                        this.log('⚠️ Firebase not yet initialized');
+                    }
+                } else {
+                    this.log('❌ Firebase Manager not found');
+                }
+                
+                if (typeof window.firebaseProfileManager !== 'undefined') {
+                    this.log('✅ Firebase Profile Manager found');
+                } else {
+                    this.log('❌ Firebase Profile Manager not found');
+                }
+            }
+            
+            updateAuthStatus() {
+                const statusDiv = document.getElementById('auth-status');
+                const guestUI = document.getElementById('guest-ui');
+                const authUI = document.getElementById('auth-ui');
+                
+                if (window.firebaseManager?.isAuthenticated()) {
+                    const user = window.firebaseManager.getCurrentUser();
+                    statusDiv.innerHTML = `<p class="text-green-600">Signed in as: ${user.email}</p>`;
+                    guestUI.classList.add('hidden');
+                    authUI.classList.remove('hidden');
+                    this.enableProfileControls();
+                } else {
+                    statusDiv.innerHTML = '<p class="text-gray-600">Not signed in</p>';
+                    guestUI.classList.remove('hidden');
+                    authUI.classList.add('hidden');
+                    this.disableProfileControls();
+                }
+            }
+            
+            enableProfileControls() {
+                document.getElementById('save-test-profile').disabled = false;
+                document.getElementById('load-profiles').disabled = false;
+            }
+            
+            disableProfileControls() {
+                document.getElementById('save-test-profile').disabled = true;
+                document.getElementById('load-profiles').disabled = true;
+            }
+            
+            handleAuthStateChange(user) {
+                if (user) {
+                    this.log(`✅ User authenticated: ${user.email}`);
+                } else {
+                    this.log('🔓 User signed out');
+                }
+                this.updateAuthStatus();
+            }
+            
+            async testSignIn() {
+                this.log('Testing sign in...');
+                try {
+                    const result = await window.firebaseManager.signIn('test@example.com', 'testpassword');
+                    if (result.success) {
+                        this.log('✅ Sign in successful');
+                    } else {
+                        this.log(`❌ Sign in failed: ${result.error}`);
+                    }
+                } catch (error) {
+                    this.log(`❌ Sign in error: ${error.message}`);
+                }
+            }
+            
+            async testSignUp() {
+                this.log('Testing sign up...');
+                try {
+                    const result = await window.firebaseManager.signUp('test@example.com', 'testpassword', 'Test User');
+                    if (result.success) {
+                        this.log('✅ Sign up successful');
+                    } else {
+                        this.log(`❌ Sign up failed: ${result.error}`);
+                    }
+                } catch (error) {
+                    this.log(`❌ Sign up error: ${error.message}`);
+                }
+            }
+            
+            async testSignOut() {
+                this.log('Testing sign out...');
+                try {
+                    const result = await window.firebaseManager.signOut();
+                    if (result.success) {
+                        this.log('✅ Sign out successful');
+                    } else {
+                        this.log(`❌ Sign out failed: ${result.error}`);
+                    }
+                } catch (error) {
+                    this.log(`❌ Sign out error: ${error.message}`);
+                }
+            }
+            
+            async testSaveProfile() {
+                const profileName = document.getElementById('test-profile-name').value;
+                this.log(`Testing save profile: ${profileName}`);
+                
+                try {
+                    // Create test vehicle data
+                    this.mockVehicleData();
+                    
+                    const success = await window.firebaseProfileManager.saveCurrentProfile(
+                        profileName,
+                        'Test profile created from Firebase test page'
+                    );
+                    
+                    if (success) {
+                        this.log('✅ Profile saved successfully');
+                        await this.testLoadProfiles();
+                    } else {
+                        this.log('❌ Profile save failed');
+                    }
+                } catch (error) {
+                    this.log(`❌ Profile save error: ${error.message}`);
+                }
+            }
+            
+            async testLoadProfiles() {
+                this.log('Loading profiles...');
+                try {
+                    await window.firebaseProfileManager.loadUserProfiles();
+                    const profiles = window.firebaseProfileManager.profiles;
+                    
+                    this.log(`✅ Loaded ${profiles.length} profiles`);
+                    this.displayProfiles(profiles);
+                    
+                } catch (error) {
+                    this.log(`❌ Load profiles error: ${error.message}`);
+                }
+            }
+            
+            displayProfiles(profiles) {
+                const container = document.getElementById('profiles-list');
+                const display = document.getElementById('profiles-display');
+                
+                if (profiles.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">No profiles found</p>';
+                } else {
+                    container.innerHTML = profiles.map(profile => `
+                        <div class="border rounded p-3">
+                            <div class="font-medium">${profile.name}</div>
+                            <div class="text-sm text-gray-600">${profile.description || 'No description'}</div>
+                            <div class="text-xs text-gray-500">
+                                Model: ${profile.vehicleData?.model || 'Unknown'} | 
+                                Created: ${this.formatDate(profile.createdAt)}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                display.classList.remove('hidden');
+            }
+            
+            mockVehicleData() {
+                // Mock form fields for testing
+                const mockData = {
+                    'vehicle-model': 'e4',
+                    'vehicle-year': '2020',
+                    'controller-type': 'T2',
+                    'motor-type': 'dc-stock',
+                    'current-speed': '25',
+                    'battery-voltage': '72',
+                    'battery-type': 'lead-acid',
+                    'battery-capacity': '105'
+                };
+                
+                Object.entries(mockData).forEach(([id, value]) => {
+                    let element = document.getElementById(id);
+                    if (!element) {
+                        element = document.createElement('input');
+                        element.id = id;
+                        element.value = value;
+                        element.style.display = 'none';
+                        document.body.appendChild(element);
+                    } else {
+                        element.value = value;
+                    }
+                });
+                
+                this.log('✅ Mock vehicle data created');
+            }
+            
+            formatDate(timestamp) {
+                if (!timestamp) return 'Unknown';
+                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                return date.toLocaleDateString();
+            }
+            
+            log(message) {
+                const output = document.getElementById('console-output');
+                const timestamp = new Date().toLocaleTimeString();
+                output.innerHTML += `<p>[${timestamp}] ${message}</p>`;
+                output.scrollTop = output.scrollHeight;
+            }
+        }
+        
+        // Initialize test when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new FirebaseTest();
+        });
+    </script>
+</body>
+</html>
