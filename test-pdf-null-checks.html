@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Null Checks Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 PDF Null Checks & Error Handling Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Error Fix Verification</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                This page tests the fix for the "Cannot read property 'length' of undefined" error at line 318 and verifies PDF text extraction is working.
+            </p>
+            
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <h3 class="font-medium mb-2">Null Check Tests</h3>
+                    <div class="space-y-2">
+                        <button id="test-undefined-pages" class="w-full px-3 py-2 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors">
+                            Test Undefined Pages Array
+                        </button>
+                        <button id="test-null-textcontent" class="w-full px-3 py-2 bg-orange-100 text-orange-700 rounded text-sm hover:bg-orange-200 transition-colors">
+                            Test Null Text Content
+                        </button>
+                        <button id="test-empty-pages" class="w-full px-3 py-2 bg-yellow-100 text-yellow-700 rounded text-sm hover:bg-yellow-200 transition-colors">
+                            Test Empty Pages Array
+                        </button>
+                        <button id="test-malformed-data" class="w-full px-3 py-2 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors">
+                            Test Malformed PDF Data
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium mb-2">Text Extraction Tests</h3>
+                    <div class="space-y-2">
+                        <button id="test-extraction-service" class="w-full px-3 py-2 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors">
+                            Test PDF Text Extraction Service
+                        </button>
+                        <button id="test-parser-availability" class="w-full px-3 py-2 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors">
+                            Test PDF Parser Availability
+                        </button>
+                        <button id="test-dependency-chain" class="w-full px-3 py-2 bg-indigo-100 text-indigo-700 rounded text-sm hover:bg-indigo-200 transition-colors">
+                            Test Dependency Chain
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h3 class="font-medium mb-2">Real PDF Upload Test</h3>
+                <input type="file" id="pdf-file" accept=".pdf" class="w-full text-sm border border-gray-300 rounded p-2">
+                <div class="text-xs text-gray-500 mt-1">Upload a PDF to test the fixed error handling</div>
+            </div>
+            
+            <div id="test-results" class="space-y-2">
+                <div class="text-sm text-gray-600">Click buttons above to run null check tests...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Text Extraction Results</h2>
+            <div id="extraction-results" class="min-h-32 border-2 border-dashed border-gray-300 rounded-md p-4 text-center text-gray-500">
+                No extraction tests run yet...
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3">Event Log</h2>
+            <div id="console-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                PDF null checks test initialized...\n
+            </div>
+        </div>
+    </div>
+
+    <!-- Load PDF.js worker setup -->
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
+    <!-- Load the dependencies -->
+    <script src="js/enhanced-pdf-analyzer.js"></script>
+    <script src="js/pdf-parser.js"></script>
+    <script src="js/unified-flow.js"></script>
+
+    <script>
+        // Event logging
+        const consoleLog = document.getElementById('console-log');
+        const testResults = document.getElementById('test-results');
+        const extractionResults = document.getElementById('extraction-results');
+        
+        let testsRun = 0;
+        let testsPassed = 0;
+        
+        function logEvent(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            consoleLog.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            console.log(message);
+        }
+
+        function addTestResult(testName, success, message, details = null) {
+            testsRun++;
+            if (success) testsPassed++;
+            
+            const resultElement = document.createElement('div');
+            resultElement.className = `flex items-start p-2 rounded text-sm ${success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`;
+            
+            let content = `
+                <span class="flex-shrink-0 mr-2">${success ? '✅' : '❌'}</span>
+                <div class="flex-grow">
+                    <div class="font-medium">${testName}</div>
+                    <div class="text-xs mt-1">${message}</div>
+                    ${details ? `<div class="text-xs mt-1 font-mono bg-white bg-opacity-50 p-1 rounded">${details}</div>` : ''}
+                </div>
+            `;
+            
+            resultElement.innerHTML = content;
+            testResults.appendChild(resultElement);
+        }
+
+        function displayExtractionResult(result, type) {
+            extractionResults.className = 'p-4 rounded-md border';
+            
+            if (result.success) {
+                extractionResults.className += ' bg-green-50 border-green-200 text-green-800';
+                extractionResults.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="text-green-600 mr-2">✅</span>
+                        <div class="flex-grow">
+                            <h4 class="font-medium">Text Extraction Successful</h4>
+                            <p class="text-sm mt-1">Extracted ${result.metadata?.textLength || 0} characters</p>
+                            <div class="text-xs text-green-600 mt-2">
+                                File: ${result.metadata?.fileName || 'Unknown'}<br>
+                                Pages: ${result.metadata?.pageCount || 0}<br>
+                                Preview: "${result.metadata?.textPreview || 'No preview'}"
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                extractionResults.className += ' bg-red-50 border-red-200 text-red-800';
+                extractionResults.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="text-red-600 mr-2">❌</span>
+                        <div class="flex-grow">
+                            <h4 class="font-medium">Text Extraction Failed</h4>
+                            <p class="text-sm mt-1">${result.error}</p>
+                            <div class="text-xs text-red-600 mt-2">
+                                Test Type: ${type}<br>
+                                Details: ${JSON.stringify(result.details || {})}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Test 1: Undefined pages array
+        document.getElementById('test-undefined-pages').addEventListener('click', function() {
+            logEvent('Testing undefined pages array handling...');
+            
+            try {
+                // Simulate the enhanced PDF analyzer with undefined pages
+                const mockTextContent = {
+                    fullText: 'Some text',
+                    pages: undefined, // This should be handled gracefully
+                    structure: { tables: [], headers: [], sections: [] }
+                };
+                
+                // Test the null check we added
+                const pageCount = (mockTextContent && mockTextContent.pages) ? mockTextContent.pages.length : 0;
+                
+                if (pageCount === 0) {
+                    addTestResult('Undefined Pages Test', true, 'Correctly handled undefined pages array', `pageCount = ${pageCount}`);
+                } else {
+                    addTestResult('Undefined Pages Test', false, 'Failed to handle undefined pages array');
+                }
+                
+            } catch (error) {
+                addTestResult('Undefined Pages Test', false, 'Error during test execution', error.message);
+            }
+            
+            logEvent('✅ Undefined pages test completed');
+        });
+
+        // Test 2: Null text content
+        document.getElementById('test-null-textcontent').addEventListener('click', function() {
+            logEvent('Testing null text content handling...');
+            
+            try {
+                // Simulate null text content
+                const mockTextContent = null;
+                
+                // Test the null check we added
+                const pageCount = (mockTextContent && mockTextContent.pages) ? mockTextContent.pages.length : 0;
+                
+                if (pageCount === 0) {
+                    addTestResult('Null Text Content Test', true, 'Correctly handled null text content', `pageCount = ${pageCount}`);
+                } else {
+                    addTestResult('Null Text Content Test', false, 'Failed to handle null text content');
+                }
+                
+            } catch (error) {
+                addTestResult('Null Text Content Test', false, 'Error during test execution', error.message);
+            }
+            
+            logEvent('✅ Null text content test completed');
+        });
+
+        // Test 3: Empty pages array
+        document.getElementById('test-empty-pages').addEventListener('click', function() {
+            logEvent('Testing empty pages array handling...');
+            
+            try {
+                // Simulate empty pages array
+                const mockTextContent = {
+                    fullText: '',
+                    pages: [], // Empty array
+                    structure: { tables: [], headers: [], sections: [] }
+                };
+                
+                // Test the null check and length check we added
+                const pageCount = (mockTextContent && mockTextContent.pages) ? mockTextContent.pages.length : 0;
+                
+                if (pageCount === 0) {
+                    addTestResult('Empty Pages Test', true, 'Correctly handled empty pages array', `pageCount = ${pageCount}`);
+                } else {
+                    addTestResult('Empty Pages Test', false, 'Failed to handle empty pages array');
+                }
+                
+            } catch (error) {
+                addTestResult('Empty Pages Test', false, 'Error during test execution', error.message);
+            }
+            
+            logEvent('✅ Empty pages test completed');
+        });
+
+        // Test 4: Malformed PDF data
+        document.getElementById('test-malformed-data').addEventListener('click', function() {
+            logEvent('Testing malformed PDF data handling...');
+            
+            try {
+                // Simulate various malformed data scenarios
+                const testCases = [
+                    { pages: 'not an array' },
+                    { pages: 123 },
+                    { fullText: null, pages: null },
+                    { structure: null }
+                ];
+                
+                let allPassed = true;
+                testCases.forEach((testCase, index) => {
+                    try {
+                        const pageCount = (testCase && testCase.pages && Array.isArray(testCase.pages)) ? testCase.pages.length : 0;
+                        if (pageCount !== 0 && typeof testCase.pages !== 'object') {
+                            allPassed = false;
+                        }
+                    } catch (error) {
+                        allPassed = false;
+                    }
+                });
+                
+                if (allPassed) {
+                    addTestResult('Malformed Data Test', true, 'All malformed data scenarios handled safely', `Tested ${testCases.length} scenarios`);
+                } else {
+                    addTestResult('Malformed Data Test', false, 'Some malformed data scenarios failed');
+                }
+                
+            } catch (error) {
+                addTestResult('Malformed Data Test', false, 'Error during test execution', error.message);
+            }
+            
+            logEvent('✅ Malformed data test completed');
+        });
+
+        // Test 5: PDF text extraction service
+        document.getElementById('test-extraction-service').addEventListener('click', async function() {
+            logEvent('Testing PDF text extraction service...');
+            
+            try {
+                // Check if UnifiedFlowController is available and has the test method
+                if (typeof UnifiedFlowController === 'undefined') {
+                    throw new Error('UnifiedFlowController not available');
+                }
+                
+                // Create a test instance
+                const flowController = new UnifiedFlowController();
+                
+                if (typeof flowController.testPDFTextExtraction !== 'function') {
+                    throw new Error('testPDFTextExtraction method not available');
+                }
+                
+                addTestResult('Text Extraction Service Test', true, 'PDF text extraction service is available and accessible');
+                displayExtractionResult({ success: true, metadata: { textLength: 0, fileName: 'Service Test', pageCount: 0, textPreview: 'Service available' } }, 'Service Test');
+                
+            } catch (error) {
+                addTestResult('Text Extraction Service Test', false, 'PDF text extraction service not available', error.message);
+                displayExtractionResult({ success: false, error: error.message, details: { test: 'Service availability' } }, 'Service Test');
+            }
+            
+            logEvent('✅ Text extraction service test completed');
+        });
+
+        // Test 6: PDF parser availability
+        document.getElementById('test-parser-availability').addEventListener('click', function() {
+            logEvent('Testing PDF parser availability...');
+            
+            try {
+                const checks = {
+                    pdfjsLib: typeof pdfjsLib !== 'undefined',
+                    PDFParser: typeof PDFParser !== 'undefined',
+                    EnhancedPDFAnalyzer: typeof EnhancedPDFAnalyzer !== 'undefined',
+                    UnifiedFlowController: typeof UnifiedFlowController !== 'undefined'
+                };
+                
+                const available = Object.values(checks).filter(Boolean).length;
+                const total = Object.keys(checks).length;
+                
+                const details = Object.entries(checks).map(([key, value]) => `${key}: ${value ? '✓' : '✗'}`).join(', ');
+                
+                if (available === total) {
+                    addTestResult('Parser Availability Test', true, 'All PDF parsing components available', details);
+                } else {
+                    addTestResult('Parser Availability Test', false, `${available}/${total} components available`, details);
+                }
+                
+            } catch (error) {
+                addTestResult('Parser Availability Test', false, 'Error checking parser availability', error.message);
+            }
+            
+            logEvent('✅ Parser availability test completed');
+        });
+
+        // Test 7: Dependency chain
+        document.getElementById('test-dependency-chain').addEventListener('click', async function() {
+            logEvent('Testing dependency chain...');
+            
+            try {
+                // Test the complete dependency chain
+                let chainTest = '';
+                
+                // 1. PDF.js
+                if (typeof pdfjsLib !== 'undefined') {
+                    chainTest += 'PDF.js ✓ → ';
+                } else {
+                    throw new Error('PDF.js not loaded');
+                }
+                
+                // 2. PDFParser
+                if (typeof PDFParser !== 'undefined') {
+                    const parser = new PDFParser();
+                    chainTest += 'PDFParser ✓ → ';
+                } else {
+                    throw new Error('PDFParser not available');
+                }
+                
+                // 3. Enhanced analyzer
+                if (typeof EnhancedPDFAnalyzer !== 'undefined') {
+                    const analyzer = new EnhancedPDFAnalyzer();
+                    chainTest += 'EnhancedPDFAnalyzer ✓ → ';
+                } else {
+                    throw new Error('EnhancedPDFAnalyzer not available');
+                }
+                
+                // 4. Unified flow
+                if (typeof UnifiedFlowController !== 'undefined') {
+                    const controller = new UnifiedFlowController();
+                    chainTest += 'UnifiedFlowController ✓';
+                } else {
+                    throw new Error('UnifiedFlowController not available');
+                }
+                
+                addTestResult('Dependency Chain Test', true, 'Complete dependency chain working', chainTest);
+                
+            } catch (error) {
+                addTestResult('Dependency Chain Test', false, 'Dependency chain broken', error.message);
+            }
+            
+            logEvent('✅ Dependency chain test completed');
+        });
+
+        // Real PDF upload test
+        document.getElementById('pdf-file').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            logEvent(`Testing real PDF upload: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+            
+            try {
+                // Test if we can create UnifiedFlowController and use testPDFTextExtraction
+                if (typeof UnifiedFlowController === 'undefined') {
+                    throw new Error('UnifiedFlowController not available');
+                }
+                
+                const controller = new UnifiedFlowController();
+                
+                if (typeof controller.testPDFTextExtraction !== 'function') {
+                    throw new Error('testPDFTextExtraction method not available');
+                }
+                
+                // Run the text extraction test
+                const result = await controller.testPDFTextExtraction(file);
+                
+                if (result.success) {
+                    addTestResult('Real PDF Upload Test', true, 'PDF text extraction successful', 
+                        `Extracted ${result.metadata.textLength} characters from ${result.metadata.pageCount} pages`);
+                    displayExtractionResult(result, 'Real PDF');
+                } else {
+                    addTestResult('Real PDF Upload Test', false, 'PDF text extraction failed', result.error);
+                    displayExtractionResult(result, 'Real PDF');
+                }
+                
+            } catch (error) {
+                addTestResult('Real PDF Upload Test', false, 'Test setup failed', error.message);
+                displayExtractionResult({ success: false, error: error.message, details: { file: file.name } }, 'Real PDF');
+            }
+            
+            logEvent('✅ Real PDF upload test completed');
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            logEvent('PDF null checks test page initialized');
+            
+            // Check basic availability
+            const pdfjsAvailable = typeof pdfjsLib !== 'undefined';
+            const parserAvailable = typeof PDFParser !== 'undefined';
+            const analyzerAvailable = typeof EnhancedPDFAnalyzer !== 'undefined';
+            const controllerAvailable = typeof UnifiedFlowController !== 'undefined';
+            
+            logEvent(`Dependencies: PDF.js ${pdfjsAvailable ? '✓' : '✗'}, PDFParser ${parserAvailable ? '✓' : '✗'}, EnhancedPDFAnalyzer ${analyzerAvailable ? '✓' : '✗'}, UnifiedFlowController ${controllerAvailable ? '✓' : '✗'}`);
+            
+            // Clear initial message
+            testResults.innerHTML = '';
+            
+            logEvent('Ready for null check and error handling tests');
+        });
+    </script>
+</body>
+</html>

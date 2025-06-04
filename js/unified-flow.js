@@ -671,6 +671,88 @@ class UnifiedFlowController {
             console.warn('Unable to show fallback suggestion:', notificationError);
         }
     }
+    
+    /**
+     * Test PDF text extraction to verify it's working correctly
+     */
+    async testPDFTextExtraction(file) {
+        if (!file) {
+            console.error('No file provided for PDF text extraction test');
+            return { success: false, error: 'No file provided' };
+        }
+        
+        try {
+            // Test basic PDF.js functionality
+            if (typeof pdfjsLib === 'undefined') {
+                throw new Error('PDF.js library not loaded');
+            }
+            
+            const arrayBuffer = await file.arrayBuffer();
+            if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+                throw new Error('Failed to read file content');
+            }
+            
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            if (!pdf || !pdf.numPages || pdf.numPages === 0) {
+                throw new Error('PDF contains no readable pages');
+            }
+            
+            // Extract text from first page as a test
+            const page = await pdf.getPage(1);
+            const textContent = await page.getTextContent();
+            
+            if (!textContent || !textContent.items || textContent.items.length === 0) {
+                throw new Error('No extractable text found on first page');
+            }
+            
+            // Build text from items
+            let extractedText = '';
+            textContent.items.forEach(item => {
+                if (item && typeof item.str === 'string') {
+                    extractedText += item.str + ' ';
+                }
+            });
+            
+            extractedText = extractedText.trim();
+            
+            if (!extractedText) {
+                throw new Error('No text content extracted from PDF');
+            }
+            
+            console.log('PDF text extraction test successful:', {
+                fileName: file.name,
+                fileSize: file.size,
+                pageCount: pdf.numPages,
+                firstPageTextLength: extractedText.length,
+                textPreview: extractedText.substring(0, 200) + (extractedText.length > 200 ? '...' : '')
+            });
+            
+            return {
+                success: true,
+                metadata: {
+                    fileName: file.name,
+                    fileSize: file.size,
+                    pageCount: pdf.numPages,
+                    textExtracted: true,
+                    textLength: extractedText.length,
+                    textPreview: extractedText.substring(0, 200)
+                },
+                fullText: extractedText
+            };
+            
+        } catch (error) {
+            console.error('PDF text extraction test failed:', error);
+            return {
+                success: false,
+                error: error.message,
+                details: {
+                    fileName: file?.name || 'Unknown',
+                    fileSize: file?.size || 0,
+                    errorType: error.name || 'Unknown'
+                }
+            };
+        }
+    }
                 
                 let errorContent = `<h4 class="font-medium text-red-900 mb-2">❌ Analysis Failed</h4>`;
                 errorContent += `<p class="text-sm text-red-700 mb-2">${error.message}</p>`;

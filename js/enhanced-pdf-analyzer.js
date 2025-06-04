@@ -100,8 +100,22 @@ class EnhancedPDFAnalyzer {
      */
     async analyzePDF(file) {
         try {
+            // Validate input file
+            if (!file) {
+                throw new Error('No file provided for analysis');
+            }
+            
             // Extract text and structure
             const textContent = await this.extractTextWithStructure(file);
+            
+            // Check if we got valid text content
+            if (!textContent || !textContent.pages) {
+                throw new Error('Failed to extract content from PDF - file may be corrupted or contain no readable text');
+            }
+            
+            if (textContent.pages.length === 0) {
+                throw new Error('PDF contains no readable pages');
+            }
             
             // Detect document format and layout
             const documentFormat = await this.detectDocumentFormat(textContent);
@@ -122,7 +136,7 @@ class EnhancedPDFAnalyzer {
                     format: documentFormat,
                     confidence: validatedSettings.overallConfidence,
                     extractionMethods: extractionResults.methods,
-                    pageCount: textContent.pages.length,
+                    pageCount: (textContent && textContent.pages) ? textContent.pages.length : 0,
                     totalExtractions: extractionResults.totalExtractions
                 },
                 analysis: analysis,
@@ -198,10 +212,42 @@ class EnhancedPDFAnalyzer {
                         }
                     });
                 } catch (error) {
-                    reject(error);
+                    // Return a safe fallback structure instead of rejecting
+                    resolve({
+                        fullText: '',
+                        pages: [],
+                        structure: {
+                            tables: [],
+                            headers: [],
+                            sections: []
+                        },
+                        metadata: {
+                            pageCount: 0,
+                            title: 'Unknown',
+                            creator: 'Unknown'
+                        },
+                        error: error.message
+                    });
                 }
             };
-            reader.onerror = reject;
+            reader.onerror = () => {
+                // Handle file reading errors gracefully
+                resolve({
+                    fullText: '',
+                    pages: [],
+                    structure: {
+                        tables: [],
+                        headers: [],
+                        sections: []
+                    },
+                    metadata: {
+                        pageCount: 0,
+                        title: 'Unknown',
+                        creator: 'Unknown'
+                    },
+                    error: 'Failed to read PDF file'
+                });
+            };
             reader.readAsArrayBuffer(file);
         });
     }
