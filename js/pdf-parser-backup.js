@@ -170,173 +170,39 @@ class PDFParser {
     }
 
     /**
-     * Parse PDF file and extract controller settings with comprehensive error handling
+     * Parse PDF file and extract controller settings
      */
     async parsePDF(file) {
         this.log('Starting PDF parsing', { fileName: file.name, fileSize: file.size });
         
         try {
-            // Validate input parameters
-            if (!file) {
-                throw new Error('No file provided for parsing');
-            }
-            
-            if (!(file instanceof File) && !(file instanceof Blob)) {
-                throw new Error('Invalid file object provided');
-            }
-            
-            if (!file.name) {
-                this.warn('File has no name property, using default');
-                file.name = 'unknown.pdf';
-            }
-            
-            // Check file size limits
-            if (file.size === 0) {
-                throw new Error('File is empty (0 bytes)');
-            }
-            
-            if (file.size > 100 * 1024 * 1024) { // 100MB limit
-                throw new Error('File too large (max 100MB)');
-            }
-            
             // Load PDF.js library if not already loaded
             if (typeof pdfjsLib === 'undefined') {
-                throw new Error('PDF.js library not loaded - unable to process PDF files');
+                throw new Error('PDF.js library not loaded');
             }
 
-            let arrayBuffer;
-            try {
-                arrayBuffer = await file.arrayBuffer();
-            } catch (bufferError) {
-                throw new Error(`Failed to read file data: ${bufferError.message}`);
-            }
-            
-            if (!arrayBuffer || arrayBuffer.byteLength === 0) {
-                throw new Error('Failed to read file content - file may be corrupted');
-            }
-
-            let pdf;
-            try {
-                pdf = await pdfjsLib.getDocument({ 
-                    data: arrayBuffer,
-                    verbosity: 0, // Reduce console noise
-                    disableAutoFetch: true,
-                    disableStream: true
-                }).promise;
-            } catch (pdfError) {
-                if (pdfError.message.includes('Invalid PDF')) {
-                    throw new Error('Invalid PDF format - file may be corrupted or not a valid PDF');
-                } else if (pdfError.message.includes('password')) {
-                    throw new Error('PDF is password protected - please remove password protection');
-                } else {
-                    throw new Error(`PDF loading failed: ${pdfError.message}`);
-                }
-            }
-            
-            // Validate PDF structure
-            if (!pdf || !pdf.numPages || pdf.numPages === 0) {
-                throw new Error('PDF contains no pages or is corrupted');
-            }
-            
-            if (pdf.numPages > 50) {
-                this.warn(`Large PDF with ${pdf.numPages} pages - this may take longer to process`);
-            }
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             
             const allExtractions = {};
             const pageTexts = [];
-            const processingErrors = [];
             
-            // Process each page with individual error handling
+            // Process each page
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                try {
-                    this.log(`Processing page ${pageNum}/${pdf.numPages}`);
-                    
-                    let page;
-                    try {
-                        page = await pdf.getPage(pageNum);
-                    } catch (pageError) {
-                        processingErrors.push(`Page ${pageNum}: ${pageError.message}`);
-                        this.warn(`Failed to load page ${pageNum}:`, pageError);
-                        continue; // Skip this page but continue with others
-                    }
-                    
-                    let textContent;
-                    try {
-                        textContent = await page.getTextContent();
-                    } catch (textError) {
-                        processingErrors.push(`Page ${pageNum} text extraction: ${textError.message}`);
-                        this.warn(`Failed to extract text from page ${pageNum}:`, textError);
-                        continue; // Skip this page but continue with others
-                    }
-                    
-                    if (!textContent || !textContent.items || textContent.items.length === 0) {
-                        this.warn(`Page ${pageNum} contains no extractable text`);
-                        continue;
-                    }
-                    
-                    let text;
-                    try {
-                        text = this.extractTextFromPage(textContent);
-                    } catch (extractError) {
-                        processingErrors.push(`Page ${pageNum} text processing: ${extractError.message}`);
-                        this.warn(`Failed to process text from page ${pageNum}:`, extractError);
-                        continue;
-                    }
-                    
-                    pageTexts.push({ pageNum, text, textLength: text.length });
-                    
-                    // Try multiple extraction methods with error handling
-                    try {
-                        const pageExtractions = this.extractFromPage(text, pageNum);
-                        if (pageExtractions && Object.keys(pageExtractions).length > 0) {
-                            Object.assign(allExtractions, pageExtractions);
-                            this.log(`Page ${pageNum}: Found ${Object.keys(pageExtractions).length} settings`);
-                        }
-                    } catch (extractionError) {
-                        processingErrors.push(`Page ${pageNum} extraction: ${extractionError.message}`);
-                        this.warn(`Settings extraction failed for page ${pageNum}:`, extractionError);
-                    }
-                    
-                } catch (pageProcessingError) {
-                    processingErrors.push(`Page ${pageNum}: ${pageProcessingError.message}`);
-                    this.warn(`Overall page processing failed for page ${pageNum}:`, pageProcessingError);
-                    continue; // Continue with next page
-                }
-            }
-            
-            // Check if we have any usable data
-            if (pageTexts.length === 0) {
-                throw new Error('No readable pages found in PDF - file may be corrupted or contain only images');
-            }
-            
-            if (Object.keys(allExtractions).length === 0) {
-                const totalTextLength = pageTexts.reduce((sum, page) => sum + page.textLength, 0);
-                if (totalTextLength === 0) {
-                    throw new Error('PDF contains no extractable text - may be a scanned document');
-                } else {
-                    throw new Error('No controller settings found in recognizable format');
-                }
+                const page = await pdf.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                const text = this.extractTextFromPage(textContent);
+                
+                pageTexts.push({ pageNum, text, textLength: text.length });
+                
+                // Try multiple extraction methods
+                const pageExtractions = this.extractFromPage(text, pageNum);
+                Object.assign(allExtractions, pageExtractions);
             }
             
             // Validate and clean extracted settings
-            let validatedSettings;
-            try {
-                validatedSettings = this.validateExtractedSettings(allExtractions);
-            } catch (validationError) {
-                throw new Error(`Settings validation failed: ${validationError.message}`);
-            }
-            
-            if (validatedSettings.validCount === 0) {
-                throw new Error('No valid controller settings found - check PDF format');
-            }
-            
-            let previewData;
-            try {
-                previewData = this.generateSettingsPreview(validatedSettings.cleanSettings);
-            } catch (previewError) {
-                this.warn('Preview generation failed:', previewError);
-                previewData = []; // Continue without preview
-            }
+            const validatedSettings = this.validateExtractedSettings(allExtractions);
+            const previewData = this.generateSettingsPreview(validatedSettings.cleanSettings);
             
             return {
                 success: true,
@@ -371,104 +237,36 @@ class PDFParser {
     }
 
     /**
-     * Extract text from PDF page content with defensive programming
+     * Extract text from PDF page content
      */
     extractTextFromPage(textContent) {
-        try {
-            // Validate input
-            if (!textContent) {
-                throw new Error('No text content provided');
+        const textItems = textContent.items;
+        let text = '';
+        let lastY = null;
+        
+        const sortedItems = textItems.sort((a, b) => {
+            const yDiff = b.transform[5] - a.transform[5];
+            if (Math.abs(yDiff) > 3) return yDiff;
+            return a.transform[4] - b.transform[4];
+        });
+        
+        sortedItems.forEach((item) => {
+            const y = item.transform[5];
+            const str = item.str.trim();
+            
+            if (!str) return;
+            
+            if (lastY !== null && Math.abs(lastY - y) > 3) {
+                text += '\n';
+            } else if (text && !text.endsWith(' ')) {
+                text += ' ';
             }
             
-            if (!textContent.items || !Array.isArray(textContent.items)) {
-                throw new Error('Invalid text content structure - no items array');
-            }
-            
-            if (textContent.items.length === 0) {
-                this.warn('Page contains no text items');
-                return '';
-            }
-            
-            const textItems = textContent.items;
-            let text = '';
-            let lastY = null;
-            
-            // Safely sort items with error handling
-            let sortedItems;
-            try {
-                sortedItems = textItems.filter(item => {
-                    // Filter out invalid items
-                    return item && 
-                           item.str !== undefined && 
-                           item.transform && 
-                           Array.isArray(item.transform) && 
-                           item.transform.length >= 6;
-                }).sort((a, b) => {
-                    try {
-                        const yDiff = b.transform[5] - a.transform[5];
-                        if (Math.abs(yDiff) > 3) return yDiff;
-                        return a.transform[4] - b.transform[4];
-                    } catch (sortError) {
-                        this.warn('Error sorting text items:', sortError);
-                        return 0; // Keep original order for problematic items
-                    }
-                });
-            } catch (sortError) {
-                this.warn('Failed to sort text items, using original order:', sortError);
-                sortedItems = textItems.filter(item => item && item.str !== undefined);
-            }
-            
-            if (sortedItems.length === 0) {
-                this.warn('No valid text items found after filtering');
-                return '';
-            }
-            
-            // Process items safely
-            sortedItems.forEach((item, index) => {
-                try {
-                    if (!item || typeof item.str !== 'string') {
-                        return; // Skip invalid items
-                    }
-                    
-                    const str = item.str.trim();
-                    if (!str) return; // Skip empty strings
-                    
-                    // Safely extract position if available
-                    let y = null;
-                    if (item.transform && Array.isArray(item.transform) && item.transform.length >= 6) {
-                        y = item.transform[5];
-                    }
-                    
-                    // Add spacing logic
-                    if (y !== null && lastY !== null && Math.abs(lastY - y) > 3) {
-                        text += '\n';
-                    } else if (text && !text.endsWith(' ') && !text.endsWith('\n')) {
-                        text += ' ';
-                    }
-                    
-                    text += str;
-                    if (y !== null) lastY = y;
-                    
-                } catch (itemError) {
-                    this.warn(`Error processing text item ${index}:`, itemError);
-                    // Continue with next item
-                }
-            });
-            
-            if (!text) {
-                this.warn('No text extracted from page');
-                return '';
-            }
-            
-            // Clean up the extracted text
-            text = text.replace(/\s+/g, ' ').trim();
-            
-            return text;
-            
-        } catch (error) {
-            this.error('Text extraction failed:', error);
-            throw new Error(`Text extraction failed: ${error.message}`);
-        }
+            text += str;
+            lastY = y;
+        });
+        
+        return text;
     }
 
     /**

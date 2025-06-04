@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean PDF Parser Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Clean PDF Parser Functionality Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Test Clean PDF Parser Implementation</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                This page tests the reverted and cleaned PDF parser to ensure all syntax errors are resolved and basic functionality works.
+            </p>
+            
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <h3 class="font-medium mb-2">Class Instantiation Test</h3>
+                    <button id="test-instantiation" class="w-full px-3 py-2 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors">
+                        Test PDFParser Instantiation
+                    </button>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium mb-2">Method Availability Test</h3>
+                    <button id="test-methods" class="w-full px-3 py-2 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors">
+                        Test Required Methods
+                    </button>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium mb-2">Pattern Recognition Test</h3>
+                    <button id="test-patterns" class="w-full px-3 py-2 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors">
+                        Test PDF Pattern Matching
+                    </button>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium mb-2">Real PDF Upload Test</h3>
+                    <input type="file" id="pdf-file" accept=".pdf" class="w-full text-sm border border-gray-300 rounded p-2">
+                </div>
+            </div>
+            
+            <div id="test-results" class="space-y-2">
+                <div class="text-sm text-gray-600">Click buttons above to run tests...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Test Results Summary</h2>
+            <div id="test-summary" class="text-sm">
+                <div class="text-gray-600">No tests run yet...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3">Console Log</h2>
+            <div id="console-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                Clean PDF parser test initialized...\n
+            </div>
+        </div>
+    </div>
+
+    <!-- Load PDF.js worker setup -->
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
+    <!-- Load the clean PDF parser -->
+    <script src="js/pdf-parser.js"></script>
+
+    <script>
+        // Event logging
+        const consoleLog = document.getElementById('console-log');
+        const testResults = document.getElementById('test-results');
+        const testSummary = document.getElementById('test-summary');
+        
+        let testsRun = 0;
+        let testsPassed = 0;
+        
+        function logEvent(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            consoleLog.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            console.log(message);
+        }
+
+        function addTestResult(testName, success, message, details = null) {
+            testsRun++;
+            if (success) testsPassed++;
+            
+            const resultElement = document.createElement('div');
+            resultElement.className = `flex items-start p-2 rounded text-sm ${success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`;
+            
+            let content = `
+                <span class="flex-shrink-0 mr-2">${success ? '✅' : '❌'}</span>
+                <div class="flex-grow">
+                    <div class="font-medium">${testName}</div>
+                    <div class="text-xs mt-1">${message}</div>
+                    ${details ? `<div class="text-xs mt-1 font-mono bg-white bg-opacity-50 p-1 rounded">${details}</div>` : ''}
+                </div>
+            `;
+            
+            resultElement.innerHTML = content;
+            testResults.appendChild(resultElement);
+            
+            updateTestSummary();
+        }
+        
+        function updateTestSummary() {
+            const percentage = testsRun > 0 ? Math.round((testsPassed / testsRun) * 100) : 0;
+            testSummary.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="font-medium">Tests: ${testsPassed}/${testsRun} passed (${percentage}%)</span>
+                    <span class="text-xs ${percentage === 100 ? 'text-green-600' : percentage >= 75 ? 'text-yellow-600' : 'text-red-600'}">
+                        ${percentage === 100 ? '🎉 All Passed' : percentage >= 75 ? '⚠️ Some Issues' : '❌ Major Issues'}
+                    </span>
+                </div>
+            `;
+        }
+
+        // Test 1: PDFParser instantiation
+        document.getElementById('test-instantiation').addEventListener('click', function() {
+            logEvent('Testing PDFParser instantiation...');
+            
+            try {
+                // Check if class exists
+                if (typeof PDFParser === 'undefined') {
+                    addTestResult('PDFParser Class Availability', false, 'PDFParser class not found in global scope');
+                    return;
+                }
+                
+                // Try to instantiate
+                const parser = new PDFParser();
+                
+                // Check basic properties
+                const hasPatterns = parser.patterns && typeof parser.patterns === 'object';
+                const hasFunctionDefs = parser.functionDefinitions && typeof parser.functionDefinitions === 'object';
+                const hasGeFunctionNames = parser.geFunctionNames && typeof parser.geFunctionNames === 'object';
+                
+                if (hasPatterns && hasFunctionDefs && hasGeFunctionNames) {
+                    addTestResult(
+                        'PDFParser Instantiation', 
+                        true, 
+                        'Class instantiated successfully with all required properties',
+                        `patterns: ${Object.keys(parser.patterns).length} groups, functions: ${Object.keys(parser.functionDefinitions).length}`
+                    );
+                } else {
+                    addTestResult(
+                        'PDFParser Instantiation', 
+                        false, 
+                        'Class instantiated but missing required properties',
+                        `patterns: ${hasPatterns}, functionDefs: ${hasFunctionDefs}, geFunctionNames: ${hasGeFunctionNames}`
+                    );
+                }
+                
+                logEvent('✅ PDFParser instantiation test completed');
+                
+            } catch (error) {
+                addTestResult('PDFParser Instantiation', false, 'Error during instantiation', error.message);
+                logEvent(`❌ PDFParser instantiation failed: ${error.message}`);
+            }
+        });
+
+        // Test 2: Required methods
+        document.getElementById('test-methods').addEventListener('click', function() {
+            logEvent('Testing PDFParser required methods...');
+            
+            try {
+                const parser = new PDFParser();
+                
+                const requiredMethods = [
+                    'parsePDF',
+                    'extractTextFromPage',
+                    'extractFromPage',
+                    'extractGESentryFormat',
+                    'extractFlexibleFunctions',
+                    'extractSimpleFormat',
+                    'validateExtractedSettings',
+                    'generateSettingsPreview',
+                    'isValidFunction',
+                    'isValidValue',
+                    'analyzeError',
+                    'getFormatExamples',
+                    'getTroubleshootingSteps'
+                ];
+                
+                let missingMethods = [];
+                let availableMethods = [];
+                
+                requiredMethods.forEach(method => {
+                    if (typeof parser[method] === 'function') {
+                        availableMethods.push(method);
+                    } else {
+                        missingMethods.push(method);
+                    }
+                });
+                
+                const allMethodsAvailable = missingMethods.length === 0;
+                
+                addTestResult(
+                    'Required Methods Availability',
+                    allMethodsAvailable,
+                    allMethodsAvailable ? 
+                        'All required methods are available' : 
+                        `Missing ${missingMethods.length} method(s)`,
+                    allMethodsAvailable ? 
+                        `${availableMethods.length} methods available` :
+                        `Missing: ${missingMethods.join(', ')}`
+                );
+                
+                logEvent(`✅ Methods test completed: ${availableMethods.length}/${requiredMethods.length} available`);
+                
+            } catch (error) {
+                addTestResult('Required Methods Availability', false, 'Error testing methods', error.message);
+                logEvent(`❌ Methods test failed: ${error.message}`);
+            }
+        });
+
+        // Test 3: Pattern recognition
+        document.getElementById('test-patterns').addEventListener('click', function() {
+            logEvent('Testing PDF pattern recognition...');
+            
+            try {
+                const parser = new PDFParser();
+                
+                // Test sample text patterns
+                const testTexts = [
+                    {
+                        name: 'GE Sentry Format',
+                        text: 'F.No.1 MPH Scaling Counts 100 Value 100 %\nF.No.3 Controlled Acceleration Counts 15 Value 15 Amps/Sec',
+                        expectedFunctions: [1, 3]
+                    },
+                    {
+                        name: 'Simple Format',
+                        text: 'F.1 100\nF.3 15\nF.4 245',
+                        expectedFunctions: [1, 3, 4]
+                    },
+                    {
+                        name: 'Flexible Format',
+                        text: 'Function 1: 100\nFunc 3 = 15\nF 4 245',
+                        expectedFunctions: [1, 3, 4]
+                    }
+                ];
+                
+                let patternsWorking = 0;
+                let totalPatterns = testTexts.length;
+                
+                testTexts.forEach(testCase => {
+                    try {
+                        const extracted = parser.extractFromPage(testCase.text, 1);
+                        const extractedFunctions = Object.keys(extracted).map(f => parseInt(f));
+                        
+                        const foundExpected = testCase.expectedFunctions.every(f => 
+                            extractedFunctions.includes(f)
+                        );
+                        
+                        if (foundExpected && extractedFunctions.length >= testCase.expectedFunctions.length) {
+                            patternsWorking++;
+                            logEvent(`✅ ${testCase.name} pattern working: found ${extractedFunctions.length} functions`);
+                        } else {
+                            logEvent(`❌ ${testCase.name} pattern failed: expected ${testCase.expectedFunctions.join(',')}, got ${extractedFunctions.join(',')}`);
+                        }
+                    } catch (error) {
+                        logEvent(`❌ ${testCase.name} pattern error: ${error.message}`);
+                    }
+                });
+                
+                const allPatternsWork = patternsWorking === totalPatterns;
+                
+                addTestResult(
+                    'Pattern Recognition',
+                    allPatternsWork,
+                    allPatternsWork ? 
+                        'All test patterns recognized correctly' : 
+                        `${patternsWorking}/${totalPatterns} patterns working`,
+                    `Tested: GE Sentry, Simple, and Flexible formats`
+                );
+                
+                logEvent(`✅ Pattern recognition test completed: ${patternsWorking}/${totalPatterns} working`);
+                
+            } catch (error) {
+                addTestResult('Pattern Recognition', false, 'Error testing patterns', error.message);
+                logEvent(`❌ Pattern recognition test failed: ${error.message}`);
+            }
+        });
+
+        // Test 4: Real PDF upload
+        document.getElementById('pdf-file').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (!file || file.type !== 'application/pdf') {
+                if (file) {
+                    addTestResult('PDF Upload Test', false, 'Selected file is not a PDF', `File type: ${file.type}`);
+                }
+                return;
+            }
+            
+            logEvent(`Testing real PDF upload: ${file.name} (${file.size} bytes)`);
+            
+            try {
+                const parser = new PDFParser();
+                const result = await parser.parsePDF(file);
+                
+                if (result.success) {
+                    const functionCount = Object.keys(result.settings).length;
+                    addTestResult(
+                        'PDF Processing',
+                        true,
+                        `PDF processed successfully`,
+                        `Found ${functionCount} functions, confidence: ${Math.round((result.metadata.confidence || 0) * 100)}%`
+                    );
+                    logEvent(`✅ PDF processed: ${functionCount} functions extracted`);
+                } else {
+                    addTestResult(
+                        'PDF Processing',
+                        false,
+                        'PDF processing failed with proper error handling',
+                        `Error: ${result.error}`
+                    );
+                    logEvent(`ℹ️ PDF failed as expected: ${result.error}`);
+                }
+                
+            } catch (error) {
+                addTestResult('PDF Processing', false, 'Unexpected error during PDF processing', error.message);
+                logEvent(`❌ PDF processing error: ${error.message}`);
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            logEvent('Clean PDF parser test page initialized');
+            
+            // Clear initial message
+            testResults.innerHTML = '';
+            
+            // Run basic availability test automatically
+            setTimeout(() => {
+                document.getElementById('test-instantiation').click();
+            }, 500);
+            
+            logEvent('Ready for testing - click buttons to run individual tests');
+        });
+    </script>
+</body>
+</html>

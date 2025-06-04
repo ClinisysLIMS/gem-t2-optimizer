@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Parser Fix Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 PDF Parser Fix Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Upload Test PDF</h2>
+            <div class="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
+                <input type="file" id="pdf-file" accept=".pdf" class="mb-2">
+                <p class="text-sm text-gray-600">Upload HudsGemstats.pdf or any controller settings PDF</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Parser Status</h2>
+            <div id="parser-status" class="space-y-2">
+                <div class="text-sm text-gray-600">Ready to test...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Extraction Results</h2>
+            <div id="extraction-results" class="space-y-2">
+                <div class="text-sm text-gray-600">No results yet...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3">Debug Output</h2>
+            <div id="debug-output" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-96 overflow-y-auto">
+                Console output will appear here...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set PDF.js worker
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        // Capture console logs
+        const debugOutput = document.getElementById('debug-output');
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+
+        function addToDebug(type, ...args) {
+            const timestamp = new Date().toISOString().substring(11, 23);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            debugOutput.innerHTML += `[${timestamp}] ${type}: ${message}\n`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToDebug('LOG', ...args);
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToDebug('WARN', ...args);
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToDebug('ERROR', ...args);
+        };
+
+        // Load PDF Parser
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function loadPDFParser() {
+            try {
+                await loadScript('js/pdf-parser.js');
+                document.getElementById('parser-status').innerHTML = `
+                    <div class="flex items-center text-sm">
+                        <span class="text-green-600">✅</span>
+                        <span class="ml-2">PDF Parser loaded successfully</span>
+                    </div>
+                `;
+                return true;
+            } catch (error) {
+                document.getElementById('parser-status').innerHTML = `
+                    <div class="flex items-center text-sm">
+                        <span class="text-red-600">❌</span>
+                        <span class="ml-2">Failed to load PDF Parser: ${error.message}</span>
+                    </div>
+                `;
+                return false;
+            }
+        }
+
+        // Test PDF parsing
+        async function testPDFParsing(file) {
+            const parserStatus = document.getElementById('parser-status');
+            const extractionResults = document.getElementById('extraction-results');
+
+            try {
+                parserStatus.innerHTML = `
+                    <div class="flex items-center text-sm">
+                        <span class="text-blue-600">⏳</span>
+                        <span class="ml-2">Parsing PDF: ${file.name}</span>
+                    </div>
+                `;
+
+                // Initialize parser
+                const parser = new PDFParser();
+                console.log('PDF Parser initialized');
+
+                // Parse the PDF
+                const result = await parser.parsePDF(file);
+                console.log('PDF parsing completed', result);
+
+                if (result.success) {
+                    const functionsFound = Object.keys(result.settings).length;
+                    parserStatus.innerHTML = `
+                        <div class="flex items-center text-sm">
+                            <span class="text-green-600">✅</span>
+                            <span class="ml-2">Successfully extracted ${functionsFound} functions</span>
+                        </div>
+                        <div class="text-xs text-gray-600 mt-1">
+                            Methods: ${result.metadata?.extractionMethods?.join(', ') || 'Unknown'}
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            Confidence: ${Math.round((result.metadata?.confidence || 0) * 100)}%
+                        </div>
+                    `;
+
+                    // Display results
+                    if (functionsFound > 0) {
+                        const settingsArray = Object.keys(result.settings)
+                            .map(func => ({
+                                function: parseInt(func),
+                                value: result.settings[func]
+                            }))
+                            .sort((a, b) => a.function - b.function);
+
+                        let resultsHTML = `
+                            <div class="text-sm font-medium mb-3">Found ${functionsFound} controller functions:</div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                        `;
+
+                        settingsArray.slice(0, 20).forEach(setting => {
+                            resultsHTML += `
+                                <div class="bg-gray-50 p-2 rounded">
+                                    <span class="font-medium">F.${setting.function}</span>: ${setting.value}
+                                </div>
+                            `;
+                        });
+
+                        if (functionsFound > 20) {
+                            resultsHTML += `<div class="text-gray-600 col-span-full text-center">... and ${functionsFound - 20} more</div>`;
+                        }
+
+                        resultsHTML += '</div>';
+                        extractionResults.innerHTML = resultsHTML;
+                    } else {
+                        extractionResults.innerHTML = `
+                            <div class="text-yellow-600 text-sm">
+                                No functions extracted - PDF may not contain controller settings in expected format
+                            </div>
+                        `;
+                    }
+                } else {
+                    parserStatus.innerHTML = `
+                        <div class="flex items-center text-sm">
+                            <span class="text-red-600">❌</span>
+                            <span class="ml-2">PDF parsing failed</span>
+                        </div>
+                        <div class="text-xs text-red-600 mt-1">${result.error || 'Unknown error'}</div>
+                    `;
+
+                    extractionResults.innerHTML = `
+                        <div class="text-red-600 text-sm">
+                            Parsing failed: ${result.error || 'Unknown error'}
+                        </div>
+                        ${result.suggestions ? `
+                            <div class="text-sm mt-2">
+                                <div class="font-medium">Suggestions:</div>
+                                <ul class="list-disc list-inside text-xs mt-1">
+                                    ${result.suggestions.map(s => `<li>${s}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    `;
+                }
+
+            } catch (error) {
+                console.error('PDF parsing error:', error);
+                parserStatus.innerHTML = `
+                    <div class="flex items-center text-sm">
+                        <span class="text-red-600">❌</span>
+                        <span class="ml-2">Error during parsing</span>
+                    </div>
+                    <div class="text-xs text-red-600 mt-1">${error.message}</div>
+                `;
+
+                extractionResults.innerHTML = `
+                    <div class="text-red-600 text-sm">
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Set up file input handler
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Page loaded, initializing PDF parser test');
+            
+            const parserLoaded = await loadPDFParser();
+            if (!parserLoaded) return;
+
+            const fileInput = document.getElementById('pdf-file');
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file && file.type === 'application/pdf') {
+                    console.log('PDF file selected:', file.name);
+                    testPDFParsing(file);
+                } else {
+                    alert('Please select a PDF file');
+                }
+            });
+
+            console.log('PDF parser test ready');
+        });
+    </script>
+</body>
+</html>

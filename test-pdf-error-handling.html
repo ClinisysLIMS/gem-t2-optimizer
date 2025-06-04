@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Error Handling Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 PDF Error Handling Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Test Improved Error Handling</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                This page tests the enhanced PDF error handling with user-friendly messages, format examples, and troubleshooting guidance.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <h3 class="font-medium mb-2">Upload Test PDF</h3>
+                    <div class="border-2 border-dashed border-gray-300 rounded-md p-3 text-center">
+                        <input type="file" id="pdf-file" accept=".pdf" class="mb-2">
+                        <p class="text-xs text-gray-600">Upload any PDF to test error handling</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium mb-2">Simulate Error Types</h3>
+                    <div class="space-y-2">
+                        <button onclick="simulateError('corrupted')" class="w-full px-3 py-2 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors">
+                            Simulate Corrupted PDF
+                        </button>
+                        <button onclick="simulateError('password')" class="w-full px-3 py-2 bg-yellow-100 text-yellow-700 rounded text-sm hover:bg-yellow-200 transition-colors">
+                            Simulate Password Protected
+                        </button>
+                        <button onclick="simulateError('no_text')" class="w-full px-3 py-2 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors">
+                            Simulate Scanned Images
+                        </button>
+                        <button onclick="simulateError('format')" class="w-full px-3 py-2 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors">
+                            Simulate Wrong Format
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Error Display Results</h2>
+            <div id="error-display" class="space-y-3">
+                <div class="text-sm text-gray-600">Click buttons above or upload a PDF to test error handling...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Features Tested</h2>
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <h3 class="font-medium mb-2 text-green-800">✅ User-Friendly Messages</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>• Plain language error explanations</li>
+                        <li>• Specific error type detection</li>
+                        <li>• Emoji icons for visual clarity</li>
+                        <li>• Technical details hidden but available</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2 text-blue-800">📋 Format Examples</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>• GE Sentry export format</li>
+                        <li>• Simple table format</li>
+                        <li>• Curtis programmer format</li>
+                        <li>• Expandable format details</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2 text-purple-800">🔧 Troubleshooting</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>• Step-by-step guidance</li>
+                        <li>• Visual step indicators</li>
+                        <li>• Actionable instructions</li>
+                        <li>• Alternative solutions</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2 text-orange-800">🛟 Fallback Handling</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>• Graceful error recovery</li>
+                        <li>• Partial result acceptance</li>
+                        <li>• Sample PDF download</li>
+                        <li>• Manual entry suggestions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3">Console Log</h2>
+            <div id="console-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                PDF error handling test ready...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set PDF.js worker
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        // Console logging
+        const consoleLog = document.getElementById('console-log');
+        const errorDisplay = document.getElementById('error-display');
+
+        function log(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            consoleLog.innerHTML += `\n[${timestamp}] ${message}`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            console.log(message);
+        }
+
+        // Load PDF Parser
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function loadPDFParser() {
+            try {
+                await loadScript('js/pdf-parser.js');
+                log('Enhanced PDF Parser loaded successfully');
+                return true;
+            } catch (error) {
+                log(`Failed to load PDF Parser: ${error.message}`);
+                return false;
+            }
+        }
+
+        // Simulate different error types
+        function simulateError(errorType) {
+            log(`Simulating ${errorType} error`);
+            
+            const mockResult = generateMockError(errorType);
+            displayPDFAnalysisError(mockResult);
+            
+            log(`Error simulation complete: ${errorType}`);
+        }
+
+        function generateMockError(errorType) {
+            const baseResult = {
+                success: false,
+                formatExamples: [
+                    {
+                        title: 'GE Sentry Export Format',
+                        description: 'Exported from Sentry programming software',
+                        example: `F.No. Function Description    Counts Value Units
+F.No.1  MPH Scaling            100    100   %
+F.No.3  Controlled Acceleration 15     15   Amps/Sec
+F.No.4  Max Armature Current   245    245   Amps`
+                    },
+                    {
+                        title: 'Simple Table Format',
+                        description: 'Basic function number and value pairs',
+                        example: `Function  Value
+F.1       100
+F.3       15
+F.4       245
+F.7       70`
+                    }
+                ],
+                troubleshooting: [
+                    {
+                        step: 1,
+                        title: 'Check PDF Content',
+                        description: 'Open the PDF in a viewer and verify it contains a table with function numbers'
+                    },
+                    {
+                        step: 2,
+                        title: 'Verify File Source',
+                        description: 'Ensure the PDF was exported directly from programming software'
+                    },
+                    {
+                        step: 3,
+                        title: 'Use Manual Entry',
+                        description: 'Enter the 7 most critical settings manually'
+                    }
+                ]
+            };
+
+            switch (errorType) {
+                case 'corrupted':
+                    return {
+                        ...baseResult,
+                        error: '❌ This PDF file appears to be corrupted or not a valid PDF.',
+                        technicalError: 'Invalid PDF structure detected',
+                        suggestions: [
+                            'Try re-downloading the PDF from your controller software',
+                            'Check if the file opens correctly in a PDF viewer',
+                            'Export a new copy from your GEM programmer software',
+                            'Make sure the file completed downloading fully',
+                            'Download our sample PDF to see the correct format',
+                            'Use manual entry to input the 7 most important settings'
+                        ],
+                        fallback: { success: false, message: 'File too corrupted for basic processing' }
+                    };
+                    
+                case 'password':
+                    return {
+                        ...baseResult,
+                        error: '🔒 This PDF is password protected and cannot be read.',
+                        technicalError: 'PDF encryption detected',
+                        suggestions: [
+                            'Remove the password protection from the PDF',
+                            'Export an unprotected version from your programming software',
+                            'Use manual entry instead to input your settings',
+                            'Download our sample PDF to see the correct format',
+                            'Use manual entry to input the 7 most important settings'
+                        ],
+                        fallback: { success: false, message: 'Cannot access encrypted content' }
+                    };
+                    
+                case 'no_text':
+                    return {
+                        ...baseResult,
+                        error: '📄 This PDF doesn\'t contain readable text (may be scanned images).',
+                        technicalError: 'No extractable text content found',
+                        suggestions: [
+                            'Use a PDF that contains selectable text, not scanned images',
+                            'Export directly from programming software instead of printing to PDF',
+                            'Try manual entry to input your current settings',
+                            'Download our sample PDF to see the correct format',
+                            'Use manual entry to input the 7 most important settings'
+                        ],
+                        fallback: { 
+                            success: true, 
+                            settings: { 1: 100, 3: 15, 4: 245 },
+                            message: 'Found some basic patterns'
+                        }
+                    };
+                    
+                case 'format':
+                default:
+                    return {
+                        ...baseResult,
+                        error: '📋 Unable to find GEM controller settings in the expected format.',
+                        technicalError: 'No recognized controller function patterns found',
+                        suggestions: [
+                            'Make sure this PDF contains GEM controller function settings',
+                            'Look for a table with F.1, F.2, etc. and corresponding values',
+                            'Try a PDF exported directly from Sentry or similar programming software',
+                            'Download our sample PDF to see the correct format',
+                            'Use manual entry to input the 7 most important settings'
+                        ],
+                        fallback: { success: false, message: 'No controller patterns detected' }
+                    };
+            }
+        }
+
+        // Enhanced error display function (copied from main page)
+        function displayPDFAnalysisError(result) {
+            let content = `
+                <div class="border border-red-200 rounded-lg p-4 bg-red-50">
+                    <div class="text-red-600 mb-3">
+                        <div class="text-sm font-medium">${result.error || '❌ PDF Analysis Failed'}</div>
+                        <div class="text-xs mt-1 text-red-500">${result.technicalError || result.guidance || ''}</div>
+                    </div>
+            `;
+            
+            // Quick suggestions
+            if (result.suggestions && result.suggestions.length > 0) {
+                const suggestionsHtml = result.suggestions.map(s => `<li class="text-xs">${s}</li>`).join('');
+                content += `
+                    <div class="mb-4">
+                        <div class="text-sm font-medium text-red-800 mb-2">💡 What to try:</div>
+                        <ul class="list-disc list-inside space-y-1 text-red-700">${suggestionsHtml}</ul>
+                    </div>
+                `;
+            }
+            
+            // Format examples
+            if (result.formatExamples && result.formatExamples.length > 0) {
+                content += `
+                    <div class="mb-4">
+                        <div class="text-sm font-medium text-blue-800 mb-2">📋 Supported PDF Formats:</div>
+                        <div class="space-y-2">
+                `;
+                
+                result.formatExamples.forEach(format => {
+                    content += `
+                        <details class="border border-blue-200 rounded p-2">
+                            <summary class="text-xs font-medium text-blue-700 cursor-pointer">${format.title}</summary>
+                            <div class="text-xs text-blue-600 mt-1">${format.description}</div>
+                            <pre class="text-xs bg-blue-50 p-2 mt-2 rounded overflow-x-auto">${format.example}</pre>
+                        </details>
+                    `;
+                });
+                
+                content += '</div></div>';
+            }
+            
+            // Troubleshooting steps
+            if (result.troubleshooting && result.troubleshooting.length > 0) {
+                content += `
+                    <div class="mb-4">
+                        <div class="text-sm font-medium text-purple-800 mb-2">🔧 Troubleshooting Steps:</div>
+                        <div class="space-y-2">
+                `;
+                
+                result.troubleshooting.forEach(step => {
+                    content += `
+                        <div class="flex text-xs">
+                            <span class="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-800 rounded-full flex items-center justify-center mr-2 text-xs font-bold">${step.step}</span>
+                            <div>
+                                <div class="font-medium text-purple-800">${step.title}</div>
+                                <div class="text-purple-600">${step.description}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                content += '</div></div>';
+            }
+            
+            // Sample PDF download
+            content += `
+                <div class="border-t border-gray-200 pt-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-medium text-green-800">📥 Download Sample PDF</div>
+                            <div class="text-xs text-green-600">See exactly what format works best</div>
+                        </div>
+                        <button onclick="downloadSampleFormat()" class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors">
+                            Download
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Fallback handling
+            if (result.fallback && result.fallback.success) {
+                content += `
+                    <div class="border-t border-gray-200 pt-3 mt-3">
+                        <div class="bg-amber-50 border border-amber-200 rounded p-2">
+                            <div class="text-amber-800 font-medium text-sm">⚠️ Partial Success</div>
+                            <div class="text-amber-700 text-xs mt-1">
+                                Fallback extraction found ${Object.keys(result.fallback.settings).length} functions using basic pattern matching
+                            </div>
+                            <button onclick="acceptFallback()" class="mt-2 px-2 py-1 bg-amber-600 text-white rounded text-xs hover:bg-amber-700 transition-colors">
+                                Use These Results
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (result.fallback && !result.fallback.success) {
+                content += `
+                    <div class="border-t border-gray-200 pt-3 mt-3">
+                        <div class="text-red-600 text-xs">
+                            Even basic text extraction failed: ${result.fallback.message || 'Unable to process PDF'}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            content += '</div>';
+            errorDisplay.innerHTML = content;
+        }
+
+        // Helper functions
+        function downloadSampleFormat() {
+            const sampleContent = `GEM T2 Controller Settings Sample
+
+This is an example of the PDF format that works best with our parser.
+
+F.No. Function Description         Counts Value Units
+F.No.1  MPH Scaling               100    100   %
+F.No.3  Controlled Acceleration   15     15    Amps/Sec  
+F.No.4  Max Armature Current      245    245   Amps
+F.No.7  Minimum Field Current     70     70    Amps
+F.No.15 Battery Volts             72     72    Volts
+F.No.20 MPH Overspeed             30     30    %
+F.No.24 Field Weakening Start    50     50    %
+
+Alternative Simple Format:
+Function  Value
+F.1       100
+F.3       15
+F.4       245
+F.7       70
+F.15      72
+F.20      30
+F.24      50
+
+Key Requirements:
+- Function numbers should be clearly labeled (F.1, F.No.1, etc.)
+- Values should be in a separate column
+- Text should be selectable (not scanned images)
+- PDF should not be password protected
+
+This sample shows the formats our parser recognizes best.
+Export directly from your programming software when possible.`;
+
+            const blob = new Blob([sampleContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'GEM_T2_Settings_Sample_Format.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            log('Sample format file downloaded');
+        }
+
+        function acceptFallback() {
+            log('Fallback results accepted');
+            errorDisplay.innerHTML = `
+                <div class="border border-green-200 rounded-lg p-4 bg-green-50">
+                    <div class="text-green-800 font-medium">✅ Fallback Results Accepted</div>
+                    <div class="text-green-700 text-sm mt-1">Using partial extraction results for optimization</div>
+                </div>
+            `;
+        }
+
+        // Real PDF testing
+        async function testRealPDF(file) {
+            log(`Testing real PDF: ${file.name} (${file.size} bytes)`);
+            
+            const parserLoaded = await loadPDFParser();
+            if (!parserLoaded) {
+                errorDisplay.innerHTML = '<div class="text-red-600">❌ Failed to load PDF parser</div>';
+                return;
+            }
+            
+            try {
+                const parser = new PDFParser();
+                const result = await parser.parsePDF(file);
+                
+                if (result.success) {
+                    log(`PDF parsed successfully: ${Object.keys(result.settings).length} functions found`);
+                    errorDisplay.innerHTML = `
+                        <div class="border border-green-200 rounded-lg p-4 bg-green-50">
+                            <div class="text-green-800 font-medium">✅ PDF Parsed Successfully</div>
+                            <div class="text-green-700 text-sm mt-1">Found ${Object.keys(result.settings).length} controller functions</div>
+                        </div>
+                    `;
+                } else {
+                    log(`PDF parsing failed: ${result.error}`);
+                    displayPDFAnalysisError(result);
+                }
+            } catch (error) {
+                log(`PDF parsing error: ${error.message}`);
+                displayPDFAnalysisError({
+                    error: '⚠️ Unexpected error occurred during PDF processing',
+                    technicalError: error.message,
+                    suggestions: [
+                        'Try refreshing the page and uploading again',
+                        'Check if the PDF opens normally in other applications',
+                        'Use manual entry as a reliable alternative'
+                    ]
+                });
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            log('PDF error handling test page initialized');
+            
+            const fileInput = document.getElementById('pdf-file');
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file && file.type === 'application/pdf') {
+                    testRealPDF(file);
+                } else if (file) {
+                    log('Non-PDF file selected, simulating format error');
+                    simulateError('format');
+                } else {
+                    log('No file selected');
+                }
+            });
+            
+            log('Ready for PDF error handling tests');
+        });
+    </script>
+</body>
+</html>

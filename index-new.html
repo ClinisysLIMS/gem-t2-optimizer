@@ -297,7 +297,7 @@
                 </div>
                 
 
-                <!-- PDF Upload Section -->
+                <!-- Current Settings Section -->
                 <div class="mt-3 bg-gray-50 rounded-md border border-gray-200 p-2">
                     <h3 class="font-medium text-gray-800 text-sm mb-2 flex items-center">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -305,7 +305,44 @@
                         </svg>
                         Import Current Settings (Optional)
                     </h3>
-                    <div id="pdf-upload-area" class="border-2 border-dashed border-gray-300 rounded-md p-2 text-center hover:border-green-400 transition-colors">
+                    
+                    <!-- Settings Input Options -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                        <button id="pdf-upload-btn" class="p-2 border border-gray-300 rounded-md hover:border-green-400 hover:bg-green-50 transition-colors text-center">
+                            <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <div class="text-xs font-medium">Upload PDF</div>
+                            <div class="text-xs text-gray-500">Sentry/Export file</div>
+                        </button>
+                        
+                        <button id="manual-entry-btn" class="p-2 border border-gray-300 rounded-md hover:border-blue-400 hover:bg-blue-50 transition-colors text-center">
+                            <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            <div class="text-xs font-medium">Manual Entry</div>
+                            <div class="text-xs text-gray-500">Enter key values</div>
+                        </button>
+                        
+                        <button id="factory-defaults-btn" class="p-2 border border-gray-300 rounded-md hover:border-purple-400 hover:bg-purple-50 transition-colors text-center">
+                            <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <div class="text-xs font-medium">Factory Defaults</div>
+                            <div class="text-xs text-gray-500">Standard values</div>
+                        </button>
+                        
+                        <button id="sample-data-btn" class="p-2 border border-gray-300 rounded-md hover:border-orange-400 hover:bg-orange-50 transition-colors text-center">
+                            <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div class="text-xs font-medium">Use Sample Data</div>
+                            <div class="text-xs text-gray-500">Test configurations</div>
+                        </button>
+                    </div>
+                    
+                    <!-- PDF Upload Area (hidden by default) -->
+                    <div id="pdf-upload-area" class="hidden border-2 border-dashed border-gray-300 rounded-md p-2 text-center hover:border-green-400 transition-colors">
                         <svg class="mx-auto h-6 w-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                         </svg>
@@ -316,13 +353,141 @@
                             </label>
                         </p>
                         <input id="settings-pdf" type="file" accept=".pdf" class="hidden">
+                        <button id="cancel-pdf-upload" class="mt-2 text-xs text-gray-500 hover:text-gray-700 underline">Cancel</button>
                     </div>
                     
-                    <div id="pdf-analysis-result" class="hidden mt-2">
-                        <div id="pdf-analysis-content" class="text-xs">
-                            <div id="pdf-metadata"></div>
-                            <div id="pdf-settings-preview" class="mt-1"></div>
-                            <div id="pdf-debug-info" class="mt-1"></div>
+                    <!-- Manual Entry Form (hidden by default) -->
+                    <div id="manual-entry-form" class="hidden border border-blue-200 rounded-md p-3 bg-blue-50">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-medium text-blue-900 text-sm">Manual Entry - Key Settings</h4>
+                            <button id="cancel-manual-entry" class="text-xs text-blue-600 hover:text-blue-800 underline">Cancel</button>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div>
+                                <label for="manual-f1" class="block text-xs font-medium text-blue-800">F.1 MPH Scaling</label>
+                                <input type="number" id="manual-f1" min="15" max="200" placeholder="100" 
+                                       class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <div class="text-xs text-blue-600 mt-0.5">15-200</div>
+                            </div>
+                            <div>
+                                <label for="manual-f3" class="block text-xs font-medium text-blue-800">F.3 Acceleration</label>
+                                <input type="number" id="manual-f3" min="8" max="40" placeholder="15" 
+                                       class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <div class="text-xs text-blue-600 mt-0.5">8-40</div>
+                            </div>
+                            <div>
+                                <label for="manual-f4" class="block text-xs font-medium text-blue-800">F.4 Max Current</label>
+                                <input type="number" id="manual-f4" min="180" max="400" placeholder="245" 
+                                       class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <div class="text-xs text-blue-600 mt-0.5">180-400</div>
+                            </div>
+                            <div>
+                                <label for="manual-f7" class="block text-xs font-medium text-blue-800">F.7 Min Field</label>
+                                <input type="number" id="manual-f7" min="51" max="120" placeholder="70" 
+                                       class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <div class="text-xs text-blue-600 mt-0.5">51-120</div>
+                            </div>
+                            <div>
+                                <label for="manual-f15" class="block text-xs font-medium text-blue-800">F.15 Battery Volts</label>
+                                <input type="number" id="manual-f15" min="48" max="96" placeholder="72" 
+                                       class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <div class="text-xs text-blue-600 mt-0.5">48-96</div>
+                            </div>
+                            <div>
+                                <label for="manual-f20" class="block text-xs font-medium text-blue-800">F.20 Overspeed</label>
+                                <input type="number" id="manual-f20" min="25" max="50" placeholder="30" 
+                                       class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <div class="text-xs text-blue-600 mt-0.5">25-50</div>
+                            </div>
+                            <div>
+                                <label for="manual-f24" class="block text-xs font-medium text-blue-800">F.24 Field Weak</label>
+                                <input type="number" id="manual-f24" min="25" max="85" placeholder="50" 
+                                       class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <div class="text-xs text-blue-600 mt-0.5">25-85</div>
+                            </div>
+                            <div class="flex items-end">
+                                <button id="save-manual-entry" class="w-full px-2 py-1.5 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors">
+                                    Save Settings
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-xs text-blue-700">
+                            💡 These are the most critical settings for optimization. Leave blank to use defaults.
+                        </div>
+                    </div>
+                    
+                    <!-- Sample Data Selection Modal (hidden by default) -->
+                    <div id="sample-data-modal" class="hidden border border-orange-200 rounded-md p-3 bg-orange-50">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-medium text-orange-900 text-sm">Choose Sample Configuration</h4>
+                            <button id="cancel-sample-data" class="text-xs text-orange-600 hover:text-orange-800 underline">Cancel</button>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="border border-orange-200 rounded p-2 bg-white hover:bg-orange-25 cursor-pointer transition-colors" onclick="selectSampleConfig('stock_e4')">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-xs font-bold text-blue-800">🏭</span>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="font-medium text-sm text-orange-900">Stock GEM e4 (72V Lead-Acid)</div>
+                                        <div class="text-xs text-orange-700 mt-1">Factory configuration for 4-passenger GEM with standard lead-acid batteries</div>
+                                        <div class="text-xs text-orange-600 mt-1">25 MPH max • 72V • Standard performance</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-orange-200 rounded p-2 bg-white hover:bg-orange-25 cursor-pointer transition-colors" onclick="selectSampleConfig('lithium_upgrade')">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-xs font-bold text-green-800">⚡</span>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="font-medium text-sm text-orange-900">Lithium Upgrade Setup</div>
+                                        <div class="text-xs text-orange-700 mt-1">Performance-optimized settings for lithium battery conversion</div>
+                                        <div class="text-xs text-orange-600 mt-1">30+ MPH • Enhanced acceleration • Extended range</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-orange-200 rounded p-2 bg-white hover:bg-orange-25 cursor-pointer transition-colors" onclick="selectSampleConfig('large_tire_setup')">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-xs font-bold text-purple-800">🚗</span>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="font-medium text-sm text-orange-900">Large Tire Setup</div>
+                                        <div class="text-xs text-orange-700 mt-1">Optimized for 23"+ tires with adjusted gear ratios and speed scaling</div>
+                                        <div class="text-xs text-orange-600 mt-1">Higher top speed • Adjusted for tire size • Better traction</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-orange-200 rounded p-2 bg-white hover:bg-orange-25 cursor-pointer transition-colors" onclick="selectSampleConfig('performance_tuned')">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-xs font-bold text-red-800">🏁</span>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="font-medium text-sm text-orange-900">Performance Tuned</div>
+                                        <div class="text-xs text-orange-700 mt-1">Aggressive settings for maximum performance and speed</div>
+                                        <div class="text-xs text-orange-600 mt-1">35+ MPH • Fast acceleration • Track-ready setup</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 text-xs text-orange-700 bg-orange-100 p-2 rounded">
+                            💡 These are realistic configurations used by GEM owners. Perfect for testing the optimizer without needing your actual settings.
+                        </div>
+                    </div>
+                    
+                    <!-- Results/Status Area -->
+                    <div id="settings-input-result" class="hidden mt-2">
+                        <div id="settings-input-content" class="text-xs">
+                            <div id="settings-metadata"></div>
+                            <div id="settings-preview" class="mt-1"></div>
+                            <div id="settings-debug-info" class="mt-1"></div>
                         </div>
                     </div>
                 </div>
@@ -548,10 +713,15 @@
 
     <!-- Load JavaScript modules -->
     <script>
-        // Set PDF.js worker
-        if (typeof pdfjsLib !== 'undefined') {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        }
+        // Set PDF.js worker - ensure PDF.js is loaded first
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof pdfjsLib !== 'undefined') {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                console.log('PDF.js worker configured successfully');
+            } else {
+                console.error('PDF.js library not loaded - PDFParser functionality will not work');
+            }
+        });
     </script>
     <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -585,52 +755,761 @@
     <script src="js/unified-flow.js"></script>
     
     <script>
-        // Enhanced PDF upload handler with preview
+        // Enhanced PDF upload and manual entry handlers
         document.addEventListener('DOMContentLoaded', function() {
             const pdfInput = document.getElementById('settings-pdf');
-            const pdfAnalysisResult = document.getElementById('pdf-analysis-result');
-            const pdfMetadata = document.getElementById('pdf-metadata');
-            const pdfSettingsPreview = document.getElementById('pdf-settings-preview');
-            const pdfDebugInfo = document.getElementById('pdf-debug-info');
+            const pdfAnalysisResult = document.getElementById('settings-input-result');
+            const pdfMetadata = document.getElementById('settings-metadata');
+            const pdfSettingsPreview = document.getElementById('settings-preview');
+            const pdfDebugInfo = document.getElementById('settings-debug-info');
+
+            // Manual entry elements
+            const pdfUploadBtn = document.getElementById('pdf-upload-btn');
+            const manualEntryBtn = document.getElementById('manual-entry-btn');
+            const factoryDefaultsBtn = document.getElementById('factory-defaults-btn');
+            const pdfUploadArea = document.getElementById('pdf-upload-area');
+            const manualEntryForm = document.getElementById('manual-entry-form');
+            const settingsInputResult = document.getElementById('settings-input-result');
+
+            // Factory defaults for GEM T2 Controller
+            const factoryDefaults = {
+                1: 100,   // MPH Scaling
+                3: 15,    // Controlled Acceleration  
+                4: 245,   // Max Armature Current Limit
+                7: 70,    // Minimum Field Current
+                15: 72,   // Battery Volts
+                20: 30,   // MPH Overspeed
+                24: 50    // Field Weakening Start
+            };
+
+            // Settings input mode handlers
+            pdfUploadBtn.addEventListener('click', function() {
+                hideAllInputMethods();
+                pdfUploadArea.classList.remove('hidden');
+                setActiveButton(pdfUploadBtn);
+            });
+
+            manualEntryBtn.addEventListener('click', function() {
+                hideAllInputMethods();
+                manualEntryForm.classList.remove('hidden');
+                setActiveButton(manualEntryBtn);
+                // Pre-fill with factory defaults as placeholders
+                populateManualFormDefaults();
+            });
+
+            factoryDefaultsBtn.addEventListener('click', function() {
+                hideAllInputMethods();
+                setActiveButton(factoryDefaultsBtn);
+                loadFactoryDefaults();
+            });
+
+            // Sample Data Button Handler
+            document.getElementById('sample-data-btn').addEventListener('click', function() {
+                hideAllInputMethods();
+                document.getElementById('sample-data-modal').classList.remove('hidden');
+                setActiveButton(document.getElementById('sample-data-btn'));
+            });
+
+            document.getElementById('cancel-sample-data').addEventListener('click', function() {
+                hideAllInputMethods();
+                clearActiveButtons();
+            });
+
+            // Cancel buttons
+            document.getElementById('cancel-pdf-upload').addEventListener('click', function() {
+                hideAllInputMethods();
+                clearActiveButtons();
+            });
+
+            document.getElementById('cancel-manual-entry').addEventListener('click', function() {
+                hideAllInputMethods();
+                clearActiveButtons();
+                clearManualForm();
+            });
+
+            // Save manual entry
+            document.getElementById('save-manual-entry').addEventListener('click', function() {
+                saveManualEntrySettings();
+            });
+
+            function hideAllInputMethods() {
+                pdfUploadArea.classList.add('hidden');
+                manualEntryForm.classList.add('hidden');
+                document.getElementById('sample-data-modal').classList.add('hidden');
+                settingsInputResult.classList.add('hidden');
+            }
+
+            function setActiveButton(activeBtn) {
+                clearActiveButtons();
+                activeBtn.classList.add('border-blue-500', 'bg-blue-50');
+            }
+
+            function clearActiveButtons() {
+                [pdfUploadBtn, manualEntryBtn, factoryDefaultsBtn, document.getElementById('sample-data-btn')].forEach(btn => {
+                    btn.classList.remove('border-blue-500', 'bg-blue-50', 'border-green-500', 'bg-green-50', 'border-purple-500', 'bg-purple-50', 'border-orange-500', 'bg-orange-50');
+                });
+            }
+
+            function populateManualFormDefaults() {
+                document.getElementById('manual-f1').placeholder = factoryDefaults[1];
+                document.getElementById('manual-f3').placeholder = factoryDefaults[3];
+                document.getElementById('manual-f4').placeholder = factoryDefaults[4];
+                document.getElementById('manual-f7').placeholder = factoryDefaults[7];
+                document.getElementById('manual-f15').placeholder = factoryDefaults[15];
+                document.getElementById('manual-f20').placeholder = factoryDefaults[20];
+                document.getElementById('manual-f24').placeholder = factoryDefaults[24];
+            }
+
+            function clearManualForm() {
+                ['manual-f1', 'manual-f3', 'manual-f4', 'manual-f7', 'manual-f15', 'manual-f20', 'manual-f24'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+            }
+
+            function loadFactoryDefaults() {
+                settingsInputResult.classList.remove('hidden');
+                pdfMetadata.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="text-purple-600">✅</span>
+                        <span class="ml-2 font-medium">Factory Defaults Loaded</span>
+                    </div>
+                `;
+                
+                displaySettingsPreview(factoryDefaults, 'Factory Default Settings');
+                
+                // Store for optimization use
+                window.importedSettings = factoryDefaults;
+                console.log('Factory defaults loaded:', factoryDefaults);
+                
+                // Notify unified flow controller
+                window.dispatchEvent(new CustomEvent('manualSettingsLoaded', {
+                    detail: { settings: factoryDefaults, source: 'factory-defaults' }
+                }));
+            }
+
+            function saveManualEntrySettings() {
+                const settings = {};
+                const fields = [
+                    { id: 'manual-f1', func: 1 },
+                    { id: 'manual-f3', func: 3 },
+                    { id: 'manual-f4', func: 4 },
+                    { id: 'manual-f7', func: 7 },
+                    { id: 'manual-f15', func: 15 },
+                    { id: 'manual-f20', func: 20 },
+                    { id: 'manual-f24', func: 24 }
+                ];
+
+                let enteredCount = 0;
+                fields.forEach(field => {
+                    const input = document.getElementById(field.id);
+                    const value = input.value.trim();
+                    if (value !== '') {
+                        settings[field.func] = parseInt(value);
+                        enteredCount++;
+                    } else {
+                        // Use factory default if not specified
+                        settings[field.func] = factoryDefaults[field.func];
+                    }
+                });
+
+                settingsInputResult.classList.remove('hidden');
+                pdfMetadata.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="text-blue-600">✅</span>
+                        <span class="ml-2 font-medium">Manual Settings Saved</span>
+                    </div>
+                    <div class="text-xs text-blue-600 mt-1">
+                        ${enteredCount} values entered, ${7 - enteredCount} using defaults
+                    </div>
+                `;
+
+                displaySettingsPreview(settings, 'Manual Entry Settings');
+
+                // Store for optimization use
+                window.importedSettings = settings;
+                console.log('Manual settings saved:', settings);
+
+                // Notify unified flow controller
+                window.dispatchEvent(new CustomEvent('manualSettingsLoaded', {
+                    detail: { settings: settings, source: 'manual' }
+                }));
+
+                // Hide the form
+                manualEntryForm.classList.add('hidden');
+                factoryDefaultsBtn.classList.add('border-blue-500', 'bg-blue-50');
+            }
+
+            function displaySettingsPreview(settings, title) {
+                const functionNames = {
+                    1: 'MPH Scaling',
+                    3: 'Controlled Acceleration',
+                    4: 'Max Armature Current',
+                    7: 'Minimum Field Current',
+                    15: 'Battery Volts',
+                    20: 'MPH Overspeed',
+                    24: 'Field Weakening Start'
+                };
+
+                let html = `
+                    <div class="bg-white bg-opacity-50 rounded p-2">
+                        <div class="font-medium text-xs mb-2">${title}:</div>
+                        <div class="grid grid-cols-2 gap-2">
+                `;
+
+                Object.entries(settings).forEach(([func, value]) => {
+                    const name = functionNames[func] || `Function ${func}`;
+                    html += `
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-medium">F.${func} ${name}</span>
+                            <span class="text-blue-600">${value}</span>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+
+                pdfSettingsPreview.innerHTML = html;
+            }
+            
+            // Sample Data Selection Handler
+            window.selectSampleConfig = function(configType) {
+                const sampleConfigurations = {
+                    'stock_e4': {
+                        name: 'Stock GEM e4 (72V Lead-Acid)',
+                        description: 'Factory configuration for 4-passenger GEM with standard lead-acid batteries',
+                        settings: {
+                            1: 100,   // MPH Scaling - Factory default
+                            3: 15,    // Controlled Acceleration - Conservative
+                            4: 245,   // Max Armature Current - Standard
+                            7: 70,    // Minimum Field Current - Factory default
+                            15: 72,   // Battery Volts - 72V system
+                            20: 30,   // MPH Overspeed - Standard safety margin
+                            24: 50    // Field Weakening Start - Conservative
+                        }
+                    },
+                    'lithium_upgrade': {
+                        name: 'Lithium Upgrade Setup',
+                        description: 'Performance-optimized settings for lithium battery conversion',
+                        settings: {
+                            1: 135,   // MPH Scaling - Higher for speed
+                            3: 25,    // Controlled Acceleration - More aggressive
+                            4: 285,   // Max Armature Current - Higher for lithium
+                            7: 85,    // Minimum Field Current - Optimized
+                            15: 72,   // Battery Volts - Still 72V nominal
+                            20: 40,   // MPH Overspeed - Higher margin
+                            24: 65    // Field Weakening Start - Performance tuned
+                        }
+                    },
+                    'large_tire_setup': {
+                        name: 'Large Tire Setup',
+                        description: 'Optimized for 23\"+ tires with adjusted gear ratios and speed scaling',
+                        settings: {
+                            1: 115,   // MPH Scaling - Adjusted for larger circumference
+                            3: 18,    // Controlled Acceleration - Slightly higher
+                            4: 260,   // Max Armature Current - Moderate increase
+                            7: 75,    // Minimum Field Current - Standard
+                            15: 72,   // Battery Volts - 72V system
+                            20: 35,   // MPH Overspeed - Moderate
+                            24: 55    // Field Weakening Start - Adjusted for tires
+                        }
+                    },
+                    'performance_tuned': {
+                        name: 'Performance Tuned',
+                        description: 'Aggressive settings for maximum performance and speed',
+                        settings: {
+                            1: 155,   // MPH Scaling - High performance
+                            3: 35,    // Controlled Acceleration - Very aggressive
+                            4: 320,   // Max Armature Current - Maximum safe
+                            7: 95,    // Minimum Field Current - High performance
+                            15: 72,   // Battery Volts - 72V system
+                            20: 50,   // MPH Overspeed - High margin
+                            24: 75    // Field Weakening Start - Performance max
+                        }
+                    }
+                };
+                
+                const config = sampleConfigurations[configType];
+                if (!config) {
+                    console.error('Unknown sample configuration:', configType);
+                    return;
+                }
+                
+                // Hide the modal
+                document.getElementById('sample-data-modal').classList.add('hidden');
+                
+                // Show results
+                settingsInputResult.classList.remove('hidden');
+                pdfMetadata.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="text-orange-600">✅</span>
+                        <span class="ml-2 font-medium">${config.name} Loaded</span>
+                    </div>
+                    <div class="text-xs text-orange-600 mt-1">
+                        ${config.description}
+                    </div>
+                `;
+                
+                displaySettingsPreview(config.settings, config.name);
+                
+                // Store for optimization use
+                window.importedSettings = config.settings;
+                console.log(`Sample configuration loaded: ${config.name}`, config.settings);
+                
+                // Notify unified flow controller
+                window.dispatchEvent(new CustomEvent('manualSettingsLoaded', {
+                    detail: { settings: config.settings, source: 'sample-data' }
+                }));
+                
+                // Set active button state
+                setActiveButton(document.getElementById('sample-data-btn'));
+            };
             
             if (pdfInput) {
                 pdfInput.addEventListener('change', async function(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    
-                    console.log('PDF file selected:', file.name);
-                    pdfAnalysisResult.classList.add('hidden');
+                    // Create error boundary for PDF upload handling
+                    const errorBoundary = createPDFErrorBoundary();
                     
                     try {
-                        // Show loading state
-                        pdfMetadata.innerHTML = '<div class="text-blue-600">📄 Analyzing PDF...</div>';
-                        pdfAnalysisResult.classList.remove('hidden');
+                        const file = event.target.files[0];
                         
-                        // Initialize PDF parser
-                        const parser = new PDFParser();
+                        // Validate file selection
+                        if (!file) {
+                            console.log('No file selected');
+                            return;
+                        }
                         
-                        // Parse the PDF
-                        const result = await parser.parsePDF(file);
-                        console.log('PDF parsing result:', result);
+                        // File validation with user-friendly messages
+                        if (file.type !== 'application/pdf') {
+                            throw new Error(`Invalid file type: ${file.type}. Please select a PDF file.`);
+                        }
                         
+                        if (file.size === 0) {
+                            throw new Error('Selected file is empty. Please choose a valid PDF file.');
+                        }
+                        
+                        if (file.size > 100 * 1024 * 1024) { // 100MB limit
+                            throw new Error('File too large (over 100MB). Please select a smaller PDF file.');
+                        }
+                        
+                        console.log('PDF file selected:', file.name, `(${(file.size / 1024).toFixed(1)} KB)`);
+                        
+                        // Reset UI state safely
+                        try {
+                            pdfAnalysisResult.classList.add('hidden');
+                            clearPreviousResults();
+                        } catch (uiError) {
+                            console.warn('Unable to reset UI state:', uiError);
+                        }
+                        
+                        // Show loading state with timeout protection
+                        const loadingStartTime = Date.now();
+                        showPDFLoadingState(file);
+                        
+                        // Critical dependency validation
+                        if (typeof PDFParser === 'undefined') {
+                            throw new Error('PDF parsing service is not available. Please refresh the page and try again.');
+                        }
+                        
+                        if (typeof pdfjsLib === 'undefined') {
+                            throw new Error('PDF.js library is not loaded. Please refresh the page and try again.');
+                        }
+                        
+                        // Initialize parser with error handling
+                        let parser;
+                        try {
+                            parser = new PDFParser();
+                        } catch (initError) {
+                            throw new Error(`Failed to initialize PDF parser: ${initError.message}`);
+                        }
+                        
+                        // Add parsing timeout protection
+                        const parsePromise = parser.parsePDF(file);
+                        const timeoutPromise = new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('PDF processing timed out after 45 seconds')), 45000)
+                        );
+                        
+                        // Execute parsing with timeout
+                        const result = await Promise.race([parsePromise, timeoutPromise]);
+                        const processingTime = Date.now() - loadingStartTime;
+                        
+                        console.log(`PDF parsing completed in ${processingTime}ms:`, result);
+                        
+                        // Validate result structure
+                        if (!result || typeof result !== 'object') {
+                            throw new Error('Invalid parsing result - parser returned invalid data');
+                        }
+                        
+                        // Handle successful parsing
                         if (result.success) {
+                            if (!result.settings || Object.keys(result.settings).length === 0) {
+                                throw new Error('PDF parsing succeeded but no settings were extracted');
+                            }
+                            
                             displayPDFAnalysisSuccess(result);
                             
-                            // Store parsed settings for use in optimization
-                            window.importedSettings = result.settings;
+                            // Store parsed settings safely with validation
+                            try {
+                                window.importedSettings = { ...result.settings };
+                                console.log('Settings stored successfully:', Object.keys(result.settings).length, 'functions');
+                                
+                                // Dispatch success event for other components
+                                window.dispatchEvent(new CustomEvent('pdfSettingsLoaded', {
+                                    detail: { 
+                                        settings: result.settings, 
+                                        source: 'pdf-upload',
+                                        confidence: result.metadata?.confidence || 0,
+                                        fileName: file.name
+                                    }
+                                }));
+                                
+                            } catch (storageError) {
+                                console.warn('Failed to store settings:', storageError);
+                                throw new Error('Settings extracted successfully but failed to save them');
+                            }
                             
                         } else {
-                            displayPDFAnalysisError(result);
+                            // Handle parsing failure with detailed error
+                            const errorMessage = result.error || 'PDF parsing failed for unknown reason';
+                            const errorWithContext = new Error(errorMessage);
+                            errorWithContext.pdfResult = result; // Attach full result for detailed error display
+                            throw errorWithContext;
                         }
                         
                     } catch (error) {
-                        console.error('PDF analysis error:', error);
-                        displayPDFAnalysisError({ 
-                            error: error.message, 
-                            suggestions: ['Please check that the PDF is not corrupted and contains controller settings'] 
-                        });
+                        console.error('PDF upload error:', error);
+                        
+                        // Handle error with comprehensive UI feedback
+                        handlePDFUploadError(error, event.target.files[0]);
+                        
+                        // Clear file input to allow re-selection of same file
+                        try {
+                            event.target.value = '';
+                        } catch (clearError) {
+                            console.warn('Unable to clear file input:', clearError);
+                        }
+                        
+                    } finally {
+                        // Cleanup and restoration
+                        try {
+                            hidePDFLoadingState();
+                        } catch (cleanupError) {
+                            console.warn('Cleanup error:', cleanupError);
+                        }
                     }
                 });
+            }
+            
+            /**
+             * Create error boundary for PDF processing
+             */
+            function createPDFErrorBoundary() {
+                return {
+                    handleError: (error, context) => {
+                        console.error(`PDF Error in ${context}:`, error);
+                        // Could add telemetry or error reporting here
+                        return {
+                            handled: true,
+                            message: error.message || 'Unknown error occurred'
+                        };
+                    }
+                };
+            }
+            
+            /**
+             * Clear previous PDF analysis results
+             */
+            function clearPreviousResults() {
+                try {
+                    if (pdfMetadata) pdfMetadata.innerHTML = '';
+                    if (pdfSettingsPreview) pdfSettingsPreview.innerHTML = '';
+                    if (pdfDebugInfo) pdfDebugInfo.innerHTML = '';
+                    window.importedSettings = null;
+                } catch (error) {
+                    console.warn('Error clearing previous results:', error);
+                }
+            }
+            
+            /**
+             * Show PDF loading state safely
+             */
+            function showPDFLoadingState(file) {
+                try {
+                    const fileName = file ? file.name : 'PDF file';
+                    const fileSize = file ? `(${(file.size / 1024).toFixed(1)} KB)` : '';
+                    
+                    if (pdfMetadata) {
+                        pdfMetadata.innerHTML = `
+                            <div class="flex items-center text-blue-600">
+                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                                <span>📄 Analyzing ${fileName} ${fileSize}...</span>
+                            </div>
+                        `;
+                    }
+                    
+                    if (pdfAnalysisResult) {
+                        pdfAnalysisResult.classList.remove('hidden');
+                        pdfAnalysisResult.className = 'mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md';
+                    }
+                } catch (error) {
+                    console.warn('Unable to show loading state:', error);
+                }
+            }
+            
+            /**
+             * Hide PDF loading state
+             */
+            function hidePDFLoadingState() {
+                // Loading state is replaced by success/error display, so no explicit hiding needed
+                // This function exists for consistency and future extensibility
+            }
+            
+            /**
+             * Handle PDF upload errors with comprehensive feedback
+             */
+            function handlePDFUploadError(error, file) {
+                try {
+                    // Create detailed error information
+                    const errorInfo = categorizeUploadError(error, file);
+                    
+                    // Display error with actionable options
+                    displayPDFAnalysisError({
+                        error: errorInfo.userMessage,
+                        technicalError: error.message,
+                        suggestions: errorInfo.suggestions,
+                        formatExamples: errorInfo.showFormatExamples ? getBasicFormatExamples() : null,
+                        troubleshooting: getBasicTroubleshootingSteps()
+                    });
+                    
+                    // Auto-suggest alternatives
+                    setTimeout(() => {
+                        suggestPDFAlternatives(errorInfo.errorType);
+                    }, 500);
+                    
+                } catch (handlingError) {
+                    console.error('Error handling failed:', handlingError);
+                    
+                    // Fallback error display
+                    try {
+                        displayPDFAnalysisError({
+                            error: 'PDF processing failed',
+                            technicalError: error.message || 'Unknown error',
+                            suggestions: [
+                                'Try refreshing the page and uploading again',
+                                'Use manual entry as an alternative',
+                                'Contact support if the problem persists'
+                            ]
+                        });
+                    } catch (fallbackError) {
+                        console.error('Even fallback error display failed:', fallbackError);
+                        // Last resort: show alert
+                        alert('PDF processing failed. Please try manual entry or refresh the page.');
+                    }
+                }
+            }
+            
+            /**
+             * Categorize upload errors for better user guidance
+             */
+            function categorizeUploadError(error, file) {
+                const message = (error.message || '').toLowerCase();
+                
+                if (message.includes('timeout') || message.includes('timed out')) {
+                    return {
+                        errorType: 'timeout',
+                        userMessage: 'PDF processing took too long and timed out.',
+                        suggestions: [
+                            'Try a smaller PDF file (current: ' + (file ? (file.size / 1024).toFixed(1) + ' KB' : 'unknown size') + ')',
+                            'Ensure stable internet connection',
+                            'Use manual entry for immediate access'
+                        ]
+                    };
+                }
+                
+                if (message.includes('invalid file type')) {
+                    return {
+                        errorType: 'invalid_type',
+                        userMessage: 'The selected file is not a valid PDF.',
+                        suggestions: [
+                            'Select a file with .pdf extension',
+                            'Export directly from GEM programming software',
+                            'Convert other formats to PDF first'
+                        ]
+                    };
+                }
+                
+                if (message.includes('too large') || message.includes('file size')) {
+                    return {
+                        errorType: 'too_large',
+                        userMessage: 'The PDF file is too large to process.',
+                        suggestions: [
+                            'Compress the PDF to reduce file size',
+                            'Export only the settings pages',
+                            'Use manual entry for large files'
+                        ]
+                    };
+                }
+                
+                if (message.includes('no settings') || message.includes('no recognizable')) {
+                    return {
+                        errorType: 'no_settings',
+                        userMessage: 'Could not find controller settings in the PDF.',
+                        suggestions: [
+                            'Ensure PDF contains function tables (F.1, F.2, etc.)',
+                            'Export directly from GEM programming software',
+                            'Verify text is selectable (not scanned images)'
+                        ],
+                        showFormatExamples: true
+                    };
+                }
+                
+                if (message.includes('service is not available') || message.includes('parser not available')) {
+                    return {
+                        errorType: 'service_unavailable',
+                        userMessage: 'PDF processing service is temporarily unavailable.',
+                        suggestions: [
+                            'Refresh the page to reload services',
+                            'Check internet connection',
+                            'Use manual entry while services restore'
+                        ]
+                    };
+                }
+                
+                // Generic error
+                return {
+                    errorType: 'unknown',
+                    userMessage: 'An unexpected error occurred while processing the PDF.',
+                    suggestions: [
+                        'Try refreshing the page',
+                        'Ensure PDF is from GEM controller software',
+                        'Use manual entry as an alternative',
+                        'Contact support if problems continue'
+                    ]
+                };
+            }
+            
+            /**
+             * Suggest PDF alternatives based on error type
+             */
+            function suggestPDFAlternatives(errorType) {
+                try {
+                    let suggestionMessage = '';
+                    let highlightElement = null;
+                    
+                    switch (errorType) {
+                        case 'timeout':
+                        case 'too_large':
+                        case 'service_unavailable':
+                            suggestionMessage = '💡 Quick tip: Manual entry only takes 2 minutes for the essential settings!';
+                            highlightElement = 'manual-entry-btn';
+                            break;
+                        case 'no_settings':
+                        case 'invalid_type':
+                            suggestionMessage = '💡 Try our sample data to test the optimizer while you prepare your PDF!';
+                            highlightElement = 'sample-data-btn';
+                            break;
+                        default:
+                            suggestionMessage = '💡 Multiple options available: manual entry, factory defaults, or sample data!';
+                            highlightElement = 'manual-entry-btn';
+                    }
+                    
+                    // Show notification
+                    showNotification(suggestionMessage, 'info', 6000);
+                    
+                    // Highlight suggested alternative
+                    if (highlightElement) {
+                        setTimeout(() => {
+                            const element = document.getElementById(highlightElement);
+                            if (element) {
+                                element.classList.add('ring-2', 'ring-blue-400', 'ring-opacity-75', 'bg-blue-50');
+                                setTimeout(() => {
+                                    element.classList.remove('ring-2', 'ring-blue-400', 'ring-opacity-75', 'bg-blue-50');
+                                }, 4000);
+                            }
+                        }, 1000);
+                    }
+                    
+                } catch (suggestionError) {
+                    console.warn('Unable to show suggestions:', suggestionError);
+                }
+            }
+            
+            /**
+             * Get basic format examples for error display
+             */
+            function getBasicFormatExamples() {
+                return [
+                    {
+                        title: 'GE Sentry Export Format',
+                        description: 'Table with function numbers and values',
+                        example: 'F.No.1  MPH Scaling  100\nF.No.3  Acceleration  15\nF.No.4  Max Current  245'
+                    },
+                    {
+                        title: 'Simple Format',
+                        description: 'Basic function-value pairs',
+                        example: 'F.1  100\nF.3  15\nF.4  245'
+                    }
+                ];
+            }
+            
+            /**
+             * Get basic troubleshooting steps
+             */
+            function getBasicTroubleshootingSteps() {
+                return [
+                    { step: 1, title: 'Check PDF Content', description: 'Verify it contains function tables' },
+                    { step: 2, title: 'Try Manual Entry', description: 'Enter key settings manually' },
+                    { step: 3, title: 'Use Alternatives', description: 'Factory defaults or sample data' }
+                ];
+            }
+            
+            /**
+             * Show notification helper (if not already defined)
+             */
+            function showNotification(message, type = 'info', duration = 5000) {
+                try {
+                    // Create notification element
+                    const notification = document.createElement('div');
+                    notification.className = `fixed top-4 right-4 z-50 max-w-sm p-3 rounded-md text-sm transition-all transform translate-x-full opacity-0`;
+                    
+                    // Style based on type
+                    switch (type) {
+                        case 'error':
+                            notification.classList.add('bg-red-100', 'text-red-800', 'border', 'border-red-200');
+                            break;
+                        case 'success':
+                            notification.classList.add('bg-green-100', 'text-green-800', 'border', 'border-green-200');
+                            break;
+                        case 'warning':
+                            notification.classList.add('bg-yellow-100', 'text-yellow-800', 'border', 'border-yellow-200');
+                            break;
+                        default: // info
+                            notification.classList.add('bg-blue-100', 'text-blue-800', 'border', 'border-blue-200');
+                    }
+                    
+                    notification.textContent = message;
+                    document.body.appendChild(notification);
+                    
+                    // Animate in
+                    setTimeout(() => {
+                        notification.classList.remove('translate-x-full', 'opacity-0');
+                    }, 100);
+                    
+                    // Animate out and remove
+                    setTimeout(() => {
+                        notification.classList.add('translate-x-full', 'opacity-0');
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 300);
+                    }, duration);
+                    
+                } catch (notificationError) {
+                    console.warn('Unable to show notification:', notificationError);
+                }
             }
             
             function displayPDFAnalysisSuccess(result) {
@@ -674,34 +1553,111 @@
             }
             
             function displayPDFAnalysisError(result) {
+                // Main error message
                 pdfMetadata.innerHTML = `
                     <div class="text-red-600">
-                        <strong>❌ Analysis Failed</strong>
-                        <div class="text-sm mt-1">${result.error || 'Unknown error occurred'}</div>
+                        <div class="text-sm font-medium">${result.error || '❌ PDF Analysis Failed'}</div>
+                        <div class="text-xs mt-1 text-red-500">${result.technicalError || result.guidance || ''}</div>
                     </div>
                 `;
                 
+                // Build comprehensive error display
+                let errorContent = '';
+                
+                // Quick suggestions
                 if (result.suggestions && result.suggestions.length > 0) {
-                    const suggestionsHtml = result.suggestions.map(s => `<li>${s}</li>`).join('');
-                    pdfSettingsPreview.innerHTML = `
-                        <div class="text-sm text-red-700">
-                            <strong>Suggestions:</strong>
-                            <ul class="list-disc list-inside mt-1 space-y-1">${suggestionsHtml}</ul>
+                    const suggestionsHtml = result.suggestions.map(s => `<li class="text-xs">${s}</li>`).join('');
+                    errorContent += `
+                        <div class="mb-4">
+                            <div class="text-sm font-medium text-red-800 mb-2">💡 What to try:</div>
+                            <ul class="list-disc list-inside space-y-1 text-red-700">${suggestionsHtml}</ul>
                         </div>
                     `;
-                } else {
-                    pdfSettingsPreview.innerHTML = '';
                 }
+                
+                // Format examples
+                if (result.formatExamples && result.formatExamples.length > 0) {
+                    errorContent += `
+                        <div class="mb-4">
+                            <div class="text-sm font-medium text-blue-800 mb-2">📋 Supported PDF Formats:</div>
+                            <div class="space-y-2">
+                    `;
+                    
+                    result.formatExamples.forEach(format => {
+                        errorContent += `
+                            <details class="border border-blue-200 rounded p-2">
+                                <summary class="text-xs font-medium text-blue-700 cursor-pointer">${format.title}</summary>
+                                <div class="text-xs text-blue-600 mt-1">${format.description}</div>
+                                <pre class="text-xs bg-blue-50 p-2 mt-2 rounded overflow-x-auto">${format.example}</pre>
+                            </details>
+                        `;
+                    });
+                    
+                    errorContent += '</div></div>';
+                }
+                
+                // Troubleshooting steps
+                if (result.troubleshooting && result.troubleshooting.length > 0) {
+                    errorContent += `
+                        <div class="mb-4">
+                            <div class="text-sm font-medium text-purple-800 mb-2">🔧 Troubleshooting Steps:</div>
+                            <div class="space-y-2">
+                    `;
+                    
+                    result.troubleshooting.forEach(step => {
+                        errorContent += `
+                            <div class="flex text-xs">
+                                <span class="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-800 rounded-full flex items-center justify-center mr-2 text-xs font-bold">${step.step}</span>
+                                <div>
+                                    <div class="font-medium text-purple-800">${step.title}</div>
+                                    <div class="text-purple-600">${step.description}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    errorContent += '</div></div>';
+                }
+                
+                // Sample PDF download
+                errorContent += `
+                    <div class="border-t border-gray-200 pt-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-medium text-green-800">📥 Download Sample PDF</div>
+                                <div class="text-xs text-green-600">See exactly what format works best</div>
+                            </div>
+                            <button onclick="downloadSamplePDF()" class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors">
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                pdfSettingsPreview.innerHTML = errorContent;
                 
                 // Show fallback info if available
                 if (result.fallback && result.fallback.success) {
                     pdfDebugInfo.innerHTML = `
-                        <div class="text-amber-600">
-                            <strong>Fallback extraction found ${Object.keys(result.fallback.settings).length} functions</strong>
-                            <div class="text-xs mt-1">Using basic pattern matching</div>
+                        <div class="bg-amber-50 border border-amber-200 rounded p-2">
+                            <div class="text-amber-800 font-medium text-sm">⚠️ Partial Success</div>
+                            <div class="text-amber-700 text-xs mt-1">
+                                Fallback extraction found ${Object.keys(result.fallback.settings).length} functions using basic pattern matching
+                            </div>
+                            <button onclick="acceptFallbackResults()" class="mt-2 px-2 py-1 bg-amber-600 text-white rounded text-xs hover:bg-amber-700 transition-colors">
+                                Use These Results
+                            </button>
                         </div>
                     `;
-                    window.importedSettings = result.fallback.settings;
+                    
+                    // Store fallback settings but don't auto-accept
+                    window.fallbackSettings = result.fallback.settings;
+                } else if (result.fallback && !result.fallback.success) {
+                    pdfDebugInfo.innerHTML = `
+                        <div class="text-red-600 text-xs">
+                            Even basic text extraction failed: ${result.fallback.message || 'Unable to process PDF'}
+                        </div>
+                    `;
                 } else {
                     pdfDebugInfo.innerHTML = '';
                 }
@@ -764,6 +1720,91 @@
                     displaySettingsPreview(fullData);
                     content.dataset.expanded = 'true';
                 }
+            };
+
+            // Global helper functions for error handling
+            window.acceptFallbackResults = function() {
+                if (window.fallbackSettings && Object.keys(window.fallbackSettings).length > 0) {
+                    window.importedSettings = window.fallbackSettings;
+                    
+                    // Update UI to show acceptance
+                    pdfMetadata.innerHTML = `
+                        <div class="text-amber-600">
+                            <div class="text-sm font-medium">⚠️ Using Fallback Results</div>
+                            <div class="text-xs mt-1">Accepted ${Object.keys(window.fallbackSettings).length} functions from basic pattern matching</div>
+                        </div>
+                    `;
+                    
+                    displaySettingsPreview(Object.keys(window.fallbackSettings).map(func => ({
+                        function: parseInt(func),
+                        value: window.fallbackSettings[func],
+                        isInRange: true
+                    })));
+                    
+                    pdfDebugInfo.innerHTML = '<div class="text-green-600 text-xs">✅ Fallback results accepted and ready for optimization</div>';
+                    
+                    console.log('Fallback PDF results accepted:', window.fallbackSettings);
+                }
+            };
+
+            window.downloadSamplePDF = function() {
+                // Create sample PDF content
+                const sampleContent = `GEM T2 Controller Settings Sample
+
+This is an example of the PDF format that works best with our parser.
+
+F.No. Function Description         Counts Value Units
+F.No.1  MPH Scaling               100    100   %
+F.No.3  Controlled Acceleration   15     15    Amps/Sec  
+F.No.4  Max Armature Current      245    245   Amps
+F.No.7  Minimum Field Current     70     70    Amps
+F.No.15 Battery Volts             72     72    Volts
+F.No.20 MPH Overspeed             30     30    %
+F.No.24 Field Weakening Start    50     50    %
+
+Alternative Simple Format:
+Function  Value
+F.1       100
+F.3       15
+F.4       245
+F.7       70
+F.15      72
+F.20      30
+F.24      50
+
+Key Requirements:
+- Function numbers should be clearly labeled (F.1, F.No.1, etc.)
+- Values should be in a separate column
+- Text should be selectable (not scanned images)
+- PDF should not be password protected
+
+This sample shows the formats our parser recognizes best.
+Export directly from your programming software when possible.`;
+
+                // Create and download the sample file
+                const blob = new Blob([sampleContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'GEM_T2_Settings_Sample_Format.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                console.log('Sample format file downloaded');
+                
+                // Show download notification
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 right-4 z-50 px-4 py-2 bg-green-100 text-green-800 border border-green-200 rounded-md text-sm max-w-sm';
+                notification.textContent = '📥 Sample format downloaded! Check your Downloads folder.';
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 3000);
             };
         });
     </script>

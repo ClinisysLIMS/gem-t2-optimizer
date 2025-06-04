@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Loading Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Class Loading and Accessibility Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Test Class Definitions</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                This page tests that PDFParser, VehicleClassifier, and GEMOptimizer classes are properly defined and accessible.
+            </p>
+            
+            <div id="test-results" class="space-y-2">
+                <div class="text-sm text-gray-600">Running tests...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3">Console Log</h2>
+            <div id="console-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                Class loading test initialized...\n
+            </div>
+        </div>
+    </div>
+
+    <!-- Load scripts in the same order as main page -->
+    <script>
+        // Set PDF.js worker
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+    <script src="js/shared-utils.js"></script>
+    <script src="js/secure-storage.js"></script>
+    <script src="js/api-manager.js"></script>
+    <script src="js/tensorflow-ml-engine.js"></script>
+    <script src="js/rule-based-optimizer.js"></script>
+    <script src="js/optimization-cache.js"></script>
+    <script src="js/fallback-calculations.js"></script>
+    <script src="js/fallback-system.js"></script>
+    <script src="js/api-integration.js"></script>
+    <script src="js/mcp-config.js"></script>
+    <script src="js/weather-service.js"></script>
+    <script src="js/terrain-service.js"></script>
+    <script src="js/optimizer.js"></script>
+    <script src="js/trip-optimizer.js"></script>
+    <script src="js/pdf-parser.js"></script>
+    <script src="js/vehicle-classifier.js"></script>
+    <script src="js/accessories-manager.js"></script>
+    <script src="js/driving-modes.js"></script>
+    <script src="js/enhanced-pdf-analyzer.js"></script>
+    <script src="js/ai-assistant.js"></script>
+    <script src="js/ai-ui-integration.js"></script>
+    <script src="js/unified-flow.js"></script>
+
+    <script>
+        // Event logging
+        const consoleLog = document.getElementById('console-log');
+        const testResults = document.getElementById('test-results');
+        
+        function logEvent(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            consoleLog.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            console.log(message);
+        }
+
+        function addTestResult(testName, success, message, details = null) {
+            const resultElement = document.createElement('div');
+            resultElement.className = `flex items-start p-2 rounded text-sm ${success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`;
+            
+            let content = `
+                <span class="flex-shrink-0 mr-2">${success ? '✅' : '❌'}</span>
+                <div class="flex-grow">
+                    <div class="font-medium">${testName}</div>
+                    <div class="text-xs mt-1">${message}</div>
+                    ${details ? `<div class="text-xs mt-1 font-mono bg-white bg-opacity-50 p-1 rounded">${details}</div>` : ''}
+                </div>
+            `;
+            
+            resultElement.innerHTML = content;
+            testResults.appendChild(resultElement);
+        }
+
+        // Run class accessibility tests
+        document.addEventListener('DOMContentLoaded', function() {
+            logEvent('Starting class accessibility tests...');
+            
+            // Clear the "Running tests..." message
+            testResults.innerHTML = '';
+            
+            // Test 1: PDFParser class
+            try {
+                const pdfParserExists = typeof PDFParser !== 'undefined';
+                if (pdfParserExists) {
+                    const parser = new PDFParser();
+                    addTestResult('PDFParser Class', true, 'Class is defined and can be instantiated', `typeof PDFParser: ${typeof PDFParser}`);
+                    logEvent('✅ PDFParser class test passed');
+                } else {
+                    addTestResult('PDFParser Class', false, 'Class is not defined in global scope', `typeof PDFParser: ${typeof PDFParser}`);
+                    logEvent('❌ PDFParser class test failed');
+                }
+            } catch (error) {
+                addTestResult('PDFParser Class', false, 'Error instantiating class', error.message);
+                logEvent(`❌ PDFParser instantiation error: ${error.message}`);
+            }
+            
+            // Test 2: VehicleClassifier class
+            try {
+                const vehicleClassifierExists = typeof VehicleClassifier !== 'undefined';
+                if (vehicleClassifierExists) {
+                    const classifier = new VehicleClassifier();
+                    addTestResult('VehicleClassifier Class', true, 'Class is defined and can be instantiated', `typeof VehicleClassifier: ${typeof VehicleClassifier}`);
+                    logEvent('✅ VehicleClassifier class test passed');
+                } else {
+                    addTestResult('VehicleClassifier Class', false, 'Class is not defined in global scope', `typeof VehicleClassifier: ${typeof VehicleClassifier}`);
+                    logEvent('❌ VehicleClassifier class test failed');
+                }
+            } catch (error) {
+                addTestResult('VehicleClassifier Class', false, 'Error instantiating class', error.message);
+                logEvent(`❌ VehicleClassifier instantiation error: ${error.message}`);
+            }
+            
+            // Test 3: GEMOptimizer class
+            try {
+                const gemOptimizerExists = typeof GEMOptimizer !== 'undefined';
+                if (gemOptimizerExists) {
+                    const optimizer = new GEMOptimizer();
+                    addTestResult('GEMOptimizer Class', true, 'Class is defined and can be instantiated', `typeof GEMOptimizer: ${typeof GEMOptimizer}`);
+                    logEvent('✅ GEMOptimizer class test passed');
+                } else {
+                    addTestResult('GEMOptimizer Class', false, 'Class is not defined in global scope', `typeof GEMOptimizer: ${typeof GEMOptimizer}`);
+                    logEvent('❌ GEMOptimizer class test failed');
+                }
+            } catch (error) {
+                addTestResult('GEMOptimizer Class', false, 'Error instantiating class', error.message);
+                logEvent(`❌ GEMOptimizer instantiation error: ${error.message}`);
+            }
+            
+            // Test 4: UnifiedFlowController class
+            try {
+                const unifiedFlowExists = typeof UnifiedFlowController !== 'undefined';
+                if (unifiedFlowExists) {
+                    // Don't instantiate this one as it might have side effects
+                    addTestResult('UnifiedFlowController Class', true, 'Class is defined (not instantiated to avoid side effects)', `typeof UnifiedFlowController: ${typeof UnifiedFlowController}`);
+                    logEvent('✅ UnifiedFlowController class test passed');
+                } else {
+                    addTestResult('UnifiedFlowController Class', false, 'Class is not defined in global scope', `typeof UnifiedFlowController: ${typeof UnifiedFlowController}`);
+                    logEvent('❌ UnifiedFlowController class test failed');
+                }
+            } catch (error) {
+                addTestResult('UnifiedFlowController Class', false, 'Error checking class', error.message);
+                logEvent(`❌ UnifiedFlowController check error: ${error.message}`);
+            }
+            
+            // Test 5: PDF.js dependency
+            try {
+                const pdfjsExists = typeof pdfjsLib !== 'undefined';
+                if (pdfjsExists) {
+                    addTestResult('PDF.js Library', true, 'PDF.js library is loaded and accessible', `typeof pdfjsLib: ${typeof pdfjsLib}`);
+                    logEvent('✅ PDF.js library test passed');
+                } else {
+                    addTestResult('PDF.js Library', false, 'PDF.js library is not loaded', `typeof pdfjsLib: ${typeof pdfjsLib}`);
+                    logEvent('❌ PDF.js library test failed');
+                }
+            } catch (error) {
+                addTestResult('PDF.js Library', false, 'Error checking PDF.js', error.message);
+                logEvent(`❌ PDF.js check error: ${error.message}`);
+            }
+            
+            // Test 6: Global window object assignments
+            logEvent('Checking global window assignments...');
+            const globalChecks = [
+                { name: 'window.PDFParser', obj: window.PDFParser },
+                { name: 'window.VehicleClassifier', obj: window.VehicleClassifier },
+                { name: 'window.GEMOptimizer', obj: window.GEMOptimizer },
+                { name: 'window.UnifiedFlowController', obj: window.UnifiedFlowController }
+            ];
+            
+            globalChecks.forEach(check => {
+                const exists = typeof check.obj !== 'undefined';
+                addTestResult(`Global ${check.name}`, exists, 
+                    exists ? 'Available in global scope' : 'Not found in global scope',
+                    `typeof ${check.name}: ${typeof check.obj}`);
+                logEvent(`${exists ? '✅' : '❌'} ${check.name}: ${typeof check.obj}`);
+            });
+            
+            logEvent('All class accessibility tests completed');
+            
+            // Summary
+            const allResults = testResults.querySelectorAll('div');
+            const passedTests = testResults.querySelectorAll('.bg-green-50').length;
+            const totalTests = allResults.length;
+            
+            logEvent(`Test Summary: ${passedTests}/${totalTests} tests passed`);
+            
+            if (passedTests === totalTests) {
+                logEvent('🎉 All tests passed! Classes are properly defined and accessible.');
+            } else {
+                logEvent(`⚠️ ${totalTests - passedTests} test(s) failed. Check the results above.`);
+            }
+        });
+    </script>
+</body>
+</html>

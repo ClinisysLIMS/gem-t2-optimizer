@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced PDF Parser Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Enhanced PDF Parser Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Upload Test PDF</h2>
+            <div class="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
+                <input type="file" id="pdf-file" accept=".pdf" class="mb-2">
+                <p class="text-sm text-gray-600">Upload any GEM controller settings PDF</p>
+                <p class="text-xs text-gray-500 mt-1">Supports: GE Sentry, Curtis, Optimization reports, Simple formats</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Parser Capabilities</h2>
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <h3 class="font-medium mb-2">GE Sentry Format</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>✅ F.No. Function Description Counts Value Units</li>
+                        <li>✅ Complete table with headers</li>
+                        <li>✅ Flexible whitespace handling</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2">Simple Formats</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>✅ Function numbers and values only</li>
+                        <li>✅ F1, F.1, F.No.1, Function 1</li>
+                        <li>✅ Various separators (:, =, -, space)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2">Curtis Programmer</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>✅ Parameter format (P1, Param 1)</li>
+                        <li>✅ Description and value extraction</li>
+                        <li>✅ Multiple Curtis variations</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2">Flexible Parsing</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>✅ Forgiving whitespace handling</li>
+                        <li>✅ Multiple extraction methods</li>
+                        <li>✅ Fallback pattern matching</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Parsing Results</h2>
+            <div id="parsing-results" class="space-y-2">
+                <div class="text-sm text-gray-600">No results yet...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Extracted Functions</h2>
+            <div id="functions-display" class="space-y-2">
+                <div class="text-sm text-gray-600">No functions extracted yet...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3">Debug Output</h2>
+            <div id="debug-output" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-96 overflow-y-auto">
+                Console output will appear here...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set PDF.js worker
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
+        // Capture console logs
+        const debugOutput = document.getElementById('debug-output');
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+
+        function addToDebug(type, ...args) {
+            const timestamp = new Date().toISOString().substring(11, 23);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            debugOutput.innerHTML += `[${timestamp}] ${type}: ${message}\n`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToDebug('LOG', ...args);
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToDebug('WARN', ...args);
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToDebug('ERROR', ...args);
+        };
+
+        // Load PDF Parser
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function loadPDFParser() {
+            try {
+                await loadScript('js/pdf-parser.js');
+                console.log('Enhanced PDF Parser loaded successfully');
+                return true;
+            } catch (error) {
+                console.error('Failed to load PDF Parser:', error);
+                return false;
+            }
+        }
+
+        // Test PDF parsing
+        async function testEnhancedPDFParsing(file) {
+            const parsingResults = document.getElementById('parsing-results');
+            const functionsDisplay = document.getElementById('functions-display');
+
+            try {
+                parsingResults.innerHTML = `
+                    <div class="flex items-center text-sm">
+                        <span class="text-blue-600">⏳</span>
+                        <span class="ml-2">Parsing PDF: ${file.name}</span>
+                    </div>
+                `;
+
+                // Initialize enhanced parser
+                const parser = new PDFParser();
+                console.log('Enhanced PDF Parser initialized with comprehensive patterns');
+
+                // Parse the PDF
+                const result = await parser.parsePDF(file);
+                console.log('Enhanced PDF parsing completed', result);
+
+                if (result.success) {
+                    const functionsFound = Object.keys(result.settings).length;
+                    const methods = result.metadata?.extractionMethods || [];
+                    const confidence = result.metadata?.confidence || 0;
+
+                    parsingResults.innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-center text-sm">
+                                <span class="text-green-600">✅</span>
+                                <span class="ml-2">Successfully extracted <strong>${functionsFound}</strong> functions</span>
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                <strong>Methods used:</strong> ${methods.join(', ')}
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                <strong>Confidence:</strong> ${Math.round(confidence * 100)}%
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                <strong>Pages processed:</strong> ${result.metadata?.pageCount || 'Unknown'}
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                <strong>Valid/Invalid:</strong> ${result.metadata?.validFunctions || 0}/${result.metadata?.invalidFunctions || 0}
+                            </div>
+                        </div>
+                    `;
+
+                    // Display extracted functions
+                    displayExtractedFunctions(result);
+
+                } else {
+                    parsingResults.innerHTML = `
+                        <div class="text-red-600 text-sm">
+                            <div class="flex items-center">
+                                <span class="text-red-600">❌</span>
+                                <span class="ml-2">Parsing failed: ${result.error || 'Unknown error'}</span>
+                            </div>
+                            ${result.suggestions ? `
+                                <div class="mt-2 text-xs">
+                                    <strong>Suggestions:</strong>
+                                    <ul class="list-disc list-inside mt-1">
+                                        ${result.suggestions.map(s => `<li>${s}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    // Check for fallback data
+                    if (result.fallback && result.fallback.success) {
+                        const fallbackFunctions = Object.keys(result.fallback.settings).length;
+                        functionsDisplay.innerHTML = `
+                            <div class="text-amber-600 text-sm">
+                                <strong>Fallback extraction found ${fallbackFunctions} functions</strong>
+                                <div class="text-xs mt-1">Using basic pattern matching</div>
+                            </div>
+                        `;
+                        displayExtractedFunctions({ settings: result.fallback.settings });
+                    } else {
+                        functionsDisplay.innerHTML = `
+                            <div class="text-gray-600 text-sm">No functions could be extracted</div>
+                        `;
+                    }
+                }
+
+            } catch (error) {
+                console.error('Enhanced PDF parsing error:', error);
+                parsingResults.innerHTML = `
+                    <div class="text-red-600 text-sm">
+                        <div class="flex items-center">
+                            <span class="text-red-600">❌</span>
+                            <span class="ml-2">Error: ${error.message}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function displayExtractedFunctions(result) {
+            const functionsDisplay = document.getElementById('functions-display');
+            const settings = result.settings || {};
+            
+            if (Object.keys(settings).length === 0) {
+                functionsDisplay.innerHTML = '<div class="text-gray-600 text-sm">No functions extracted</div>';
+                return;
+            }
+
+            // Sort functions numerically
+            const sortedFunctions = Object.keys(settings)
+                .map(f => parseInt(f))
+                .sort((a, b) => a - b);
+
+            // Group into chunks for display
+            const chunks = [];
+            for (let i = 0; i < sortedFunctions.length; i += 8) {
+                chunks.push(sortedFunctions.slice(i, i + 8));
+            }
+
+            let html = `
+                <div class="text-sm font-medium mb-3">
+                    Extracted ${sortedFunctions.length} controller functions:
+                </div>
+            `;
+
+            chunks.forEach(chunk => {
+                html += '<div class="grid grid-cols-4 md:grid-cols-8 gap-2 mb-2">';
+                chunk.forEach(func => {
+                    const value = settings[func];
+                    const isInRange = value >= 0 && value <= 255; // Basic validation
+                    html += `
+                        <div class="bg-gray-50 p-2 rounded text-center">
+                            <div class="text-xs font-medium">F.${func}</div>
+                            <div class="text-sm ${isInRange ? 'text-green-600' : 'text-red-600'}">${value}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            });
+
+            // Add summary stats
+            const validCount = sortedFunctions.filter(f => settings[f] >= 0 && settings[f] <= 255).length;
+            const invalidCount = sortedFunctions.length - validCount;
+            
+            html += `
+                <div class="mt-3 pt-2 border-t border-gray-200 text-xs text-gray-600">
+                    <span class="text-green-600">${validCount} valid</span> • 
+                    <span class="text-red-600">${invalidCount} invalid</span> • 
+                    Functions 1-128 supported
+                </div>
+            `;
+
+            functionsDisplay.innerHTML = html;
+        }
+
+        // Set up file input handler
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Enhanced PDF parser test page loaded');
+            
+            const parserLoaded = await loadPDFParser();
+            if (!parserLoaded) {
+                document.getElementById('parsing-results').innerHTML = 
+                    '<div class="text-red-600 text-sm">❌ Failed to load PDF parser</div>';
+                return;
+            }
+
+            const fileInput = document.getElementById('pdf-file');
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file && file.type === 'application/pdf') {
+                    console.log('Enhanced PDF file selected:', file.name);
+                    testEnhancedPDFParsing(file);
+                } else {
+                    alert('Please select a PDF file');
+                }
+            });
+
+            console.log('Enhanced PDF parser test ready');
+        });
+    </script>
+</body>
+</html>

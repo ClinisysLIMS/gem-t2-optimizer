@@ -8,9 +8,28 @@ class UnifiedFlowController {
         this.vehicleData = {};
         this.tripData = {};
         this.pdfSettings = null;
-        this.classifier = new VehicleClassifier();
-        this.optimizer = new GEMOptimizer();
-        this.pdfParser = new PDFParser();
+        
+        // Initialize components with error checking
+        try {
+            this.classifier = typeof VehicleClassifier !== 'undefined' ? new VehicleClassifier() : null;
+        } catch (error) {
+            console.warn('VehicleClassifier not available:', error);
+            this.classifier = null;
+        }
+        
+        try {
+            this.optimizer = typeof GEMOptimizer !== 'undefined' ? new GEMOptimizer() : null;
+        } catch (error) {
+            console.warn('GEMOptimizer not available:', error);
+            this.optimizer = null;
+        }
+        
+        try {
+            this.pdfParser = typeof PDFParser !== 'undefined' ? new PDFParser() : null;
+        } catch (error) {
+            console.warn('PDFParser not available:', error);
+            this.pdfParser = null;
+        }
         
         this.init();
     }
@@ -37,6 +56,11 @@ class UnifiedFlowController {
         // Listen for Firebase profile events
         window.addEventListener('authStateChanged', (e) => {
             this.handleAuthStateChange(e.detail.user);
+        });
+        
+        // Listen for manual settings input
+        window.addEventListener('manualSettingsLoaded', (e) => {
+            this.handleManualSettings(e.detail.settings, e.detail.source);
         });
     }
 
@@ -295,88 +319,358 @@ class UnifiedFlowController {
     }
 
     /**
-     * Process uploaded PDF file
+     * Process uploaded PDF file with comprehensive error handling
      */
     async processPDFFile(file) {
         const uploadArea = document.getElementById('pdf-upload-area');
         const resultDiv = document.getElementById('pdf-analysis-result');
         const contentDiv = document.getElementById('pdf-analysis-content');
         
-        // Show processing state
-        if (uploadArea) {
-            uploadArea.innerHTML = `
-                <div class="flex items-center justify-center">
-                    <div class="spinner mr-3"></div>
-                    <span class="text-sm text-gray-600">Analyzing PDF...</span>
-                </div>
-            `;
-        }
+        // Defensive programming - ensure DOM elements exist
+        const safeUploadArea = uploadArea || document.createElement('div');
+        const safeResultDiv = resultDiv || document.createElement('div');
+        const safeContentDiv = contentDiv || document.createElement('div');
         
         try {
-            const result = await this.pdfParser.parsePDF(file);
+            // Validate file input
+            if (!file) {
+                throw new Error('No file provided');
+            }
             
-            if (result.success && result.formats.length > 0) {
-                // Use the first format for now
-                const format = result.formats[0];
-                let settings = {};
+            if (file.type !== 'application/pdf') {
+                throw new Error(`Invalid file type: ${file.type}. Please select a PDF file.`);
+            }
+            
+            if (file.size > 50 * 1024 * 1024) { // 50MB limit
+                throw new Error('File too large. Please select a PDF smaller than 50MB.');
+            }
+            
+            // Show processing state safely
+            try {
+                safeUploadArea.innerHTML = `
+                    <div class="flex items-center justify-center p-4">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mr-3"></div>
+                        <span class="text-sm text-gray-600">Analyzing PDF...</span>
+                    </div>
+                `;
+            } catch (domError) {
+                console.warn('Unable to update upload area UI:', domError);
+            }
+            
+            // Critical dependency check
+            if (!this.pdfParser) {
+                throw new Error('PDF parsing service is not available. Please refresh the page and try again.');
+            }
+            
+            // Attempt PDF parsing with timeout protection
+            let result;
+            try {
+                const parsePromise = this.pdfParser.parsePDF(file);
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('PDF parsing timed out after 30 seconds')), 30000)
+                );
                 
-                if (format.type === 'optimization-comparison') {
-                    // Use original values by default
-                    settings = format.original;
-                } else if (format.type === 'sentry-export') {
-                    settings = format.settings;
-                } else if (format.type === 'ge-controller') {
-                    settings = format.data.settings;
+                result = await Promise.race([parsePromise, timeoutPromise]);
+            } catch (parseError) {
+                console.error('PDF parsing failed:', parseError);
+                throw new Error(`PDF parsing failed: ${parseError.message}`);
+            }
+            
+            // Validate parsing result structure
+            if (!result || typeof result !== 'object') {
+                throw new Error('Invalid parsing result structure');
+            }
+            
+            // Handle successful parsing
+            if (result.success && result.settings && typeof result.settings === 'object') {
+                const settingsCount = Object.keys(result.settings).length;
+                
+                if (settingsCount === 0) {
+                    throw new Error('PDF contains no recognizable controller settings');
                 }
                 
-                this.pdfSettings = settings;
+                // Store settings safely
+                this.pdfSettings = { ...result.settings };
                 
-                // Show success
-                if (resultDiv && contentDiv) {
-                    resultDiv.classList.remove('hidden');
-                    contentDiv.innerHTML = `
-                        <p>Successfully extracted ${Object.keys(settings).length} controller settings</p>
-                        <p class="text-xs mt-1">Format: ${format.name}</p>
-                        <button class="mt-2 text-xs text-green-600 hover:underline" onclick="unifiedFlow.showPDFDetails()">
-                            View details →
-                        </button>
-                    `;
+                // Show success UI safely
+                try {
+                    this.showPDFSuccessUI(result, settingsCount);
+                } catch (uiError) {
+                    console.warn('Unable to update success UI:', uiError);
                 }
                 
-                // Restore upload area
-                this.restoreUploadArea();
+                // Analyze settings safely
+                try {
+                    this.analyzePDFSettings(result.settings);
+                } catch (analysisError) {
+                    console.warn('Settings analysis failed:', analysisError);
+                }
                 
-                // Analyze settings for insights
-                this.analyzePDFSettings(settings);
-                
-            } else {
-                // Check if we have fallback data
-                if (result.fallback && result.fallback.length > 0) {
-                    // Use fallback data
+                return; // Success path complete
+            }
+            
+            // Handle partial success with fallback data
+            if (result.fallback && Array.isArray(result.fallback) && result.fallback.length > 0) {
+                try {
                     const fallbackFormat = result.fallback[0];
-                    this.pdfSettings = fallbackFormat.settings;
-                    
-                    if (resultDiv && contentDiv) {
-                        resultDiv.classList.remove('hidden');
-                        resultDiv.classList.replace('bg-green-50', 'bg-yellow-50');
-                        contentDiv.innerHTML = `
-                            <h4 class="font-medium text-yellow-900 mb-2">⚠️ Limited Analysis</h4>
-                            <p class="text-sm text-yellow-700">Using fallback parser - found ${Object.keys(fallbackFormat.settings).length} settings</p>
-                            <p class="text-xs mt-1 text-yellow-600">Some settings may be missing or inaccurate</p>
-                        `;
+                    if (fallbackFormat.settings && Object.keys(fallbackFormat.settings).length > 0) {
+                        this.pdfSettings = { ...fallbackFormat.settings };
+                        this.showPDFPartialSuccessUI(fallbackFormat);
+                        this.analyzePDFSettings(fallbackFormat.settings);
+                        return; // Partial success path complete
                     }
-                    
-                    this.analyzePDFSettings(fallbackFormat.settings);
-                } else {
-                    throw new Error('No valid settings found in PDF');
+                } catch (fallbackError) {
+                    console.warn('Fallback processing failed:', fallbackError);
                 }
             }
             
+            // No usable data found
+            throw new Error(result.error || 'Unable to extract controller settings from this PDF format');
+            
         } catch (error) {
             console.error('PDF processing error:', error);
-            if (resultDiv && contentDiv) {
-                resultDiv.classList.remove('hidden');
-                resultDiv.classList.replace('bg-green-50', 'bg-red-50');
+            
+            // Show comprehensive error UI with fallback options
+            this.showPDFErrorUI(error, file);
+            
+            // Clear any stored PDF settings on error
+            this.pdfSettings = null;
+            
+            // Auto-suggest manual entry fallback
+            this.suggestManualEntryFallback(error);
+        } finally {
+            // Always restore upload area
+            try {
+                this.restoreUploadArea();
+            } catch (restoreError) {
+                console.warn('Unable to restore upload area:', restoreError);
+            }
+        }
+    }
+    
+    /**
+     * Show PDF success UI safely
+     */
+    showPDFSuccessUI(result, settingsCount) {
+        const resultDiv = document.getElementById('pdf-analysis-result');
+        const contentDiv = document.getElementById('pdf-analysis-content');
+        
+        if (resultDiv && contentDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.className = 'mt-4 p-3 bg-green-50 border border-green-200 rounded-md';
+            
+            const confidence = Math.round((result.metadata?.confidence || 0.8) * 100);
+            const methods = result.metadata?.extractionMethods?.join(', ') || 'Multi-pattern';
+            
+            contentDiv.innerHTML = `
+                <div class="flex items-start">
+                    <span class="text-green-600 mr-2">✅</span>
+                    <div class="flex-grow">
+                        <h4 class="font-medium text-green-900">PDF Analysis Successful</h4>
+                        <p class="text-sm text-green-700 mt-1">
+                            Extracted ${settingsCount} controller settings with ${confidence}% confidence
+                        </p>
+                        <div class="text-xs text-green-600 mt-2 space-y-1">
+                            <div>Extraction method: ${methods}</div>
+                            <div>File: ${result.metadata?.fileName || 'Unknown'}</div>
+                        </div>
+                        <button onclick="unifiedFlow.showPDFDetails()" class="mt-2 text-xs text-green-600 hover:text-green-800 underline">
+                            View detailed settings →
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    /**
+     * Show PDF partial success UI
+     */
+    showPDFPartialSuccessUI(fallbackFormat) {
+        const resultDiv = document.getElementById('pdf-analysis-result');
+        const contentDiv = document.getElementById('pdf-analysis-content');
+        
+        if (resultDiv && contentDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.className = 'mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md';
+            
+            const settingsCount = Object.keys(fallbackFormat.settings).length;
+            
+            contentDiv.innerHTML = `
+                <div class="flex items-start">
+                    <span class="text-yellow-600 mr-2">⚠️</span>
+                    <div class="flex-grow">
+                        <h4 class="font-medium text-yellow-900">Partial PDF Analysis</h4>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            Found ${settingsCount} settings using fallback parsing
+                        </p>
+                        <p class="text-xs text-yellow-600 mt-1">
+                            Some settings may be missing. Consider manual entry for complete configuration.
+                        </p>
+                        <div class="mt-2 flex space-x-2">
+                            <button onclick="unifiedFlow.acceptPartialResults()" class="text-xs bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700">
+                                Use These Settings
+                            </button>
+                            <button onclick="unifiedFlow.switchToManualEntry()" class="text-xs text-yellow-600 hover:text-yellow-800 underline">
+                                Enter Manually Instead
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    /**
+     * Show comprehensive PDF error UI with actionable options
+     */
+    showPDFErrorUI(error, file) {
+        const resultDiv = document.getElementById('pdf-analysis-result');
+        const contentDiv = document.getElementById('pdf-analysis-content');
+        
+        if (resultDiv && contentDiv) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.className = 'mt-4 p-3 bg-red-50 border border-red-200 rounded-md';
+            
+            // Categorize error for better user guidance
+            const errorType = this.categorizeError(error);
+            
+            contentDiv.innerHTML = `
+                <div class="flex items-start">
+                    <span class="text-red-600 mr-2">❌</span>
+                    <div class="flex-grow">
+                        <h4 class="font-medium text-red-900">PDF Analysis Failed</h4>
+                        <p class="text-sm text-red-700 mt-1">${errorType.userMessage}</p>
+                        <div class="text-xs text-red-600 mt-1">
+                            Technical details: ${error.message}
+                        </div>
+                        
+                        <div class="mt-3 space-y-2">
+                            <h5 class="text-sm font-medium text-red-900">What you can do:</h5>
+                            <div class="space-y-1">
+                                ${errorType.suggestions.map(suggestion => 
+                                    `<div class="text-xs text-red-700">• ${suggestion}</div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <button onclick="unifiedFlow.switchToManualEntry()" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                                📝 Enter Settings Manually
+                            </button>
+                            <button onclick="unifiedFlow.loadFactoryDefaults()" class="text-xs bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700">
+                                🏭 Use Factory Defaults
+                            </button>
+                            <button onclick="unifiedFlow.showSampleData()" class="text-xs bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-700">
+                                🧪 Load Sample Data
+                            </button>
+                            <button onclick="unifiedFlow.downloadSamplePDF()" class="text-xs text-red-600 hover:text-red-800 underline">
+                                📥 Download Format Example
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    /**
+     * Categorize errors for better user guidance
+     */
+    categorizeError(error) {
+        const message = error.message.toLowerCase();
+        
+        if (message.includes('timeout')) {
+            return {
+                userMessage: 'PDF processing took too long and timed out.',
+                suggestions: [
+                    'Try a smaller PDF file',
+                    'Ensure the PDF is not corrupted',
+                    'Use manual entry for faster setup'
+                ]
+            };
+        }
+        
+        if (message.includes('invalid file type') || message.includes('not a pdf')) {
+            return {
+                userMessage: 'The selected file is not a valid PDF.',
+                suggestions: [
+                    'Select a PDF file (.pdf extension)',
+                    'Export directly from your controller software',
+                    'Ensure the file is not corrupted'
+                ]
+            };
+        }
+        
+        if (message.includes('too large')) {
+            return {
+                userMessage: 'The PDF file is too large to process.',
+                suggestions: [
+                    'Try compressing the PDF',
+                    'Export only the settings page',
+                    'Use manual entry instead'
+                ]
+            };
+        }
+        
+        if (message.includes('no recognizable') || message.includes('no valid settings')) {
+            return {
+                userMessage: 'Could not find controller settings in the expected format.',
+                suggestions: [
+                    'Ensure PDF contains a table with function numbers (F.1, F.2, etc.)',
+                    'Export directly from GEM programming software',
+                    'Check that text is selectable (not a scanned image)',
+                    'Try the manual entry option below'
+                ]
+            };
+        }
+        
+        if (message.includes('service is not available') || message.includes('parser not available')) {
+            return {
+                userMessage: 'PDF parsing service is temporarily unavailable.',
+                suggestions: [
+                    'Refresh the page and try again',
+                    'Check your internet connection',
+                    'Use manual entry as an alternative'
+                ]
+            };
+        }
+        
+        // Generic error
+        return {
+            userMessage: 'An unexpected error occurred while processing the PDF.',
+            suggestions: [
+                'Try refreshing the page',
+                'Ensure the PDF is from GEM controller software',
+                'Use manual entry to continue',
+                'Contact support if the problem persists'
+            ]
+        };
+    }
+    
+    /**
+     * Suggest manual entry fallback after PDF error
+     */
+    suggestManualEntryFallback(error) {
+        try {
+            // Show a brief notification suggesting manual entry
+            this.showNotification('💡 Pro tip: Use manual entry to quickly input the 7 most important settings!', 'info', 5000);
+            
+            // Automatically highlight manual entry button if it exists
+            setTimeout(() => {
+                const manualBtn = document.getElementById('manual-entry-btn');
+                if (manualBtn) {
+                    manualBtn.classList.add('ring-2', 'ring-blue-400', 'ring-opacity-75');
+                    setTimeout(() => {
+                        manualBtn.classList.remove('ring-2', 'ring-blue-400', 'ring-opacity-75');
+                    }, 3000);
+                }
+            }, 1000);
+            
+        } catch (notificationError) {
+            console.warn('Unable to show fallback suggestion:', notificationError);
+        }
+    }
                 
                 let errorContent = `<h4 class="font-medium text-red-900 mb-2">❌ Analysis Failed</h4>`;
                 errorContent += `<p class="text-sm text-red-700 mb-2">${error.message}</p>`;
@@ -424,26 +718,107 @@ class UnifiedFlowController {
     }
 
     /**
-     * Analyze PDF settings for insights
+     * Handle manually entered settings
+     * @param {Object} settings - Manual settings object
+     * @param {string} source - Source type ('manual', 'factory-defaults')
      */
-    analyzePDFSettings(settings) {
+    handleManualSettings(settings, source) {
+        console.log(`Manual settings loaded from ${source}:`, settings);
+        
+        // Store the settings
+        this.pdfSettings = settings;
+        
+        // Analyze settings same as PDF
+        this.analyzeSettings(settings, source);
+        
+        // Show success message
+        this.showSettingsLoadedMessage(source, Object.keys(settings).length);
+    }
+
+    /**
+     * Analyze settings for insights (works for both PDF and manual entry)
+     */
+    analyzeSettings(settings, source = 'PDF') {
         // Basic analysis
         const analysis = {
             topSpeed: this.estimateTopSpeed(settings),
             profile: this.identifyProfile(settings),
-            modifications: this.detectModifications(settings)
+            modifications: this.detectModifications(settings),
+            source: source
         };
         
         // Store analysis
         this.vehicleData.currentSettings = settings;
         this.vehicleData.settingsAnalysis = analysis;
         
-        // Update current speed if detected
-        if (analysis.topSpeed && analysis.topSpeed !== this.vehicleData.currentSpeed) {
-            document.getElementById('current-speed').value = analysis.topSpeed;
-            this.vehicleData.currentSpeed = analysis.topSpeed;
-            this.updateVehicleClassification();
+        // Update current speed if detected and different
+        if (analysis.topSpeed && Math.abs(analysis.topSpeed - (this.vehicleData.currentSpeed || 25)) > 2) {
+            const speedInput = document.getElementById('current-speed');
+            if (speedInput) {
+                speedInput.value = analysis.topSpeed;
+                this.vehicleData.currentSpeed = analysis.topSpeed;
+                this.updateVehicleClassification();
+                
+                // Show notification about speed update
+                this.showNotification(`Updated top speed to ${analysis.topSpeed} MPH based on ${source} settings`, 'info');
+            }
         }
+        
+        console.log(`Settings analysis complete for ${source}:`, analysis);
+    }
+
+    /**
+     * Legacy method - now calls analyzeSettings
+     */
+    analyzePDFSettings(settings) {
+        this.analyzeSettings(settings, 'PDF');
+    }
+
+    /**
+     * Show settings loaded message
+     */
+    showSettingsLoadedMessage(source, count) {
+        const sourceNames = {
+            'manual': 'Manual Entry',
+            'factory-defaults': 'Factory Defaults',
+            'sample-data': 'Sample Configuration',
+            'PDF': 'PDF Import'
+        };
+        
+        const message = `${sourceNames[source] || source} loaded with ${count} settings`;
+        console.log(message);
+        
+        // Could add visual notification here if needed
+        if (typeof this.showNotification === 'function') {
+            this.showNotification(message, 'success');
+        }
+    }
+
+    /**
+     * Show notification helper
+     */
+    showNotification(message, type = 'info') {
+        // Simple console log for now - could be enhanced with visual notifications
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // Create a temporary visual notification
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-md text-sm max-w-sm ${
+            type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+            type === 'warning' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+            type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+            'bg-blue-100 text-blue-800 border border-blue-200'
+        }`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
     }
 
     /**

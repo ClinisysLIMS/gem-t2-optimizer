@@ -1037,3 +1037,11 @@ class GEMOptimizer {
         };
     }
 }
+
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = GEMOptimizer;
+} else if (typeof window !== 'undefined') {
+    // Make GEMOptimizer available globally in browser environment
+    window.GEMOptimizer = GEMOptimizer;
+}

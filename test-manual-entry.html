@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Entry Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Manual Entry Functionality Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Test Manual Entry Options</h2>
+            <p class="text-sm text-gray-600 mb-4">This page tests the manual entry functionality added as a fallback when PDF parsing fails.</p>
+            
+            <!-- Settings Input Options (copied from main page) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+                <button id="pdf-upload-btn" class="p-2 border border-gray-300 rounded-md hover:border-green-400 hover:bg-green-50 transition-colors text-center">
+                    <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <div class="text-xs font-medium">Upload PDF</div>
+                    <div class="text-xs text-gray-500">Sentry/Export file</div>
+                </button>
+                
+                <button id="manual-entry-btn" class="p-2 border border-gray-300 rounded-md hover:border-blue-400 hover:bg-blue-50 transition-colors text-center">
+                    <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    <div class="text-xs font-medium">Manual Entry</div>
+                    <div class="text-xs text-gray-500">Enter key values</div>
+                </button>
+                
+                <button id="factory-defaults-btn" class="p-2 border border-gray-300 rounded-md hover:border-purple-400 hover:bg-purple-50 transition-colors text-center">
+                    <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <div class="text-xs font-medium">Factory Defaults</div>
+                    <div class="text-xs text-gray-500">Standard values</div>
+                </button>
+            </div>
+            
+            <!-- PDF Upload Area (hidden by default) -->
+            <div id="pdf-upload-area" class="hidden border-2 border-dashed border-gray-300 rounded-md p-2 text-center hover:border-green-400 transition-colors">
+                <p class="text-sm text-gray-600">PDF upload would work here (requires full PDF parser setup)</p>
+                <button id="cancel-pdf-upload" class="mt-2 text-xs text-gray-500 hover:text-gray-700 underline">Cancel</button>
+            </div>
+            
+            <!-- Manual Entry Form (hidden by default) -->
+            <div id="manual-entry-form" class="hidden border border-blue-200 rounded-md p-3 bg-blue-50">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-medium text-blue-900 text-sm">Manual Entry - Key Settings</h4>
+                    <button id="cancel-manual-entry" class="text-xs text-blue-600 hover:text-blue-800 underline">Cancel</button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div>
+                        <label for="manual-f1" class="block text-xs font-medium text-blue-800">F.1 MPH Scaling</label>
+                        <input type="number" id="manual-f1" min="15" max="200" placeholder="100" 
+                               class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <div class="text-xs text-blue-600 mt-0.5">15-200</div>
+                    </div>
+                    <div>
+                        <label for="manual-f3" class="block text-xs font-medium text-blue-800">F.3 Acceleration</label>
+                        <input type="number" id="manual-f3" min="8" max="40" placeholder="15" 
+                               class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <div class="text-xs text-blue-600 mt-0.5">8-40</div>
+                    </div>
+                    <div>
+                        <label for="manual-f4" class="block text-xs font-medium text-blue-800">F.4 Max Current</label>
+                        <input type="number" id="manual-f4" min="180" max="400" placeholder="245" 
+                               class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <div class="text-xs text-blue-600 mt-0.5">180-400</div>
+                    </div>
+                    <div>
+                        <label for="manual-f7" class="block text-xs font-medium text-blue-800">F.7 Min Field</label>
+                        <input type="number" id="manual-f7" min="51" max="120" placeholder="70" 
+                               class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <div class="text-xs text-blue-600 mt-0.5">51-120</div>
+                    </div>
+                    <div>
+                        <label for="manual-f15" class="block text-xs font-medium text-blue-800">F.15 Battery Volts</label>
+                        <input type="number" id="manual-f15" min="48" max="96" placeholder="72" 
+                               class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <div class="text-xs text-blue-600 mt-0.5">48-96</div>
+                    </div>
+                    <div>
+                        <label for="manual-f20" class="block text-xs font-medium text-blue-800">F.20 Overspeed</label>
+                        <input type="number" id="manual-f20" min="25" max="50" placeholder="30" 
+                               class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <div class="text-xs text-blue-600 mt-0.5">25-50</div>
+                    </div>
+                    <div>
+                        <label for="manual-f24" class="block text-xs font-medium text-blue-800">F.24 Field Weak</label>
+                        <input type="number" id="manual-f24" min="25" max="85" placeholder="50" 
+                               class="mt-1 w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <div class="text-xs text-blue-600 mt-0.5">25-85</div>
+                    </div>
+                    <div class="flex items-end">
+                        <button id="save-manual-entry" class="w-full px-2 py-1.5 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors">
+                            Save Settings
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs text-blue-700">
+                    💡 These are the most critical settings for optimization. Leave blank to use defaults.
+                </div>
+            </div>
+            
+            <!-- Results/Status Area -->
+            <div id="settings-input-result" class="hidden mt-2">
+                <div id="settings-input-content" class="text-xs">
+                    <div id="settings-metadata"></div>
+                    <div id="settings-preview" class="mt-1"></div>
+                    <div id="settings-debug-info" class="mt-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Test Results</h2>
+            <div id="test-results" class="space-y-2">
+                <div class="text-sm text-gray-600">Click buttons above to test functionality...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3">Event Log</h2>
+            <div id="event-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                Page loaded - ready for testing...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Event logging
+        const eventLog = document.getElementById('event-log');
+        const testResults = document.getElementById('test-results');
+
+        function logEvent(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            eventLog.innerHTML += `\n[${timestamp}] ${message}`;
+            eventLog.scrollTop = eventLog.scrollHeight;
+            console.log(message);
+        }
+
+        function updateTestResults(result) {
+            testResults.innerHTML = `
+                <div class="text-sm">
+                    <div class="flex items-center mb-1">
+                        <span class="text-green-600">✅</span>
+                        <span class="ml-2 font-medium">${result.title}</span>
+                    </div>
+                    <div class="text-xs text-gray-600 ml-6">${result.description}</div>
+                    ${result.data ? `<div class="text-xs text-gray-500 ml-6 mt-1">Data: ${JSON.stringify(result.data)}</div>` : ''}
+                </div>
+            `;
+        }
+
+        // Copy manual entry functionality from main page
+        document.addEventListener('DOMContentLoaded', function() {
+            logEvent('Manual entry test page initialized');
+
+            const pdfUploadBtn = document.getElementById('pdf-upload-btn');
+            const manualEntryBtn = document.getElementById('manual-entry-btn');
+            const factoryDefaultsBtn = document.getElementById('factory-defaults-btn');
+            const pdfUploadArea = document.getElementById('pdf-upload-area');
+            const manualEntryForm = document.getElementById('manual-entry-form');
+            const settingsInputResult = document.getElementById('settings-input-result');
+            const pdfMetadata = document.getElementById('settings-metadata');
+            const pdfSettingsPreview = document.getElementById('settings-preview');
+
+            // Factory defaults for GEM T2 Controller
+            const factoryDefaults = {
+                1: 100,   // MPH Scaling
+                3: 15,    // Controlled Acceleration  
+                4: 245,   // Max Armature Current Limit
+                7: 70,    // Minimum Field Current
+                15: 72,   // Battery Volts
+                20: 30,   // MPH Overspeed
+                24: 50    // Field Weakening Start
+            };
+
+            // Event handlers
+            pdfUploadBtn.addEventListener('click', function() {
+                logEvent('PDF Upload button clicked');
+                hideAllInputMethods();
+                pdfUploadArea.classList.remove('hidden');
+                setActiveButton(pdfUploadBtn);
+                updateTestResults({
+                    title: 'PDF Upload Mode Activated',
+                    description: 'PDF upload area is now visible (would integrate with PDF parser in full implementation)'
+                });
+            });
+
+            manualEntryBtn.addEventListener('click', function() {
+                logEvent('Manual Entry button clicked');
+                hideAllInputMethods();
+                manualEntryForm.classList.remove('hidden');
+                setActiveButton(manualEntryBtn);
+                populateManualFormDefaults();
+                updateTestResults({
+                    title: 'Manual Entry Mode Activated',
+                    description: 'Form is now visible with 7 key controller settings ready for input'
+                });
+            });
+
+            factoryDefaultsBtn.addEventListener('click', function() {
+                logEvent('Factory Defaults button clicked');
+                hideAllInputMethods();
+                setActiveButton(factoryDefaultsBtn);
+                loadFactoryDefaults();
+                updateTestResults({
+                    title: 'Factory Defaults Loaded',
+                    description: 'Standard GEM T2 controller values have been loaded automatically',
+                    data: factoryDefaults
+                });
+            });
+
+            document.getElementById('cancel-pdf-upload').addEventListener('click', function() {
+                logEvent('PDF upload cancelled');
+                hideAllInputMethods();
+                clearActiveButtons();
+            });
+
+            document.getElementById('cancel-manual-entry').addEventListener('click', function() {
+                logEvent('Manual entry cancelled');
+                hideAllInputMethods();
+                clearActiveButtons();
+                clearManualForm();
+            });
+
+            document.getElementById('save-manual-entry').addEventListener('click', function() {
+                logEvent('Manual entry save clicked');
+                const result = saveManualEntrySettings();
+                updateTestResults({
+                    title: 'Manual Settings Saved',
+                    description: `${result.enteredCount} values entered, ${7 - result.enteredCount} using defaults`,
+                    data: result.settings
+                });
+            });
+
+            function hideAllInputMethods() {
+                pdfUploadArea.classList.add('hidden');
+                manualEntryForm.classList.add('hidden');
+                settingsInputResult.classList.add('hidden');
+            }
+
+            function setActiveButton(activeBtn) {
+                clearActiveButtons();
+                activeBtn.classList.add('border-blue-500', 'bg-blue-50');
+            }
+
+            function clearActiveButtons() {
+                [pdfUploadBtn, manualEntryBtn, factoryDefaultsBtn].forEach(btn => {
+                    btn.classList.remove('border-blue-500', 'bg-blue-50', 'border-green-500', 'bg-green-50', 'border-purple-500', 'bg-purple-50');
+                });
+            }
+
+            function populateManualFormDefaults() {
+                document.getElementById('manual-f1').placeholder = factoryDefaults[1];
+                document.getElementById('manual-f3').placeholder = factoryDefaults[3];
+                document.getElementById('manual-f4').placeholder = factoryDefaults[4];
+                document.getElementById('manual-f7').placeholder = factoryDefaults[7];
+                document.getElementById('manual-f15').placeholder = factoryDefaults[15];
+                document.getElementById('manual-f20').placeholder = factoryDefaults[20];
+                document.getElementById('manual-f24').placeholder = factoryDefaults[24];
+                logEvent('Manual form populated with factory default placeholders');
+            }
+
+            function clearManualForm() {
+                ['manual-f1', 'manual-f3', 'manual-f4', 'manual-f7', 'manual-f15', 'manual-f20', 'manual-f24'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                logEvent('Manual form cleared');
+            }
+
+            function loadFactoryDefaults() {
+                settingsInputResult.classList.remove('hidden');
+                pdfMetadata.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="text-purple-600">✅</span>
+                        <span class="ml-2 font-medium">Factory Defaults Loaded</span>
+                    </div>
+                `;
+                
+                displaySettingsPreview(factoryDefaults, 'Factory Default Settings');
+                
+                window.importedSettings = factoryDefaults;
+                logEvent(`Factory defaults loaded: ${Object.keys(factoryDefaults).length} settings`);
+            }
+
+            function saveManualEntrySettings() {
+                const settings = {};
+                const fields = [
+                    { id: 'manual-f1', func: 1 },
+                    { id: 'manual-f3', func: 3 },
+                    { id: 'manual-f4', func: 4 },
+                    { id: 'manual-f7', func: 7 },
+                    { id: 'manual-f15', func: 15 },
+                    { id: 'manual-f20', func: 20 },
+                    { id: 'manual-f24', func: 24 }
+                ];
+
+                let enteredCount = 0;
+                fields.forEach(field => {
+                    const input = document.getElementById(field.id);
+                    const value = input.value.trim();
+                    if (value !== '') {
+                        settings[field.func] = parseInt(value);
+                        enteredCount++;
+                    } else {
+                        settings[field.func] = factoryDefaults[field.func];
+                    }
+                });
+
+                settingsInputResult.classList.remove('hidden');
+                pdfMetadata.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="text-blue-600">✅</span>
+                        <span class="ml-2 font-medium">Manual Settings Saved</span>
+                    </div>
+                    <div class="text-xs text-blue-600 mt-1">
+                        ${enteredCount} values entered, ${7 - enteredCount} using defaults
+                    </div>
+                `;
+
+                displaySettingsPreview(settings, 'Manual Entry Settings');
+                window.importedSettings = settings;
+                manualEntryForm.classList.add('hidden');
+                factoryDefaultsBtn.classList.add('border-blue-500', 'bg-blue-50');
+                
+                logEvent(`Manual settings saved: ${enteredCount} entered, ${7 - enteredCount} defaults`);
+                return { settings, enteredCount };
+            }
+
+            function displaySettingsPreview(settings, title) {
+                const functionNames = {
+                    1: 'MPH Scaling',
+                    3: 'Controlled Acceleration',
+                    4: 'Max Armature Current',
+                    7: 'Minimum Field Current',
+                    15: 'Battery Volts',
+                    20: 'MPH Overspeed',
+                    24: 'Field Weakening Start'
+                };
+
+                let html = `
+                    <div class="bg-white bg-opacity-50 rounded p-2">
+                        <div class="font-medium text-xs mb-2">${title}:</div>
+                        <div class="grid grid-cols-2 gap-2">
+                `;
+
+                Object.entries(settings).forEach(([func, value]) => {
+                    const name = functionNames[func] || `Function ${func}`;
+                    html += `
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-medium">F.${func} ${name}</span>
+                            <span class="text-blue-600">${value}</span>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+
+                pdfSettingsPreview.innerHTML = html;
+                logEvent(`Settings preview displayed: ${Object.keys(settings).length} functions`);
+            }
+
+            logEvent('All event handlers registered successfully');
+        });
+    </script>
+</body>
+</html>

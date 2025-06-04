@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Loading Order Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 1. PDF.js library should load first -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Script Loading Order Verification</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Current Script Loading Order Analysis</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                This page verifies that scripts are loaded in the correct dependency order and that all classes are accessible when needed.
+            </p>
+            
+            <div class="mb-4">
+                <h3 class="font-medium text-gray-800 mb-2">Expected Loading Order:</h3>
+                <ol class="text-sm space-y-1 ml-4">
+                    <li class="flex items-center">
+                        <span class="w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center justify-center mr-2">1</span>
+                        PDF.js library (in &lt;head&gt;)
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center justify-center mr-2">2</span>
+                        PDF.js worker configuration (with DOM ready check)
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center justify-center mr-2">3</span>
+                        Core utility classes (shared-utils.js, etc.)
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center justify-center mr-2">4</span>
+                        GEMOptimizer and VehicleClassifier classes
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center justify-center mr-2">5</span>
+                        PDFParser class (depends on PDF.js)
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center justify-center mr-2">6</span>
+                        UnifiedFlowController (depends on all above)
+                    </li>
+                    <li class="flex items-center">
+                        <span class="w-6 h-6 bg-blue-100 text-blue-800 rounded-full text-xs flex items-center justify-center mr-2">7</span>
+                        Inline scripts that use classes (with DOMContentLoaded)
+                    </li>
+                </ol>
+            </div>
+            
+            <div id="loading-test-results" class="space-y-2">
+                <div class="text-sm text-gray-600">Running loading order tests...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Detailed Script Analysis</h2>
+            <div id="script-analysis" class="text-sm">
+                <div class="text-gray-600">Analyzing script tags...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3">Event Log</h2>
+            <div id="console-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                Script loading order test initialized...\n
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. PDF.js worker configuration with proper timing -->
+    <script>
+        console.log('PDF.js worker setup script running...');
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof pdfjsLib !== 'undefined') {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                console.log('✅ PDF.js worker configured successfully');
+            } else {
+                console.error('❌ PDF.js library not loaded - PDFParser functionality will not work');
+            }
+        });
+    </script>
+
+    <!-- 3. Core dependencies in correct order -->
+    <script src="js/shared-utils.js"></script>
+    <script src="js/secure-storage.js"></script>
+    <script src="js/api-manager.js"></script>
+    <script src="js/tensorflow-ml-engine.js"></script>
+    <script src="js/rule-based-optimizer.js"></script>
+    <script src="js/optimization-cache.js"></script>
+    <script src="js/fallback-calculations.js"></script>
+    <script src="js/fallback-system.js"></script>
+    <script src="js/api-integration.js"></script>
+    <script src="js/mcp-config.js"></script>
+    <script src="js/weather-service.js"></script>
+    <script src="js/terrain-service.js"></script>
+
+    <!-- 4. Main optimizer classes -->
+    <script src="js/optimizer.js"></script>
+    <script src="js/trip-optimizer.js"></script>
+    <script src="js/vehicle-classifier.js"></script>
+
+    <!-- 5. PDF parser (depends on PDF.js) -->
+    <script src="js/pdf-parser.js"></script>
+
+    <!-- 6. Other components -->
+    <script src="js/accessories-manager.js"></script>
+    <script src="js/driving-modes.js"></script>
+    <script src="js/enhanced-pdf-analyzer.js"></script>
+    <script src="js/ai-assistant.js"></script>
+    <script src="js/ai-ui-integration.js"></script>
+
+    <!-- 7. Main controller (depends on all above) -->
+    <script src="js/unified-flow.js"></script>
+
+    <!-- 8. Application logic with proper dependency checks -->
+    <script>
+        // Event logging
+        const consoleLog = document.getElementById('console-log');
+        const loadingTestResults = document.getElementById('loading-test-results');
+        const scriptAnalysis = document.getElementById('script-analysis');
+        
+        function logEvent(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            consoleLog.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            console.log(message);
+        }
+
+        function addTestResult(testName, success, message, details = null) {
+            const resultElement = document.createElement('div');
+            resultElement.className = `flex items-start p-2 rounded text-sm ${success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`;
+            
+            let content = `
+                <span class="flex-shrink-0 mr-2">${success ? '✅' : '❌'}</span>
+                <div class="flex-grow">
+                    <div class="font-medium">${testName}</div>
+                    <div class="text-xs mt-1">${message}</div>
+                    ${details ? `<div class="text-xs mt-1 font-mono bg-white bg-opacity-50 p-1 rounded">${details}</div>` : ''}
+                </div>
+            `;
+            
+            resultElement.innerHTML = content;
+            loadingTestResults.appendChild(resultElement);
+        }
+
+        // Analyze script tags and their order
+        function analyzeScriptOrder() {
+            const scripts = Array.from(document.querySelectorAll('script[src]'));
+            let analysis = '<div class="space-y-2">';
+            
+            scripts.forEach((script, index) => {
+                const src = script.src;
+                const filename = src.split('/').pop();
+                const isExternal = src.startsWith('http');
+                
+                analysis += `
+                    <div class="flex items-center text-xs p-2 border rounded">
+                        <span class="w-6 h-6 bg-gray-100 text-gray-800 rounded-full text-xs flex items-center justify-center mr-2">${index + 1}</span>
+                        <div class="flex-grow">
+                            <div class="font-medium">${filename}</div>
+                            <div class="text-gray-500">${isExternal ? 'External CDN' : 'Local file'}</div>
+                        </div>
+                        <div class="text-gray-400">${isExternal ? '🌐' : '📁'}</div>
+                    </div>
+                `;
+            });
+            
+            analysis += '</div>';
+            scriptAnalysis.innerHTML = analysis;
+        }
+
+        // Test dependency loading order
+        document.addEventListener('DOMContentLoaded', function() {
+            logEvent('Starting script loading order tests...');
+            
+            // Clear initial message
+            loadingTestResults.innerHTML = '';
+            
+            // Test 1: PDF.js library availability
+            const pdfJsAvailable = typeof pdfjsLib !== 'undefined';
+            addTestResult(
+                'PDF.js Library Loading',
+                pdfJsAvailable,
+                pdfJsAvailable ? 'PDF.js loaded successfully in head section' : 'PDF.js not available',
+                `typeof pdfjsLib: ${typeof pdfjsLib}`
+            );
+            
+            // Test 2: PDF.js worker configuration
+            let workerConfigured = false;
+            try {
+                if (pdfJsAvailable && pdfjsLib.GlobalWorkerOptions && pdfjsLib.GlobalWorkerOptions.workerSrc) {
+                    workerConfigured = true;
+                }
+            } catch (e) {
+                // Worker not yet configured, which is expected at this point
+            }
+            
+            // Test 3: Core classes availability
+            const coreClasses = [
+                { name: 'GEMOptimizer', available: typeof GEMOptimizer !== 'undefined' },
+                { name: 'VehicleClassifier', available: typeof VehicleClassifier !== 'undefined' },
+                { name: 'PDFParser', available: typeof PDFParser !== 'undefined' },
+                { name: 'UnifiedFlowController', available: typeof UnifiedFlowController !== 'undefined' }
+            ];
+            
+            coreClasses.forEach(cls => {
+                addTestResult(
+                    `${cls.name} Class Loading`,
+                    cls.available,
+                    cls.available ? 'Class loaded and accessible' : 'Class not available',
+                    `typeof ${cls.name}: ${typeof window[cls.name]}`
+                );
+            });
+            
+            // Test 4: Dependency chain validation
+            let dependencyChainValid = true;
+            let dependencyMessage = '';
+            
+            // Check if PDFParser can be instantiated (requires PDF.js)
+            try {
+                if (typeof PDFParser !== 'undefined' && pdfJsAvailable) {
+                    const testParser = new PDFParser();
+                    dependencyMessage = 'PDFParser instantiated successfully with PDF.js dependency';
+                } else {
+                    dependencyChainValid = false;
+                    dependencyMessage = 'PDFParser or PDF.js dependency missing';
+                }
+            } catch (error) {
+                dependencyChainValid = false;
+                dependencyMessage = `PDFParser instantiation failed: ${error.message}`;
+            }
+            
+            addTestResult(
+                'Dependency Chain Validation',
+                dependencyChainValid,
+                dependencyMessage
+            );
+            
+            // Test 5: UnifiedFlowController instantiation
+            let unifiedFlowValid = false;
+            let unifiedFlowMessage = '';
+            
+            try {
+                if (typeof UnifiedFlowController !== 'undefined') {
+                    // Don't actually instantiate to avoid side effects, just check constructor
+                    unifiedFlowValid = true;
+                    unifiedFlowMessage = 'UnifiedFlowController class available and ready';
+                } else {
+                    unifiedFlowMessage = 'UnifiedFlowController class not available';
+                }
+            } catch (error) {
+                unifiedFlowMessage = `UnifiedFlowController check failed: ${error.message}`;
+            }
+            
+            addTestResult(
+                'UnifiedFlowController Readiness',
+                unifiedFlowValid,
+                unifiedFlowMessage
+            );
+            
+            // Analyze script order
+            analyzeScriptOrder();
+            
+            // Summary
+            const allResults = loadingTestResults.querySelectorAll('div');
+            const passedTests = loadingTestResults.querySelectorAll('.bg-green-50').length;
+            const totalTests = allResults.length;
+            
+            logEvent(`Test Summary: ${passedTests}/${totalTests} dependency tests passed`);
+            
+            if (passedTests === totalTests) {
+                logEvent('🎉 All dependency loading tests passed! Script order is correct.');
+            } else {
+                logEvent(`⚠️ ${totalTests - passedTests} test(s) failed. Check script loading order.`);
+            }
+            
+            // Test PDF functionality if everything is available
+            if (pdfJsAvailable && typeof PDFParser !== 'undefined') {
+                logEvent('✅ PDF functionality should work - all dependencies loaded');
+            } else {
+                logEvent('❌ PDF functionality will not work - missing dependencies');
+            }
+        });
+    </script>
+</body>
+</html>

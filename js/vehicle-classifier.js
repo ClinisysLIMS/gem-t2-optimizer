@@ -562,4 +562,7 @@ class VehicleClassifier {
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = VehicleClassifier;
+} else if (typeof window !== 'undefined') {
+    // Make VehicleClassifier available globally in browser environment
+    window.VehicleClassifier = VehicleClassifier;
 }

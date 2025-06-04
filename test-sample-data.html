@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Data Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Sample Data Functionality Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Test Sample Data Feature</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                This page tests the new "Use Sample Data" feature that allows users to quickly load realistic GEM configurations for testing the optimizer.
+            </p>
+            
+            <!-- Settings Input Options (copied from main page) -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                <button id="pdf-upload-btn" class="p-2 border border-gray-300 rounded-md hover:border-green-400 hover:bg-green-50 transition-colors text-center">
+                    <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <div class="text-xs font-medium">Upload PDF</div>
+                    <div class="text-xs text-gray-500">Sentry/Export file</div>
+                </button>
+                
+                <button id="manual-entry-btn" class="p-2 border border-gray-300 rounded-md hover:border-blue-400 hover:bg-blue-50 transition-colors text-center">
+                    <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    <div class="text-xs font-medium">Manual Entry</div>
+                    <div class="text-xs text-gray-500">Enter key values</div>
+                </button>
+                
+                <button id="factory-defaults-btn" class="p-2 border border-gray-300 rounded-md hover:border-purple-400 hover:bg-purple-50 transition-colors text-center">
+                    <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <div class="text-xs font-medium">Factory Defaults</div>
+                    <div class="text-xs text-gray-500">Standard values</div>
+                </button>
+                
+                <button id="sample-data-btn" class="p-2 border border-gray-300 rounded-md hover:border-orange-400 hover:bg-orange-50 transition-colors text-center">
+                    <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="text-xs font-medium">Use Sample Data</div>
+                    <div class="text-xs text-gray-500">Test configurations</div>
+                </button>
+            </div>
+            
+            <!-- Sample Data Selection Modal -->
+            <div id="sample-data-modal" class="hidden border border-orange-200 rounded-md p-3 bg-orange-50">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-medium text-orange-900 text-sm">Choose Sample Configuration</h4>
+                    <button id="cancel-sample-data" class="text-xs text-orange-600 hover:text-orange-800 underline">Cancel</button>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="border border-orange-200 rounded p-2 bg-white hover:bg-orange-25 cursor-pointer transition-colors" onclick="selectSampleConfig('stock_e4')">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-xs font-bold text-blue-800">🏭</span>
+                            </div>
+                            <div class="flex-grow">
+                                <div class="font-medium text-sm text-orange-900">Stock GEM e4 (72V Lead-Acid)</div>
+                                <div class="text-xs text-orange-700 mt-1">Factory configuration for 4-passenger GEM with standard lead-acid batteries</div>
+                                <div class="text-xs text-orange-600 mt-1">25 MPH max • 72V • Standard performance</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-orange-200 rounded p-2 bg-white hover:bg-orange-25 cursor-pointer transition-colors" onclick="selectSampleConfig('lithium_upgrade')">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-xs font-bold text-green-800">⚡</span>
+                            </div>
+                            <div class="flex-grow">
+                                <div class="font-medium text-sm text-orange-900">Lithium Upgrade Setup</div>
+                                <div class="text-xs text-orange-700 mt-1">Performance-optimized settings for lithium battery conversion</div>
+                                <div class="text-xs text-orange-600 mt-1">30+ MPH • Enhanced acceleration • Extended range</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-orange-200 rounded p-2 bg-white hover:bg-orange-25 cursor-pointer transition-colors" onclick="selectSampleConfig('large_tire_setup')">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-xs font-bold text-purple-800">🚗</span>
+                            </div>
+                            <div class="flex-grow">
+                                <div class="font-medium text-sm text-orange-900">Large Tire Setup</div>
+                                <div class="text-xs text-orange-700 mt-1">Optimized for 23"+ tires with adjusted gear ratios and speed scaling</div>
+                                <div class="text-xs text-orange-600 mt-1">Higher top speed • Adjusted for tire size • Better traction</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-orange-200 rounded p-2 bg-white hover:bg-orange-25 cursor-pointer transition-colors" onclick="selectSampleConfig('performance_tuned')">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-xs font-bold text-red-800">🏁</span>
+                            </div>
+                            <div class="flex-grow">
+                                <div class="font-medium text-sm text-orange-900">Performance Tuned</div>
+                                <div class="text-xs text-orange-700 mt-1">Aggressive settings for maximum performance and speed</div>
+                                <div class="text-xs text-orange-600 mt-1">35+ MPH • Fast acceleration • Track-ready setup</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 text-xs text-orange-700 bg-orange-100 p-2 rounded">
+                    💡 These are realistic configurations used by GEM owners. Perfect for testing the optimizer without needing your actual settings.
+                </div>
+            </div>
+            
+            <!-- Results/Status Area -->
+            <div id="settings-input-result" class="hidden mt-2">
+                <div id="settings-input-content" class="text-xs">
+                    <div id="settings-metadata"></div>
+                    <div id="settings-preview" class="mt-1"></div>
+                    <div id="settings-debug-info" class="mt-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Sample Configuration Details</h2>
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <h3 class="font-medium mb-2 text-blue-800">🏭 Stock GEM e4 Features</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>• Factory default settings for safety</li>
+                        <li>• Optimized for lead-acid batteries</li>
+                        <li>• Conservative acceleration and speed limits</li>
+                        <li>• Maximum 25 MPH operation</li>
+                        <li>• Suitable for neighborhood use</li>
+                    </ul>
+                    
+                    <h3 class="font-medium mb-2 mt-4 text-green-800">⚡ Lithium Upgrade Features</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>• Higher performance settings</li>
+                        <li>• Increased current limits for lithium</li>
+                        <li>• Enhanced acceleration response</li>
+                        <li>• 30+ MPH capability</li>
+                        <li>• Extended range operation</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2 text-purple-800">🚗 Large Tire Setup Features</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>• Adjusted MPH scaling for larger tires</li>
+                        <li>• Compensated speed calculations</li>
+                        <li>• Optimized field weakening points</li>
+                        <li>• Better traction and stability</li>
+                        <li>• Suitable for 23"+ diameter tires</li>
+                    </ul>
+                    
+                    <h3 class="font-medium mb-2 mt-4 text-red-800">🏁 Performance Tuned Features</h3>
+                    <ul class="space-y-1 text-xs text-gray-600">
+                        <li>• Maximum safe performance settings</li>
+                        <li>• Aggressive acceleration curves</li>
+                        <li>• High current and field limits</li>
+                        <li>• 35+ MPH top speed capability</li>
+                        <li>• Track-ready configuration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3">Event Log</h2>
+            <div id="event-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                Sample data test page loaded...\n
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Event logging
+        const eventLog = document.getElementById('event-log');
+        
+        function logEvent(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            eventLog.innerHTML += `[${timestamp}] ${message}\n`;
+            eventLog.scrollTop = eventLog.scrollHeight;
+            console.log(message);
+        }
+
+        // Sample Data Selection Handler (copied from main page)
+        window.selectSampleConfig = function(configType) {
+            const sampleConfigurations = {
+                'stock_e4': {
+                    name: 'Stock GEM e4 (72V Lead-Acid)',
+                    description: 'Factory configuration for 4-passenger GEM with standard lead-acid batteries',
+                    settings: {
+                        1: 100,   // MPH Scaling - Factory default
+                        3: 15,    // Controlled Acceleration - Conservative
+                        4: 245,   // Max Armature Current - Standard
+                        7: 70,    // Minimum Field Current - Factory default
+                        15: 72,   // Battery Volts - 72V system
+                        20: 30,   // MPH Overspeed - Standard safety margin
+                        24: 50    // Field Weakening Start - Conservative
+                    }
+                },
+                'lithium_upgrade': {
+                    name: 'Lithium Upgrade Setup',
+                    description: 'Performance-optimized settings for lithium battery conversion',
+                    settings: {
+                        1: 135,   // MPH Scaling - Higher for speed
+                        3: 25,    // Controlled Acceleration - More aggressive
+                        4: 285,   // Max Armature Current - Higher for lithium
+                        7: 85,    // Minimum Field Current - Optimized
+                        15: 72,   // Battery Volts - Still 72V nominal
+                        20: 40,   // MPH Overspeed - Higher margin
+                        24: 65    // Field Weakening Start - Performance tuned
+                    }
+                },
+                'large_tire_setup': {
+                    name: 'Large Tire Setup',
+                    description: 'Optimized for 23"+ tires with adjusted gear ratios and speed scaling',
+                    settings: {
+                        1: 115,   // MPH Scaling - Adjusted for larger circumference
+                        3: 18,    // Controlled Acceleration - Slightly higher
+                        4: 260,   // Max Armature Current - Moderate increase
+                        7: 75,    // Minimum Field Current - Standard
+                        15: 72,   // Battery Volts - 72V system
+                        20: 35,   // MPH Overspeed - Moderate
+                        24: 55    // Field Weakening Start - Adjusted for tires
+                    }
+                },
+                'performance_tuned': {
+                    name: 'Performance Tuned',
+                    description: 'Aggressive settings for maximum performance and speed',
+                    settings: {
+                        1: 155,   // MPH Scaling - High performance
+                        3: 35,    // Controlled Acceleration - Very aggressive
+                        4: 320,   // Max Armature Current - Maximum safe
+                        7: 95,    // Minimum Field Current - High performance
+                        15: 72,   // Battery Volts - 72V system
+                        20: 50,   // MPH Overspeed - High margin
+                        24: 75    // Field Weakening Start - Performance max
+                    }
+                }
+            };
+            
+            const config = sampleConfigurations[configType];
+            if (!config) {
+                logEvent(`ERROR: Unknown sample configuration: ${configType}`);
+                return;
+            }
+            
+            logEvent(`Sample configuration selected: ${config.name}`);
+            
+            // Hide the modal
+            document.getElementById('sample-data-modal').classList.add('hidden');
+            
+            // Show results
+            const settingsInputResult = document.getElementById('settings-input-result');
+            const settingsMetadata = document.getElementById('settings-metadata');
+            const settingsPreview = document.getElementById('settings-preview');
+            
+            settingsInputResult.classList.remove('hidden');
+            settingsMetadata.innerHTML = `
+                <div class="flex items-center">
+                    <span class="text-orange-600">✅</span>
+                    <span class="ml-2 font-medium">${config.name} Loaded</span>
+                </div>
+                <div class="text-xs text-orange-600 mt-1">
+                    ${config.description}
+                </div>
+            `;
+            
+            // Display settings preview
+            displaySettingsPreview(config.settings, config.name);
+            
+            // Log the loaded settings
+            logEvent(`Settings loaded: ${Object.keys(config.settings).length} functions`);
+            Object.entries(config.settings).forEach(([func, value]) => {
+                logEvent(`  F.${func} = ${value}`);
+            });
+            
+            // Store for optimization use (simulated)
+            window.importedSettings = config.settings;
+            
+            // Simulate unified flow event
+            logEvent(`Dispatching manualSettingsLoaded event for sample-data source`);
+            
+            // Set active button state
+            setActiveButton(document.getElementById('sample-data-btn'));
+        };
+        
+        function displaySettingsPreview(settings, title) {
+            const functionNames = {
+                1: 'MPH Scaling',
+                3: 'Controlled Acceleration',
+                4: 'Max Armature Current',
+                7: 'Minimum Field Current',
+                15: 'Battery Volts',
+                20: 'MPH Overspeed',
+                24: 'Field Weakening Start'
+            };
+
+            let html = `
+                <div class="bg-white bg-opacity-50 rounded p-2">
+                    <div class="font-medium text-xs mb-2">${title}:</div>
+                    <div class="grid grid-cols-2 gap-2">
+            `;
+
+            Object.entries(settings).forEach(([func, value]) => {
+                const name = functionNames[func] || `Function ${func}`;
+                html += `
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="font-medium">F.${func} ${name}</span>
+                        <span class="text-orange-600">${value}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('settings-preview').innerHTML = html;
+            logEvent(`Settings preview displayed: ${Object.keys(settings).length} functions`);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            logEvent('Sample data test page initialized');
+
+            const sampleDataBtn = document.getElementById('sample-data-btn');
+            const sampleDataModal = document.getElementById('sample-data-modal');
+            const cancelSampleData = document.getElementById('cancel-sample-data');
+
+            // Sample Data Button Handler
+            sampleDataBtn.addEventListener('click', function() {
+                logEvent('Sample Data button clicked');
+                hideAllInputMethods();
+                sampleDataModal.classList.remove('hidden');
+                setActiveButton(sampleDataBtn);
+            });
+
+            cancelSampleData.addEventListener('click', function() {
+                logEvent('Sample data selection cancelled');
+                hideAllInputMethods();
+                clearActiveButtons();
+            });
+
+            function hideAllInputMethods() {
+                sampleDataModal.classList.add('hidden');
+                document.getElementById('settings-input-result').classList.add('hidden');
+            }
+
+            function setActiveButton(activeBtn) {
+                clearActiveButtons();
+                activeBtn.classList.add('border-orange-500', 'bg-orange-50');
+            }
+
+            function clearActiveButtons() {
+                [document.getElementById('pdf-upload-btn'), 
+                 document.getElementById('manual-entry-btn'), 
+                 document.getElementById('factory-defaults-btn'), 
+                 sampleDataBtn].forEach(btn => {
+                    btn.classList.remove('border-blue-500', 'bg-blue-50', 'border-green-500', 'bg-green-50', 'border-purple-500', 'bg-purple-50', 'border-orange-500', 'bg-orange-50');
+                });
+            }
+
+            logEvent('All event handlers registered successfully');
+        });
+    </script>
+</body>
+</html>
