@@ -13,18 +13,6 @@ class APIManager {
                 isConfigured: false,
                 fallbackAvailable: true
             },
-            openai: {
-                key: null,
-                baseUrl: 'https://api.openai.com/v1',
-                isConfigured: false,
-                fallbackAvailable: true
-            },
-            claude: {
-                key: null,
-                baseUrl: 'https://api.anthropic.com/v1',
-                isConfigured: false,
-                fallbackAvailable: true
-            },
             mapbox: {
                 key: null,
                 baseUrl: 'https://api.mapbox.com',
@@ -36,6 +24,13 @@ class APIManager {
                 baseUrl: 'https://api.openweathermap.org/data/2.5',
                 isConfigured: false,
                 fallbackAvailable: true
+            },
+            localAI: {
+                key: null,
+                baseUrl: 'local',
+                isConfigured: true,
+                fallbackAvailable: false,
+                description: 'Local AI using TensorFlow.js and rule-based optimization'
             }
         };
         
@@ -69,8 +64,6 @@ class APIManager {
     loadStoredAPIKeys() {
         const apiKeys = {
             googleMaps: this.secureStorage.getItem('api_google_maps'),
-            openai: this.secureStorage.getItem('api_openai'),
-            claude: this.secureStorage.getItem('api_claude'),
             mapbox: this.secureStorage.getItem('api_mapbox'),
             openweather: this.secureStorage.getItem('api_openweather')
         };
@@ -124,10 +117,8 @@ class APIManager {
             switch (apiName) {
                 case 'googleMaps':
                     return await this.testGoogleMapsAPI();
-                case 'openai':
-                    return await this.testOpenAIAPI();
-                case 'claude':
-                    return await this.testClaudeAPI();
+                case 'localAI':
+                    return await this.testLocalAI();
                 case 'mapbox':
                     return await this.testMapboxAPI();
                 case 'openweather':
@@ -155,10 +146,9 @@ class APIManager {
      */
     setupRateLimiting() {
         this.rateLimits.set('googleMaps', { requests: 0, limit: 100, window: 1000 }); // 100 req/sec
-        this.rateLimits.set('openai', { requests: 0, limit: 60, window: 60000 }); // 60 req/min
-        this.rateLimits.set('claude', { requests: 0, limit: 100, window: 60000 }); // 100 req/min
         this.rateLimits.set('mapbox', { requests: 0, limit: 600, window: 60000 }); // 600 req/min
         this.rateLimits.set('openweather', { requests: 0, limit: 60, window: 60000 }); // 60 req/min
+        this.rateLimits.set('localAI', { requests: 0, limit: 1000, window: 1000 }); // 1000 req/sec (local)
         
         // Reset counters periodically
         Object.keys(this.apis).forEach(api => {
@@ -261,13 +251,8 @@ class APIManager {
         switch (apiName) {
             case 'googleMaps':
                 return {}; // Key goes in URL params
-            case 'openai':
-                return { 'Authorization': `Bearer ${api.key}` };
-            case 'claude':
-                return { 
-                    'x-api-key': api.key,
-                    'anthropic-version': '2023-06-01'
-                };
+            case 'localAI':
+                return {}; // No headers needed for local AI
             case 'mapbox':
                 return {}; // Key goes in URL params
             case 'openweather':
@@ -286,9 +271,8 @@ class APIManager {
         switch (apiName) {
             case 'googleMaps':
                 return this.getGoogleMapsFallback(endpoint, options);
-            case 'openai':
-            case 'claude':
-                return this.getAIFallback(endpoint, options);
+            case 'localAI':
+                return this.getLocalAIResponse(endpoint, options);
             case 'mapbox':
                 return this.getMapboxFallback(endpoint, options);
             case 'openweather':
@@ -338,38 +322,213 @@ class APIManager {
     }
     
     /**
-     * AI fallback for PDF analysis
+     * Local AI response using TensorFlow.js and rule-based optimization
      */
-    getAIFallback(endpoint, options) {
-        if (endpoint.includes('completions') || endpoint.includes('messages')) {
-            const pdfText = options.body?.messages?.[0]?.content || options.body?.prompt || '';
-            
-            // Basic pattern matching for controller settings
-            const settings = {};
-            const matches = pdfText.matchAll(/F\.(\d+)\s*=\s*(\d+)/g);
-            
-            for (const match of matches) {
-                settings[`F.${match[1]}`] = parseInt(match[2]);
+    async getLocalAIResponse(endpoint, options) {
+        try {
+            // Route to appropriate local AI system
+            if (endpoint.includes('/optimize') || endpoint.includes('/completions')) {
+                return await this.handleOptimizationRequest(options);
             }
             
-            return {
-                success: true,
-                fallback: true,
-                data: {
-                    choices: [{
-                        message: {
-                            content: JSON.stringify({
-                                extracted_settings: settings,
-                                confidence: 0.7,
-                                method: 'pattern_matching'
-                            })
-                        }
-                    }]
-                }
-            };
+            if (endpoint.includes('/analyze') || endpoint.includes('/messages')) {
+                return await this.handleAnalysisRequest(options);
+            }
+            
+            if (endpoint.includes('/classify')) {
+                return await this.handleClassificationRequest(options);
+            }
+            
+            // Default: try optimization cache first
+            const cacheResult = this.tryOptimizationCache(options);
+            if (cacheResult) {
+                return {
+                    success: true,
+                    data: cacheResult,
+                    source: 'optimization_cache',
+                    local: true
+                };
+            }
+            
+            return { success: false, error: 'Unknown local AI endpoint', local: true };
+            
+        } catch (error) {
+            console.error('Local AI request failed:', error);
+            return { success: false, error: error.message, local: true };
+        }
+    }
+    
+    /**
+     * Handle optimization requests using local systems
+     */
+    async handleOptimizationRequest(options) {
+        const { vehicleData, priorities, currentSettings, conditions } = options.body || {};
+        
+        // Try cache first
+        if (window.optimizationCache) {
+            const cached = window.optimizationCache.getOptimization(vehicleData, priorities, conditions);
+            if (cached) {
+                return {
+                    success: true,
+                    data: cached,
+                    source: 'optimization_cache',
+                    local: true
+                };
+            }
         }
         
-        return { success: false, fallback: true, data: null };
+        // Try TensorFlow.js ML engine
+        if (window.tensorflowMLEngine && window.tensorflowMLEngine.isInitialized) {
+            const mlResult = await window.tensorflowMLEngine.optimizeController(vehicleData, priorities, currentSettings);
+            if (mlResult.success) {
+                // Cache the result
+                if (window.optimizationCache) {
+                    window.optimizationCache.addToCache(vehicleData, priorities, conditions, mlResult);
+                }
+                return {
+                    success: true,
+                    data: mlResult,
+                    source: 'tensorflow_ml',
+                    local: true
+                };
+            }
+        }
+        
+        // Fallback to rule-based optimizer
+        if (window.ruleBasedOptimizer) {
+            const ruleResult = window.ruleBasedOptimizer.optimize(vehicleData, priorities, currentSettings, conditions);
+            if (ruleResult.success) {
+                // Cache the result
+                if (window.optimizationCache) {
+                    window.optimizationCache.addToCache(vehicleData, priorities, conditions, ruleResult);
+                }
+                return {
+                    success: true,
+                    data: ruleResult,
+                    source: 'rule_based_optimizer',
+                    local: true
+                };
+            }
+        }
+        
+        return { success: false, error: 'No local optimization systems available', local: true };
+    }
+    
+    /**
+     * Handle analysis requests using local pattern matching
+     */
+    async handleAnalysisRequest(options) {
+        const content = options.body?.messages?.[0]?.content || options.body?.prompt || '';
+        
+        // Extract controller settings using pattern matching
+        const settings = {};
+        const settingsMatches = content.matchAll(/F\.(\d+)\s*[=:]\s*(\d+)/gi);
+        for (const match of settingsMatches) {
+            settings[`F.${match[1]}`] = parseInt(match[2]);
+        }
+        
+        // Extract vehicle information
+        const vehicleInfo = {};
+        const modelMatch = content.match(/(?:model|vehicle)[\s:]+([e][2-6]|e[SLM]|elXD)/i);
+        if (modelMatch) vehicleInfo.model = modelMatch[1];
+        
+        const yearMatch = content.match(/(?:year|model year)[\s:]+(\d{4})/i);
+        if (yearMatch) vehicleInfo.year = parseInt(yearMatch[1]);
+        
+        // Use rule-based analysis if available
+        let analysis = 'Settings extracted using local pattern matching.';
+        if (window.ruleBasedOptimizer && Object.keys(settings).length > 0) {
+            try {
+                const analysisResult = window.ruleBasedOptimizer.optimize(
+                    vehicleInfo,
+                    { speed: 5, range: 5, acceleration: 5, efficiency: 5 },
+                    Object.values(settings)
+                );
+                if (analysisResult.recommendations) {
+                    analysis = analysisResult.recommendations.join('\n');
+                }
+            } catch (error) {
+                console.warn('Rule-based analysis failed:', error);
+            }
+        }
+        
+        return {
+            success: true,
+            data: {
+                content: [{
+                    text: JSON.stringify({
+                        controller_settings: settings,
+                        vehicle_info: vehicleInfo,
+                        analysis: analysis,
+                        raw_text: content,
+                        metadata: {
+                            extraction_method: 'local_pattern_matching',
+                            timestamp: new Date().toISOString()
+                        }
+                    })
+                }]
+            },
+            source: 'local_pattern_matching',
+            local: true
+        };
+    }
+    
+    /**
+     * Handle classification requests using TensorFlow.js
+     */
+    async handleClassificationRequest(options) {
+        const { vehicleData } = options.body || {};
+        
+        if (window.tensorflowMLEngine && window.tensorflowMLEngine.isInitialized) {
+            const classification = await window.tensorflowMLEngine.classifyVehicle(vehicleData);
+            if (classification.success) {
+                return {
+                    success: true,
+                    data: classification,
+                    source: 'tensorflow_classification',
+                    local: true
+                };
+            }
+        }
+        
+        // Fallback classification
+        const model = vehicleData?.model?.toLowerCase() || 'unknown';
+        let vehicleType = 'custom';
+        let confidence = 0.5;
+        
+        if (model.includes('e2')) {
+            vehicleType = 'e2';
+            confidence = 0.8;
+        } else if (model.includes('e4')) {
+            vehicleType = 'e4';
+            confidence = 0.8;
+        } else if (model.includes('el') || model.includes('xd')) {
+            vehicleType = 'el-xd';
+            confidence = 0.8;
+        }
+        
+        return {
+            success: true,
+            data: {
+                vehicleType: vehicleType,
+                confidence: confidence,
+                method: 'local_pattern_matching'
+            },
+            source: 'local_pattern_matching',
+            local: true
+        };
+    }
+    
+    /**
+     * Try optimization cache for quick results
+     */
+    tryOptimizationCache(options) {
+        if (!window.optimizationCache) return null;
+        
+        const { vehicleData, priorities, conditions } = options.body || {};
+        if (!vehicleData || !priorities) return null;
+        
+        return window.optimizationCache.getOptimization(vehicleData, priorities, conditions);
     }
     
     /**
@@ -428,21 +587,23 @@ class APIManager {
     }
     
     /**
-     * Test OpenAI API
+     * Test Local AI systems
      */
-    async testOpenAIAPI() {
-        const response = await fetch(`${this.apis.openai.baseUrl}/models`, {
-            headers: { 'Authorization': `Bearer ${this.apis.openai.key}` }
-        });
-        return response.ok;
-    }
-    
-    /**
-     * Test Claude API
-     */
-    async testClaudeAPI() {
-        // Claude doesn't have a simple test endpoint, so we'll check if key format is valid
-        return this.apis.claude.key && this.apis.claude.key.startsWith('sk-ant-');
+    async testLocalAI() {
+        try {
+            // Check if local AI systems are available
+            const systems = {
+                tensorflowML: !!window.tensorflowMLEngine,
+                ruleBasedOptimizer: !!window.ruleBasedOptimizer,
+                optimizationCache: !!window.optimizationCache
+            };
+            
+            // At least one system should be available
+            return Object.values(systems).some(available => available);
+        } catch (error) {
+            console.error('Local AI test failed:', error);
+            return false;
+        }
     }
     
     /**

@@ -1,15 +1,25 @@
 /**
- * API Integration Layer with Fallback Support
- * Seamlessly switches between API calls and local calculations
+ * API Integration Layer with Free APIs and Local Storage
+ * Uses free APIs with local fallback calculations and IndexedDB storage
  */
 class APIIntegration {
     constructor() {
-        this.apiManager = window.apiManager || null;
+        // Serverless API client (primary method)
+        this.serverlessAPI = window.serverlessAPIClient || null;
+        
+        // Free API services (fallback when serverless unavailable)
+        this.geocoding = window.freeGeocodingService || null;
+        this.weather = window.freeWeatherService || null;
+        this.elevation = window.freeElevationService || null;
+        this.onDeviceAI = window.onDeviceAI || null;
+        this.localStorage = window.localStorageService || null;
+        
+        // Local fallback services
         this.fallbackCalc = window.fallbackCalculations || new FallbackCalculations();
         this.fallbackSystem = window.fallbackSystem || null;
-        this.mcpConfig = window.mcpConfig || null;
         
         this.useLocalOnly = false; // Force local calculations
+        this.useServerless = true; // Prefer serverless endpoints
         this.apiAttempts = new Map(); // Track API failures
         this.maxRetries = 3;
         
@@ -19,16 +29,87 @@ class APIIntegration {
     /**
      * Initialize API integration
      */
-    initialize() {
+    async initialize() {
         // Check for required dependencies
         if (!this.fallbackCalc) {
             console.error('Fallback calculations not available');
         }
         
+        // Check free API services availability
+        await this.checkFreeServicesAvailability();
+        
+        // Initialize local storage
+        if (this.localStorage && !this.localStorage.isInitialized) {
+            await this.localStorage.init();
+        }
+        
         // Set up event listeners
         this.setupEventListeners();
         
-        console.log('API Integration initialized with fallback support');
+        console.log('API Integration initialized with free APIs and local storage');
+    }
+    
+    /**
+     * Check if services are available (serverless first, then free services)
+     */
+    async checkFreeServicesAvailability() {
+        const services = {};
+        
+        // Test serverless API first
+        if (this.serverlessAPI && this.useServerless) {
+            try {
+                const healthCheck = await this.serverlessAPI.healthCheck();
+                services.serverless = healthCheck.overall.healthy;
+                
+                if (services.serverless) {
+                    console.log('Serverless API available:', healthCheck.overall.baseUrl);
+                    this.serviceAvailability = { ...services, serverless: true };
+                    return;
+                }
+            } catch (error) {
+                services.serverless = false;
+                console.warn('Serverless API test failed:', error.message);
+            }
+        }
+        
+        // Fallback to testing free services directly
+        console.log('Testing direct free services...');
+        
+        // Test geocoding service
+        if (this.geocoding) {
+            try {
+                const test = await this.geocoding.testConnection();
+                services.geocoding = test.available;
+            } catch (error) {
+                services.geocoding = false;
+                console.warn('Geocoding service test failed:', error.message);
+            }
+        }
+        
+        // Test weather service
+        if (this.weather) {
+            try {
+                const test = await this.weather.testConnection();
+                services.weather = test.available;
+            } catch (error) {
+                services.weather = false;
+                console.warn('Weather service test failed:', error.message);
+            }
+        }
+        
+        // Test elevation service
+        if (this.elevation) {
+            try {
+                const test = await this.elevation.testConnection();
+                services.elevation = test.available;
+            } catch (error) {
+                services.elevation = false;
+                console.warn('Elevation service test failed:', error.message);
+            }
+        }
+        
+        this.serviceAvailability = services;
+        console.log('Service availability:', services);
     }
     
     /**
@@ -46,7 +127,7 @@ class APIIntegration {
     }
     
     /**
-     * Get weather data with fallback
+     * Get weather data with serverless API, free API, and fallback
      */
     async getWeather(location, date = new Date()) {
         // Check if forced to local mode
@@ -54,20 +135,46 @@ class APIIntegration {
             return this.getLocalWeather(location, date);
         }
         
-        // Try API first
-        try {
-            if (this.apiManager?.apis.openweather?.isConfigured) {
-                const response = await this.apiManager.makeAPIRequest('openweather', '/weather', {
-                    method: 'GET',
-                    params: { q: location }
-                });
+        // Try serverless API first
+        if (this.serverlessAPI && this.useServerless && this.serviceAvailability?.serverless) {
+            try {
+                let response;
+                
+                // Use appropriate endpoint based on date
+                if (this.isToday(date)) {
+                    response = await this.serverlessAPI.getCurrentWeather(location);
+                } else {
+                    response = await this.serverlessAPI.getWeatherForDate(location, date);
+                }
                 
                 if (response.success) {
-                    return this.transformWeatherResponse(response.data);
+                    return this.transformServerlessWeatherResponse(response.data);
                 }
+            } catch (error) {
+                console.warn('Serverless weather API failed, trying direct API:', error);
+                this.serviceAvailability.serverless = false;
             }
-        } catch (error) {
-            console.warn('Weather API failed, using fallback:', error);
+        }
+        
+        // Try free weather API as fallback
+        if (this.weather && this.serviceAvailability?.weather) {
+            try {
+                let response;
+                
+                // Use appropriate endpoint based on date
+                if (this.isToday(date)) {
+                    response = await this.weather.getCurrentWeather(location);
+                } else {
+                    response = await this.weather.getWeatherForDate(location, date);
+                }
+                
+                if (response.success) {
+                    return this.transformFreeWeatherResponse(response.data);
+                }
+            } catch (error) {
+                console.warn('Free weather API failed, using fallback:', error);
+                this.serviceAvailability.weather = false;
+            }
         }
         
         // Use fallback calculation
@@ -85,6 +192,54 @@ class APIIntegration {
             displayWarning: 'Using estimated weather data',
             isLocal: true
         };
+    }
+    
+    /**
+     * Transform serverless weather API response to standard format
+     */
+    transformServerlessWeatherResponse(data) {
+        // Serverless API returns standardized format
+        return {
+            temperature: data.current?.temperature || data.weather?.temperature || 72,
+            humidity: data.current?.humidity || data.weather?.humidity || 55,
+            windSpeed: data.current?.windSpeed || data.weather?.windSpeed || 8,
+            conditions: data.current?.conditions || data.weather?.conditions || 'Clear',
+            precipitation: data.current?.precipitation || data.weather?.precipitation || 0,
+            source: data.source || 'serverless',
+            location: data.location || { name: 'Unknown' },
+            timestamp: data.timestamp || new Date().toISOString(),
+            isLocal: false,
+            confidence: 0.95,
+            serverless: true
+        };
+    }
+    
+    /**
+     * Transform free weather API response to standard format
+     */
+    transformFreeWeatherResponse(data) {
+        // Free weather service already returns standardized format
+        return {
+            temperature: data.current?.temperature || data.weather?.temperature || 72,
+            humidity: data.current?.humidity || data.weather?.humidity || 55,
+            windSpeed: data.current?.windSpeed || data.weather?.windSpeed || 8,
+            conditions: data.current?.conditions || data.weather?.conditions || 'Clear',
+            precipitation: data.current?.precipitation || data.weather?.precipitation || 0,
+            source: data.source || 'open-meteo',
+            location: data.location || { name: 'Unknown' },
+            timestamp: data.timestamp || new Date().toISOString(),
+            isLocal: false,
+            confidence: 0.9
+        };
+    }
+    
+    /**
+     * Check if date is today
+     */
+    isToday(date) {
+        const today = new Date();
+        const checkDate = new Date(date);
+        return checkDate.toDateString() === today.toDateString();
     }
     
     /**

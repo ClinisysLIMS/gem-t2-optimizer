@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Integration Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">MCP Integration Test Suite</h1>
+        
+        <!-- Test Results -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Test Results</h2>
+            <div id="test-results" class="space-y-2">
+                <!-- Test results will appear here -->
+            </div>
+        </div>
+        
+        <!-- Configuration Test -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Configuration Test</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="testConfigUI()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    Show Config UI
+                </button>
+                <button onclick="testEnableDisable()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Test Enable/Disable
+                </button>
+            </div>
+        </div>
+        
+        <!-- Feature Tests -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Feature Tests</h2>
+            <div class="grid grid-cols-3 gap-4">
+                <button onclick="testOptimization()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Test Optimization
+                </button>
+                <button onclick="testWeatherFallback()" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
+                    Test Weather Fallback
+                </button>
+                <button onclick="testFullWorkflow()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                    Test Full Workflow
+                </button>
+            </div>
+        </div>
+        
+        <!-- Status Display -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">System Status</h2>
+            <div id="system-status" class="bg-gray-50 p-4 rounded">
+                Loading...
+            </div>
+        </div>
+    </div>
+
+    <!-- Load all required scripts -->
+    <script src="js/mcp-config.js"></script>
+    <script src="js/mcp-config-ui.js"></script>
+    <script src="js/fallback-calculations.js"></script>
+    <script src="js/api-integration.js"></script>
+    <script src="js/optimizer.js"></script>
+    
+    <script>
+        let testResults = [];
+        
+        // Initialize when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                updateSystemStatus();
+                runInitialTests();
+            }, 500);
+        });
+        
+        function addTestResult(name, status, details) {
+            testResults.push({ name, status, details, timestamp: new Date() });
+            updateTestDisplay();
+        }
+        
+        function updateTestDisplay() {
+            const container = document.getElementById('test-results');
+            container.innerHTML = testResults.map(result => `
+                <div class="flex items-center justify-between p-3 rounded border ${
+                    result.status === 'pass' ? 'bg-green-50 border-green-200' :
+                    result.status === 'fail' ? 'bg-red-50 border-red-200' :
+                    'bg-yellow-50 border-yellow-200'
+                }">
+                    <div>
+                        <span class="font-medium">${result.name}</span>
+                        <div class="text-xs text-gray-600">${result.details}</div>
+                    </div>
+                    <span class="${
+                        result.status === 'pass' ? 'text-green-600' :
+                        result.status === 'fail' ? 'text-red-600' :
+                        'text-yellow-600'
+                    }">
+                        ${result.status === 'pass' ? '✓' : result.status === 'fail' ? '✗' : '?'}
+                    </span>
+                </div>
+            `).join('');
+        }
+        
+        function updateSystemStatus() {
+            const statusDiv = document.getElementById('system-status');
+            
+            try {
+                const mcpStatus = window.mcpConfig?.getStatus() || { error: 'MCP not loaded' };
+                const hasUI = !!window.mcpConfigUI;
+                const hasFallback = !!window.FallbackCalculations;
+                const hasAPI = !!window.apiIntegration;
+                
+                statusDiv.innerHTML = `
+                    <div class="space-y-2 text-sm">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <strong>MCP Config:</strong> ${mcpStatus.error || 'Loaded'}
+                            </div>
+                            <div>
+                                <strong>MCP UI:</strong> ${hasUI ? 'Loaded' : 'Missing'}
+                            </div>
+                            <div>
+                                <strong>Fallback System:</strong> ${hasFallback ? 'Loaded' : 'Missing'}
+                            </div>
+                            <div>
+                                <strong>API Integration:</strong> ${hasAPI ? 'Loaded' : 'Missing'}
+                            </div>
+                        </div>
+                        ${!mcpStatus.error ? `
+                            <div class="border-t pt-2 mt-2">
+                                <div><strong>Status:</strong> ${mcpStatus.connectionStatus}</div>
+                                <div><strong>Mode:</strong> ${mcpStatus.isLocal ? 'Local' : 'Remote'}</div>
+                                <div><strong>Enabled:</strong> ${mcpStatus.config.enabled ? 'Yes' : 'No'}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="text-red-600">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function runInitialTests() {
+            // Test component loading
+            if (window.mcpConfig) {
+                addTestResult('MCP Config Load', 'pass', 'Successfully loaded');
+            } else {
+                addTestResult('MCP Config Load', 'fail', 'Failed to load');
+            }
+            
+            if (window.mcpConfigUI) {
+                addTestResult('MCP UI Load', 'pass', 'Successfully loaded');
+            } else {
+                addTestResult('MCP UI Load', 'fail', 'Failed to load');
+            }
+            
+            // Test basic functionality
+            try {
+                const status = window.mcpConfig.getStatus();
+                addTestResult('Status Check', 'pass', `Status: ${status.connectionStatus}`);
+            } catch (error) {
+                addTestResult('Status Check', 'fail', error.message);
+            }
+        }
+        
+        function testConfigUI() {
+            try {
+                if (window.mcpConfigUI) {
+                    window.mcpConfigUI.show();
+                    addTestResult('Config UI Display', 'pass', 'Modal opened successfully');
+                } else {
+                    addTestResult('Config UI Display', 'fail', 'UI not available');
+                }
+            } catch (error) {
+                addTestResult('Config UI Display', 'fail', error.message);
+            }
+        }
+        
+        async function testEnableDisable() {
+            try {
+                // Test disabling
+                window.mcpConfig.updateConfig({ enabled: false });
+                
+                const result1 = await window.mcpConfig.callTool('get_weather', {
+                    location: 'Test Location',
+                    date: new Date().toISOString()
+                });
+                
+                if (result1.source === 'local' || result1.source.includes('local')) {
+                    addTestResult('Disable Test', 'pass', 'Correctly used local when disabled');
+                } else {
+                    addTestResult('Disable Test', 'warning', `Used ${result1.source} when disabled`);
+                }
+                
+                // Re-enable
+                window.mcpConfig.updateConfig({ enabled: true });
+                updateSystemStatus();
+                
+            } catch (error) {
+                addTestResult('Enable/Disable Test', 'fail', error.message);
+            }
+        }
+        
+        async function testOptimization() {
+            try {
+                const testData = {
+                    vehicleData: {
+                        vehicle: { model: 'e4', motorCondition: 'good' },
+                        battery: { type: 'lead', voltage: 72, capacity: 150 },
+                        wheel: { tireDiameter: 22, gearRatio: 8.91 }
+                    },
+                    priorities: { speed: 7, acceleration: 6, hillClimbing: 8, range: 5, regen: 6 },
+                    baseline: { 1: 22, 3: 20, 4: 255, 6: 60 }
+                };
+                
+                const result = await window.mcpConfig.callTool('optimize_controller', testData);
+                
+                if (result.success) {
+                    addTestResult('Optimization Test', 'pass', `Via ${result.source}, ${Object.keys(result.optimizedSettings).length} settings`);
+                } else {
+                    addTestResult('Optimization Test', 'fail', 'Optimization failed');
+                }
+            } catch (error) {
+                addTestResult('Optimization Test', 'fail', error.message);
+            }
+        }
+        
+        async function testWeatherFallback() {
+            try {
+                const result = await window.mcpConfig.callTool('get_weather', {
+                    location: 'San Francisco, CA',
+                    date: new Date().toISOString()
+                });
+                
+                if (result.success) {
+                    const isEnhanced = result.source.includes('enhanced');
+                    addTestResult('Weather Fallback', 'pass', 
+                        `Via ${result.source} - ${isEnhanced ? 'Enhanced' : 'Basic'} - ${result.weather.temperature}°F`);
+                } else {
+                    addTestResult('Weather Fallback', 'fail', 'Weather fetch failed');
+                }
+            } catch (error) {
+                addTestResult('Weather Fallback', 'fail', error.message);
+            }
+        }
+        
+        async function testFullWorkflow() {
+            try {
+                // Test the complete workflow that would be used in the main app
+                const vehicleData = {
+                    model: 'e4',
+                    year: '2023',
+                    currentSpeed: 25,
+                    batteryVoltage: 72
+                };
+                
+                const tripData = {
+                    destination: 'Monterey, CA',
+                    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    optimizationMode: 'balanced'
+                };
+                
+                // Test weather
+                const weather = await window.mcpConfig.callTool('get_weather', {
+                    location: tripData.destination,
+                    date: tripData.date
+                });
+                
+                // Test optimization
+                const optimization = await window.mcpConfig.callTool('optimize_controller', {
+                    vehicleData: vehicleData,
+                    priorities: { speed: 7, acceleration: 7, hillClimbing: 7, range: 7, regen: 7 },
+                    baseline: { 1: 22, 3: 20, 4: 255, 6: 60 }
+                });
+                
+                const success = weather.success && optimization.success;
+                const sources = `Weather: ${weather.source}, Opt: ${optimization.source}`;
+                
+                addTestResult('Full Workflow', success ? 'pass' : 'fail', sources);
+                
+            } catch (error) {
+                addTestResult('Full Workflow', 'fail', error.message);
+            }
+        }
+        
+        // Auto-refresh status every 10 seconds
+        setInterval(updateSystemStatus, 10000);
+    </script>
+</body>
+</html>

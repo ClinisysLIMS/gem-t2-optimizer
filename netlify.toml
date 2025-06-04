@@ -1,0 +1,128 @@
+# Netlify Configuration for GEM T2 Optimizer
+# Deploy to Netlify for free serverless hosting
+
+[build]
+  # Build command - not needed for static site with serverless functions
+  command = "echo 'No build command needed'"
+  
+  # Directory to publish (root directory contains static files)
+  publish = "."
+  
+  # Functions directory (serverless functions)
+  functions = "api"
+
+[build.environment]
+  # Node.js version
+  NODE_VERSION = "18"
+
+# Environment variables (set these in Netlify dashboard)
+# GOOGLE_MAPS_API_KEY = "your_google_maps_api_key"
+# MAPBOX_API_KEY = "your_mapbox_api_key"
+# OPENWEATHER_API_KEY = "your_openweather_api_key"
+# WEATHERAPI_KEY = "your_weatherapi_key"
+# HERE_API_KEY = "your_here_api_key"
+# OPENROUTESERVICE_API_KEY = "your_openrouteservice_api_key"
+
+# Redirects and rewrites
+[[redirects]]
+  # Redirect root to main app
+  from = "/"
+  to = "/index-new.html"
+  status = 200
+
+[[redirects]]
+  # API proxy for weather
+  from = "/api/weather/*"
+  to = "/.netlify/functions/weather"
+  status = 200
+
+[[redirects]]
+  # API proxy for geocoding
+  from = "/api/geocoding/*"
+  to = "/.netlify/functions/geocoding"
+  status = 200
+
+[[redirects]]
+  # API proxy for elevation
+  from = "/api/elevation/*"
+  to = "/.netlify/functions/elevation"
+  status = 200
+
+[[redirects]]
+  # API proxy for maps/routing
+  from = "/api/maps/*"
+  to = "/.netlify/functions/maps"
+  status = 200
+
+# Headers for security and CORS
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# Cache static assets
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+# Error pages
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+# Function timeout (max 10 seconds on free tier)
+[functions]
+  # Default timeout for all functions
+  timeout = 10
+
+# Edge functions (if needed in the future)
+[edge_functions]
+  # Not used currently but available for advanced routing
+
+# Form handling (if contact forms are added)
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = false
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+# Dev settings for local development
+[dev]
+  command = "echo 'Starting local development server'"
+  framework = "#static"
+  targetPort = 8888
+  port = 8888
+  autoLaunch = true

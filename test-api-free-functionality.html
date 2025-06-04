@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API-Free Functionality Test - GEM Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">🧪 API-Free Functionality Test Suite</h1>
+            <p class="text-lg text-gray-600">Comprehensive testing of all features without API dependencies</p>
+        </div>
+        
+        <!-- Test Status Overview -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Test Status Overview</h2>
+            <div id="test-overview" class="grid md:grid-cols-4 gap-4">
+                <div class="text-center p-4 bg-gray-50 rounded-lg">
+                    <div class="text-2xl font-bold text-gray-500" id="total-tests">0</div>
+                    <div class="text-sm text-gray-600">Total Tests</div>
+                </div>
+                <div class="text-center p-4 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600" id="passed-tests">0</div>
+                    <div class="text-sm text-green-600">Passed</div>
+                </div>
+                <div class="text-center p-4 bg-red-50 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600" id="failed-tests">0</div>
+                    <div class="text-sm text-red-600">Failed</div>
+                </div>
+                <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600" id="warnings">0</div>
+                    <div class="text-sm text-yellow-600">Warnings</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Controls -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Test Controls</h2>
+            <div class="flex gap-4 flex-wrap">
+                <button onclick="runAllTests()" 
+                        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                    🚀 Run All Tests
+                </button>
+                <button onclick="runCoreTests()" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    Core Functionality
+                </button>
+                <button onclick="runUITests()" 
+                        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    UI Components
+                </button>
+                <button onclick="runFallbackTests()" 
+                        class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                    Fallback Systems
+                </button>
+                <button onclick="clearResults()" 
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    Clear Results
+                </button>
+            </div>
+        </div>
+        
+        <!-- Test Results -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Test Results</h2>
+            <div id="test-results" class="space-y-4">
+                <p class="text-gray-500">Click "Run All Tests" to begin testing...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load all necessary JavaScript files -->
+    <script>
+        // Set PDF.js worker
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+    <script src="js/secure-storage.js"></script>
+    <script src="js/api-manager.js"></script>
+    <script src="js/fallback-calculations.js"></script>
+    <script src="js/fallback-system.js"></script>
+    <script src="js/api-integration.js"></script>
+    <script src="js/mcp-config.js"></script>
+    <script src="js/weather-service.js"></script>
+    <script src="js/terrain-service.js"></script>
+    <script src="js/optimizer.js"></script>
+    <script src="js/trip-optimizer.js"></script>
+    <script src="js/pdf-parser.js"></script>
+    <script src="js/vehicle-classifier.js"></script>
+    <script src="js/accessories-manager.js"></script>
+    <script src="js/driving-modes.js"></script>
+    <script src="js/enhanced-pdf-analyzer.js"></script>
+    <script src="js/ai-assistant.js"></script>
+    <script src="js/ai-ui-integration.js"></script>
+    <script src="js/unified-flow.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/presets.js"></script>
+    <script src="js/ui.js"></script>
+    
+    <script>
+        // Test framework
+        class TestFramework {
+            constructor() {
+                this.tests = [];
+                this.results = [];
+                this.stats = {
+                    total: 0,
+                    passed: 0,
+                    failed: 0,
+                    warnings: 0
+                };
+                this.forceLocalMode = true; // Always test without APIs
+            }
+            
+            addTest(name, testFunction, category = 'general') {
+                this.tests.push({ name, testFunction, category });
+            }
+            
+            async runTest(test) {
+                const startTime = Date.now();
+                let result = {
+                    name: test.name,
+                    category: test.category,
+                    status: 'unknown',
+                    message: '',
+                    duration: 0,
+                    details: null
+                };
+                
+                try {
+                    // Force local mode for all APIs
+                    if (window.apiIntegration) {
+                        window.apiIntegration.forceLocalMode(true);
+                    }
+                    
+                    const testResult = await test.testFunction();
+                    result.status = testResult.status || 'passed';
+                    result.message = testResult.message || 'Test completed successfully';
+                    result.details = testResult.details || null;
+                    
+                    if (result.status === 'warning') {
+                        this.stats.warnings++;
+                    } else if (result.status === 'passed') {
+                        this.stats.passed++;
+                    } else {
+                        this.stats.failed++;
+                    }
+                    
+                } catch (error) {
+                    result.status = 'failed';
+                    result.message = error.message || 'Test failed with unknown error';
+                    result.details = { error: error.toString() };
+                    this.stats.failed++;
+                }
+                
+                result.duration = Date.now() - startTime;
+                this.stats.total++;
+                this.results.push(result);
+                this.updateDisplay();
+                
+                return result;
+            }
+            
+            async runAllTests() {
+                this.clearResults();
+                
+                for (const test of this.tests) {
+                    await this.runTest(test);
+                    // Small delay between tests for UI updates
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                this.displaySummary();
+            }
+            
+            async runTestsByCategory(category) {
+                this.clearResults();
+                
+                const categoryTests = this.tests.filter(test => test.category === category);
+                for (const test of categoryTests) {
+                    await this.runTest(test);
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                this.displaySummary();
+            }
+            
+            clearResults() {
+                this.results = [];
+                this.stats = { total: 0, passed: 0, failed: 0, warnings: 0 };
+                this.updateDisplay();
+                document.getElementById('test-results').innerHTML = '<p class="text-gray-500">Running tests...</p>';
+            }
+            
+            updateDisplay() {
+                document.getElementById('total-tests').textContent = this.stats.total;
+                document.getElementById('passed-tests').textContent = this.stats.passed;
+                document.getElementById('failed-tests').textContent = this.stats.failed;
+                document.getElementById('warnings').textContent = this.stats.warnings;
+                
+                // Update results display
+                const resultsDiv = document.getElementById('test-results');
+                let html = '';
+                
+                for (const result of this.results) {
+                    const statusColor = {
+                        'passed': 'text-green-600 bg-green-50 border-green-200',
+                        'failed': 'text-red-600 bg-red-50 border-red-200',
+                        'warning': 'text-yellow-600 bg-yellow-50 border-yellow-200'
+                    }[result.status] || 'text-gray-600 bg-gray-50 border-gray-200';
+                    
+                    const statusIcon = {
+                        'passed': '✅',
+                        'failed': '❌',
+                        'warning': '⚠️'
+                    }[result.status] || '❓';
+                    
+                    html += `
+                        <div class="border rounded-lg p-4 ${statusColor}">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold flex items-center">
+                                        <span class="mr-2">${statusIcon}</span>
+                                        ${result.name}
+                                        <span class="ml-2 text-xs bg-white px-2 py-1 rounded">${result.category}</span>
+                                    </h4>
+                                    <p class="text-sm mt-1">${result.message}</p>
+                                    ${result.details ? `<details class="mt-2"><summary class="text-xs cursor-pointer">Details</summary><pre class="text-xs mt-1 overflow-x-auto">${JSON.stringify(result.details, null, 2)}</pre></details>` : ''}
+                                </div>
+                                <div class="text-xs text-right">
+                                    ${result.duration}ms
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                resultsDiv.innerHTML = html || '<p class="text-gray-500">No results yet...</p>';
+            }
+            
+            displaySummary() {
+                const resultsDiv = document.getElementById('test-results');
+                const passRate = this.stats.total > 0 ? Math.round((this.stats.passed / this.stats.total) * 100) : 0;
+                
+                const summaryHtml = `
+                    <div class="border-t pt-4 mt-4">
+                        <h3 class="text-lg font-semibold mb-2">Test Summary</h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <p><strong>Pass Rate:</strong> ${passRate}% (${this.stats.passed}/${this.stats.total})</p>
+                                <p><strong>Failed Tests:</strong> ${this.stats.failed}</p>
+                                <p><strong>Warnings:</strong> ${this.stats.warnings}</p>
+                            </div>
+                            <div>
+                                <p class="${passRate >= 90 ? 'text-green-600' : passRate >= 70 ? 'text-yellow-600' : 'text-red-600'}">
+                                    <strong>Overall Status:</strong> 
+                                    ${passRate >= 90 ? '🟢 Excellent' : passRate >= 70 ? '🟡 Good' : '🔴 Needs Attention'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                resultsDiv.innerHTML = resultsDiv.innerHTML + summaryHtml;
+            }
+        }
+        
+        // Create test framework instance
+        const testFramework = new TestFramework();
+        
+        // Add core functionality tests
+        testFramework.addTest('Core JavaScript Libraries Load', async () => {
+            const requiredLibs = [
+                'fallbackSystem', 'fallbackCalculations', 'apiIntegration',
+                'GEMControllerOptimizer', 'ValidationSystem', 'PresetsManager'
+            ];
+            
+            const missing = requiredLibs.filter(lib => !window[lib]);
+            
+            if (missing.length > 0) {
+                return {
+                    status: 'failed',
+                    message: `Missing required libraries: ${missing.join(', ')}`,
+                    details: { missing }
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'All core libraries loaded successfully'
+            };
+        }, 'core');
+        
+        testFramework.addTest('Vehicle Optimization Without APIs', async () => {
+            if (!window.GEMControllerOptimizer) {
+                throw new Error('GEMControllerOptimizer not available');
+            }
+            
+            const optimizer = new GEMControllerOptimizer();
+            const vehicleData = {
+                model: 'e4',
+                year: '2016+',
+                motorType: 'dc-stock',
+                batteryVoltage: '48',
+                batteryType: 'lead-acid',
+                currentSpeed: 25,
+                tireDiameter: 22.5,
+                gearRatio: '10.35:1'
+            };
+            
+            const result = await optimizer.optimizeSettings(vehicleData);
+            
+            if (!result || !result.settings) {
+                return {
+                    status: 'failed',
+                    message: 'Optimization failed to produce settings'
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'Vehicle optimization completed successfully',
+                details: { settings: Object.keys(result.settings).length }
+            };
+        }, 'core');
+        
+        testFramework.addTest('PDF Parser Without AI APIs', async () => {
+            if (!window.PDFParser) {
+                return {
+                    status: 'warning',
+                    message: 'PDF Parser not available - feature will be limited'
+                };
+            }
+            
+            // Test pattern-based extraction
+            const sampleText = `
+                GEM T2 Controller Settings
+                F.1 = 75
+                F.2 = 80
+                F.3 = 100
+                Motor Type: DC 3.5HP
+                Battery: 48V Lead Acid
+            `;
+            
+            const parser = new PDFParser();
+            const result = parser.extractSettingsFromText(sampleText);
+            
+            if (!result || Object.keys(result.settings || {}).length === 0) {
+                return {
+                    status: 'failed',
+                    message: 'PDF pattern matching failed'
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'PDF pattern matching works correctly',
+                details: result
+            };
+        }, 'core');
+        
+        testFramework.addTest('Weather Service Fallback', async () => {
+            if (!window.WeatherService) {
+                throw new Error('WeatherService not available');
+            }
+            
+            const weatherService = new WeatherService();
+            
+            // Force fallback mode
+            const result = await weatherService.getWeather('San Diego, CA', new Date());
+            
+            if (!result || typeof result.temperature === 'undefined') {
+                return {
+                    status: 'failed',
+                    message: 'Weather fallback failed to provide data'
+                };
+            }
+            
+            if (result.source !== 'fallback') {
+                return {
+                    status: 'warning',
+                    message: 'Weather service may be using API instead of fallback',
+                    details: result
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'Weather fallback working correctly',
+                details: result
+            };
+        }, 'fallback');
+        
+        testFramework.addTest('Terrain Service Fallback', async () => {
+            if (!window.TerrainService) {
+                throw new Error('TerrainService not available');
+            }
+            
+            const terrainService = new TerrainService();
+            const result = await terrainService.analyzeTerrain('Mountain View, CA');
+            
+            if (!result || !result.terrain) {
+                return {
+                    status: 'failed',
+                    message: 'Terrain fallback failed'
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'Terrain fallback working correctly',
+                details: result
+            };
+        }, 'fallback');
+        
+        testFramework.addTest('Trip Planning Without APIs', async () => {
+            if (!window.TripOptimizer) {
+                throw new Error('TripOptimizer not available');
+            }
+            
+            const tripOptimizer = new TripOptimizer();
+            const tripData = {
+                start: 'Home',
+                destination: 'Beach',
+                date: new Date(),
+                vehicleConfig: {
+                    model: 'e4',
+                    batteryAge: 1,
+                    motorCondition: 'good'
+                }
+            };
+            
+            const result = await tripOptimizer.optimizeTrip(tripData);
+            
+            if (!result) {
+                return {
+                    status: 'failed',
+                    message: 'Trip optimization failed'
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'Trip planning works without APIs',
+                details: { hasRoute: !!result.route, hasSettings: !!result.settings }
+            };
+        }, 'core');
+        
+        testFramework.addTest('Weekend Planner Features', async () => {
+            // Test that weekend planner core functions work
+            const features = {
+                routePlanning: typeof window.optimizeRoute !== 'undefined',
+                weatherAnalysis: typeof window.analyzeWeather !== 'undefined',
+                terrainAnalysis: typeof window.analyzeTerrain !== 'undefined',
+                settingsGeneration: typeof window.generateOptimalSettings !== 'undefined'
+            };
+            
+            const workingFeatures = Object.values(features).filter(Boolean).length;
+            const totalFeatures = Object.keys(features).length;
+            
+            if (workingFeatures === 0) {
+                return {
+                    status: 'failed',
+                    message: 'No weekend planner features available'
+                };
+            }
+            
+            if (workingFeatures < totalFeatures) {
+                return {
+                    status: 'warning',
+                    message: `${workingFeatures}/${totalFeatures} weekend planner features available`,
+                    details: features
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'All weekend planner features available',
+                details: features
+            };
+        }, 'ui');
+        
+        testFramework.addTest('Form Validation System', async () => {
+            if (!window.ValidationSystem) {
+                throw new Error('ValidationSystem not available');
+            }
+            
+            const validation = new ValidationSystem();
+            
+            // Test valid vehicle data
+            const validData = {
+                vehicleModel: 'e4',
+                vehicleYear: '2016+',
+                controllerType: 'T2',
+                motorType: 'dc-stock',
+                currentSpeed: 25
+            };
+            
+            const isValid = validation.validateVehicleInfo(validData);
+            
+            if (!isValid) {
+                return {
+                    status: 'failed',
+                    message: 'Validation system rejecting valid data'
+                };
+            }
+            
+            // Test invalid data
+            const invalidData = { vehicleModel: '' };
+            const isInvalid = validation.validateVehicleInfo(invalidData);
+            
+            if (isInvalid) {
+                return {
+                    status: 'failed',
+                    message: 'Validation system accepting invalid data'
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'Validation system working correctly'
+            };
+        }, 'ui');
+        
+        testFramework.addTest('Presets Manager Functionality', async () => {
+            if (!window.PresetsManager) {
+                throw new Error('PresetsManager not available');
+            }
+            
+            const optimizer = new GEMControllerOptimizer();
+            const presetsManager = new PresetsManager(optimizer);
+            
+            // Test getting presets
+            const presets = presetsManager.getPresets();
+            
+            if (!presets || Object.keys(presets).length === 0) {
+                return {
+                    status: 'failed',
+                    message: 'No presets available'
+                };
+            }
+            
+            // Test applying a preset
+            const presetName = Object.keys(presets)[0];
+            const applied = presetsManager.applyPreset(presetName);
+            
+            if (!applied) {
+                return {
+                    status: 'failed',
+                    message: 'Failed to apply preset'
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: `Presets manager working with ${Object.keys(presets).length} presets`,
+                details: { presets: Object.keys(presets) }
+            };
+        }, 'ui');
+        
+        testFramework.addTest('MCP Integration Local Mode', async () => {
+            if (!window.mcpConfig) {
+                return {
+                    status: 'warning',
+                    message: 'MCP config not available - functionality will be limited'
+                };
+            }
+            
+            const mcpStatus = window.mcpConfig.getStatus();
+            
+            if (!mcpStatus.isLocal) {
+                return {
+                    status: 'warning',
+                    message: 'MCP not in local mode - may require API keys',
+                    details: mcpStatus
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'MCP running in local mode',
+                details: mcpStatus
+            };
+        }, 'fallback');
+        
+        testFramework.addTest('Error Messages User-Friendly', async () => {
+            // Test that error messages are helpful for users without APIs
+            const testCases = [
+                {
+                    name: 'Weather API unavailable',
+                    test: async () => {
+                        if (window.WeatherService) {
+                            const service = new WeatherService();
+                            // This should use fallback
+                            const result = await service.getWeather('Test Location');
+                            return result.source === 'fallback';
+                        }
+                        return false;
+                    }
+                },
+                {
+                    name: 'Missing API keys handled gracefully',
+                    test: async () => {
+                        if (window.apiManager) {
+                            const status = window.apiManager.getStatus();
+                            // Should not break even with no API keys
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            ];
+            
+            const results = await Promise.all(testCases.map(async (testCase) => {
+                try {
+                    return await testCase.test();
+                } catch (error) {
+                    return false;
+                }
+            }));
+            
+            const passedTests = results.filter(Boolean).length;
+            
+            if (passedTests === 0) {
+                return {
+                    status: 'failed',
+                    message: 'Error handling needs improvement'
+                };
+            }
+            
+            if (passedTests < testCases.length) {
+                return {
+                    status: 'warning',
+                    message: `${passedTests}/${testCases.length} error handling tests passed`
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'Error handling working correctly'
+            };
+        }, 'ui');
+        
+        testFramework.addTest('UI Components Load Without Errors', async () => {
+            const components = [
+                'vehicle-model', 'vehicle-year', 'controller-type', 'motor-type',
+                'battery-voltage', 'battery-type', 'current-speed'
+            ];
+            
+            const missingComponents = components.filter(id => !document.getElementById(id));
+            
+            if (missingComponents.length > 0) {
+                return {
+                    status: 'warning',
+                    message: `Some UI components not found: ${missingComponents.join(', ')}`,
+                    details: { missing: missingComponents }
+                };
+            }
+            
+            return {
+                status: 'passed',
+                message: 'All UI components loaded successfully'
+            };
+        }, 'ui');
+        
+        // Global test runner functions
+        window.runAllTests = () => testFramework.runAllTests();
+        window.runCoreTests = () => testFramework.runTestsByCategory('core');
+        window.runUITests = () => testFramework.runTestsByCategory('ui');
+        window.runFallbackTests = () => testFramework.runTestsByCategory('fallback');
+        window.clearResults = () => testFramework.clearResults();
+        
+        // Auto-run tests on load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                console.log('Test framework ready. Available tests:', testFramework.tests.length);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -117,6 +117,10 @@
                         this.updateAuthStatus();
                     } else {
                         this.log('⚠️ Firebase not yet initialized');
+                        // Check if config needs to be updated
+                        if (window.firebaseManager.firebaseConfig.apiKey === "YOUR_API_KEY") {
+                            this.log('❌ Firebase configuration not updated - see FIREBASE_SETUP.md for instructions');
+                        }
                     }
                 } else {
                     this.log('❌ Firebase Manager not found');

@@ -111,47 +111,97 @@ class GEMOptimizer {
      * @returns {Object} Optimization results
      */
     optimizeSettings(inputData, baselineSettings = null) {
-        // Start with baseline settings if provided, otherwise use factory defaults
-        const startingSettings = baselineSettings || this.factoryDefaults;
-        const optimizedSettings = { ...startingSettings };
-        
-        // Analyze the input configuration
-        const analysisData = this.analyzeConfiguration(inputData);
-        
-        // Apply optimizations in order of priority
-        this.optimizeTireSettings(optimizedSettings, inputData, analysisData);
-        this.optimizeBatterySettings(optimizedSettings, inputData, analysisData);
-        this.optimizeMotorProtection(optimizedSettings, inputData, analysisData);
-        this.optimizeTerrainSettings(optimizedSettings, inputData, analysisData);
-        this.optimizePerformanceSettings(optimizedSettings, inputData, analysisData);
-        
-        // Apply new function optimizations
-        this.optimizeCreepSpeed(optimizedSettings, inputData, analysisData);
-        this.optimizePlugCurrent(optimizedSettings, inputData, analysisData);
-        this.optimizeFieldRampRate(optimizedSettings, inputData, analysisData);
-        this.optimizeArmCurrentRamp(optimizedSettings, inputData, analysisData);
-        this.optimizeErrorCompensation(optimizedSettings, inputData, analysisData);
-        
-        // Apply safety constraints
-        this.applySafetyConstraints(optimizedSettings);
-        
-        // Calculate performance changes
-        const performanceChanges = this.calculatePerformanceChanges(
-            optimizedSettings, 
-            this.factoryDefaults,
-            inputData, 
-            analysisData
-        );
-        
-        return {
-            factorySettings: this.factoryDefaults,
-            baselineSettings: baselineSettings || this.factoryDefaults,
-            isUsingImportedBaseline: baselineSettings !== null,
-            optimizedSettings,
-            performanceChanges,
-            analysisData,
-            inputData
-        };
+        try {
+            // Input validation
+            if (!inputData || typeof inputData !== 'object') {
+                throw new Error('Invalid input data: must be object');
+            }
+            
+            if (!inputData.vehicle || !inputData.vehicle.model) {
+                throw new Error('Vehicle model is required');
+            }
+            
+            // Validate baseline settings if provided
+            if (baselineSettings && (!Array.isArray(baselineSettings) || baselineSettings.length !== 128)) {
+                console.warn('Invalid baseline settings format, using factory defaults');
+                baselineSettings = null;
+            }
+            
+            // Start with baseline settings if provided, otherwise use factory defaults
+            const startingSettings = baselineSettings || this.factoryDefaults;
+            const optimizedSettings = { ...startingSettings };
+            
+            // Analyze the input configuration with error handling
+            let analysisData;
+            try {
+                analysisData = this.analyzeConfiguration(inputData);
+            } catch (error) {
+                console.error('Configuration analysis failed:', error);
+                analysisData = this.getDefaultAnalysisData();
+            }
+            
+            // Apply optimizations with individual error handling
+            const optimizationSteps = [
+                { func: 'optimizeTireSettings', name: 'tire settings' },
+                { func: 'optimizeBatterySettings', name: 'battery settings' },
+                { func: 'optimizeMotorProtection', name: 'motor protection' },
+                { func: 'optimizeTerrainSettings', name: 'terrain settings' },
+                { func: 'optimizePerformanceSettings', name: 'performance settings' },
+                { func: 'optimizeCreepSpeed', name: 'creep speed' },
+                { func: 'optimizePlugCurrent', name: 'plug current' },
+                { func: 'optimizeFieldRampRate', name: 'field ramp rate' },
+                { func: 'optimizeArmCurrentRamp', name: 'armature current ramp' },
+                { func: 'optimizeErrorCompensation', name: 'error compensation' }
+            ];
+            
+            for (const step of optimizationSteps) {
+                try {
+                    this[step.func](optimizedSettings, inputData, analysisData);
+                } catch (error) {
+                    console.warn(`${step.name} optimization failed:`, error);
+                    // Continue with other optimizations
+                }
+            }
+            
+            // Apply safety constraints with error handling
+            try {
+                this.applySafetyConstraints(optimizedSettings);
+            } catch (error) {
+                console.error('Safety constraints application failed:', error);
+                // Apply emergency safety defaults
+                this.applyEmergencySafetyDefaults(optimizedSettings);
+            }
+            
+            // Calculate performance changes with error handling
+            let performanceChanges;
+            try {
+                performanceChanges = this.calculatePerformanceChanges(
+                    optimizedSettings, 
+                    this.factoryDefaults,
+                    inputData, 
+                    analysisData
+                );
+            } catch (error) {
+                console.error('Performance calculation failed:', error);
+                performanceChanges = this.getDefaultPerformanceChanges();
+            }
+            
+            return {
+                success: true,
+                factorySettings: this.factoryDefaults,
+                baselineSettings: baselineSettings || this.factoryDefaults,
+                isUsingImportedBaseline: baselineSettings !== null,
+                optimizedSettings,
+                performanceChanges,
+                analysisData,
+                inputData,
+                warnings: this.getOptimizationWarnings(optimizedSettings, inputData)
+            };
+            
+        } catch (error) {
+            console.error('Optimization failed:', error);
+            return this.getEmergencyFallback(inputData, baselineSettings, error);
+        }
     }
     
     /**
@@ -885,5 +935,105 @@ class GEMOptimizer {
         // Run optimization using the main optimization method
         const result = this.optimizeSettings(inputData, settings);
         return result;
+    }
+    
+    /**
+     * Get default analysis data for error fallback
+     */
+    getDefaultAnalysisData() {
+        return {
+            vehicleCharacteristics: {
+                type: 'e4',
+                motor: 'ac',
+                battery: 'lead',
+                drivetrain: 'standard'
+            },
+            performanceWeights: {
+                speed: 5,
+                range: 5,
+                acceleration: 5,
+                efficiency: 5,
+                hills: 5
+            },
+            environmentalFactors: {
+                terrain: 'mixed',
+                temperature: 'mild',
+                load: 'medium'
+            }
+        };
+    }
+    
+    /**
+     * Apply emergency safety defaults
+     */
+    applyEmergencySafetyDefaults(settings) {
+        // Apply extremely conservative settings for safety
+        settings[1] = Math.min(settings[1] || 22, 20);    // Very conservative speed
+        settings[4] = Math.min(settings[4] || 245, 200);  // Very conservative current
+        settings[6] = Math.min(settings[6] || 60, 40);    // Gentle acceleration
+        settings[24] = Math.min(settings[24] || 43, 35);  // Conservative field weakening
+        
+        console.warn('Emergency safety defaults applied due to constraint validation failure');
+    }
+    
+    /**
+     * Get default performance changes for error fallback
+     */
+    getDefaultPerformanceChanges() {
+        return {
+            speed: { value: 0, unit: 'mph', description: 'No change calculated' },
+            range: { value: 0, unit: 'miles', description: 'No change calculated' },
+            acceleration: { value: 0, unit: 'seconds', description: 'No change calculated' },
+            efficiency: { value: 0, unit: '%', description: 'No change calculated' },
+            hillClimbing: { value: 0, unit: '%', description: 'No change calculated' }
+        };
+    }
+    
+    /**
+     * Get optimization warnings
+     */
+    getOptimizationWarnings(settings, inputData) {
+        const warnings = [];
+        
+        // Check for potentially risky settings
+        if (settings[1] > 25) {
+            warnings.push('Speed setting may exceed legal limits for some areas');
+        }
+        
+        if (settings[4] > 300) {
+            warnings.push('High motor current - monitor temperature closely');
+        }
+        
+        if (settings[24] > 50) {
+            warnings.push('High field weakening - ensure adequate motor cooling');
+        }
+        
+        // Check for motor condition concerns
+        if (inputData.vehicle?.motorCondition === 'worn') {
+            warnings.push('Motor condition is worn - consider more conservative settings');
+        }
+        
+        return warnings;
+    }
+    
+    /**
+     * Get emergency fallback result
+     */
+    getEmergencyFallback(inputData, baselineSettings, error) {
+        console.error('Using emergency fallback optimization due to error:', error);
+        
+        return {
+            success: false,
+            error: SharedUtils.formatUserError(error, 'Optimization'),
+            factorySettings: this.factoryDefaults,
+            baselineSettings: baselineSettings || this.factoryDefaults,
+            isUsingImportedBaseline: baselineSettings !== null,
+            optimizedSettings: baselineSettings || this.factoryDefaults,
+            performanceChanges: this.getDefaultPerformanceChanges(),
+            analysisData: this.getDefaultAnalysisData(),
+            inputData: inputData || {},
+            warnings: ['Emergency fallback used - settings may not be optimized'],
+            emergencyFallback: true
+        };
     }
 }

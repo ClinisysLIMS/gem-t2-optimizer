@@ -85,6 +85,25 @@ class MCPConfigUI {
                             </p>
                         </div>
                         
+                        <!-- Enable/Disable MCP -->
+                        <div class="border-t pt-6">
+                            <h4 class="font-medium text-gray-800 mb-3">MCP Features</h4>
+                            
+                            <div class="mb-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" 
+                                           id="mcp-enabled" 
+                                           class="mr-3 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                                    <span class="text-sm font-medium text-gray-700">
+                                        Enable MCP AI assistance
+                                    </span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1 ml-6">
+                                    When disabled, the optimizer will use local calculations only, regardless of server configuration.
+                                </p>
+                            </div>
+                        </div>
+                        
                         <!-- Advanced Settings -->
                         <div class="border-t pt-6">
                             <h4 class="font-medium text-gray-800 mb-3">Advanced Settings</h4>
@@ -264,6 +283,7 @@ class MCPConfigUI {
         document.getElementById('mcp-timeout').value = config.timeout || 30000;
         document.getElementById('mcp-retry').value = config.retryAttempts || 3;
         document.getElementById('mcp-local-fallback').checked = config.enableLocalFallback !== false;
+        document.getElementById('mcp-enabled').checked = config.enabled !== false;
     }
     
     /**
@@ -277,27 +297,33 @@ class MCPConfigUI {
         let statusText = 'Not configured';
         let statusIcon = '⚫';
         
-        switch (status.connectionStatus) {
-            case 'connected':
-                statusColor = 'green';
-                statusText = 'Connected to MCP server';
-                statusIcon = '🟢';
-                break;
-            case 'local':
-                statusColor = 'blue';
-                statusText = 'Using local calculations';
-                statusIcon = '🔵';
-                break;
-            case 'local_fallback':
-                statusColor = 'yellow';
-                statusText = 'Using local fallback (server unavailable)';
-                statusIcon = '🟡';
-                break;
-            case 'error':
-                statusColor = 'red';
-                statusText = 'Connection error';
-                statusIcon = '🔴';
-                break;
+        if (!status.config.enabled) {
+            statusColor = 'gray';
+            statusText = 'MCP disabled - using local calculations only';
+            statusIcon = '⚪';
+        } else {
+            switch (status.connectionStatus) {
+                case 'connected':
+                    statusColor = 'green';
+                    statusText = 'Connected to MCP server';
+                    statusIcon = '🟢';
+                    break;
+                case 'local':
+                    statusColor = 'blue';
+                    statusText = 'Using local calculations';
+                    statusIcon = '🔵';
+                    break;
+                case 'local_fallback':
+                    statusColor = 'yellow';
+                    statusText = 'Using local fallback (server unavailable)';
+                    statusIcon = '🟡';
+                    break;
+                case 'error':
+                    statusColor = 'red';
+                    statusText = 'Connection error';
+                    statusIcon = '🔴';
+                    break;
+            }
         }
         
         statusDisplay.innerHTML = `
@@ -308,6 +334,7 @@ class MCPConfigUI {
                         <div class="font-medium text-${statusColor}-800">${statusText}</div>
                         <div class="text-xs text-gray-600">
                             Mode: ${status.isLocal ? 'Local' : 'Remote'} | 
+                            Enabled: ${status.config.enabled ? 'Yes' : 'No'} |
                             Server: ${status.config.serverUrl || 'Not configured'} |
                             Auth: ${status.config.hasApiKey ? 'Configured' : 'None'}
                         </div>
@@ -316,7 +343,7 @@ class MCPConfigUI {
                 <div class="text-right">
                     <div class="text-sm font-medium">AI Features</div>
                     <div class="text-xs text-gray-600">
-                        ${status.isLocal ? 'Basic' : 'Enhanced'}
+                        ${!status.config.enabled ? 'Disabled' : (status.isLocal ? 'Basic' : 'Enhanced')}
                     </div>
                 </div>
             </div>
@@ -390,7 +417,8 @@ class MCPConfigUI {
             apiKey: document.getElementById('mcp-api-key').value.trim(),
             timeout: parseInt(document.getElementById('mcp-timeout').value) || 30000,
             retryAttempts: parseInt(document.getElementById('mcp-retry').value) || 3,
-            enableLocalFallback: document.getElementById('mcp-local-fallback').checked
+            enableLocalFallback: document.getElementById('mcp-local-fallback').checked,
+            enabled: document.getElementById('mcp-enabled').checked
         };
         
         this.mcpManager.updateConfig(config);

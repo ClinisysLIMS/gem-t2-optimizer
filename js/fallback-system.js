@@ -300,14 +300,10 @@ class FallbackSystem {
     }
     
     /**
-     * Get season from date
+     * Get season from date (using shared utility)
      */
     getSeason(date) {
-        const month = date.getMonth();
-        if (month >= 11 || month <= 1) return 'winter';
-        if (month >= 2 && month <= 4) return 'spring';
-        if (month >= 5 && month <= 7) return 'summer';
-        return 'fall';
+        return SharedUtils.getSeason(date);
     }
     
     /**

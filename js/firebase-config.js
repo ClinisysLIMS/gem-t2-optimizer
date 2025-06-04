@@ -18,13 +18,15 @@ class FirebaseManager {
         // 3. Enable Authentication (Email/Password and Google)
         // 4. Enable Firestore Database
         // 5. Get your config from Project Settings > General > Your apps
+        // 6. Replace the placeholder values below with your actual config
+        // 7. See FIREBASE_SETUP.md for detailed instructions
         this.firebaseConfig = {
-            apiKey: "your-api-key-here",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef123456"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
         
         this.initFirebase();
@@ -38,6 +40,14 @@ class FirebaseManager {
             // Check if Firebase is already loaded
             if (typeof firebase === 'undefined') {
                 console.warn('Firebase SDK not loaded. Please include Firebase scripts.');
+                this.showSetupInstructions();
+                return;
+            }
+            
+            // Check if configuration has been updated from placeholders
+            if (this.firebaseConfig.apiKey === "YOUR_API_KEY") {
+                console.warn('Firebase configuration has not been updated.');
+                this.showSetupInstructions();
                 return;
             }
             
@@ -45,6 +55,16 @@ class FirebaseManager {
             this.app = firebase.initializeApp(this.firebaseConfig);
             this.auth = firebase.auth();
             this.db = firebase.firestore();
+            
+            // Enable Firestore persistence for offline support
+            this.db.enablePersistence()
+                .catch((err) => {
+                    if (err.code === 'failed-precondition') {
+                        console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+                    } else if (err.code === 'unimplemented') {
+                        console.warn('The current browser does not support offline persistence');
+                    }
+                });
             
             // Set up auth state observer
             this.auth.onAuthStateChanged((user) => {
@@ -57,7 +77,76 @@ class FirebaseManager {
             
         } catch (error) {
             console.error('Firebase initialization error:', error);
+            this.showSetupInstructions();
         }
+    }
+    
+    /**
+     * Show detailed setup instructions
+     */
+    showSetupInstructions() {
+        console.log(`
+%c========================================
+FIREBASE SETUP REQUIRED
+========================================%c
+
+To enable user accounts and save profiles, follow these steps:
+
+%c1. Create a Firebase Project:%c
+   • Go to https://console.firebase.google.com/
+   • Click "Create a project" or select existing
+   • Follow the setup wizard
+
+%c2. Enable Authentication:%c
+   • In your Firebase project, click "Authentication"
+   • Click "Get started"
+   • Enable "Email/Password" provider
+   • Enable "Google" provider (optional)
+
+%c3. Enable Firestore Database:%c
+   • Click "Firestore Database" in sidebar
+   • Click "Create database"
+   • Choose "Start in test mode" for development
+   • Select your region
+
+%c4. Get Your Configuration:%c
+   • Click ⚙️ next to "Project Overview"
+   • Select "Project settings"
+   • Scroll to "Your apps" section
+   • Click </> (Web app icon)
+   • Register your app with a nickname
+   • Copy the firebaseConfig object
+
+%c5. Update This File:%c
+   • Open js/firebase-config.js
+   • Replace the placeholder values:
+     - YOUR_API_KEY
+     - YOUR_PROJECT_ID
+     - YOUR_MESSAGING_SENDER_ID
+     - YOUR_APP_ID
+   • Save and refresh the page
+
+%cFor detailed instructions with screenshots, see FIREBASE_SETUP.md%c
+
+%cNote: Firebase features are optional. The app works without them, but you won't be able to save profiles or use community features.%c
+`, 
+        'color: red; font-weight: bold',
+        'color: inherit',
+        'color: blue; font-weight: bold',
+        'color: inherit',
+        'color: blue; font-weight: bold',
+        'color: inherit',
+        'color: blue; font-weight: bold',
+        'color: inherit',
+        'color: blue; font-weight: bold',
+        'color: inherit',
+        'color: blue; font-weight: bold',
+        'color: inherit',
+        'color: green; font-weight: bold',
+        'color: inherit',
+        'color: orange; font-style: italic',
+        'color: inherit'
+        );
     }
     
     /**

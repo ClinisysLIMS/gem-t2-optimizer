@@ -1,0 +1,45 @@
+# Netlify Redirects Configuration
+# Handle URL redirects and rewrites
+
+# Redirect root to main application
+/                    /index-new.html                    200
+
+# API endpoints to serverless functions
+/api/weather         /.netlify/functions/weather        200
+/api/weather/*       /.netlify/functions/weather        200
+/api/geocoding       /.netlify/functions/geocoding      200
+/api/geocoding/*     /.netlify/functions/geocoding      200
+/api/elevation       /.netlify/functions/elevation      200
+/api/elevation/*     /.netlify/functions/elevation      200
+/api/maps            /.netlify/functions/maps           200
+/api/maps/*          /.netlify/functions/maps           200
+
+# Legacy API redirects (in case old URLs are used)
+/backend/weather     /.netlify/functions/weather        301
+/backend/geocoding   /.netlify/functions/geocoding      301
+/backend/elevation   /.netlify/functions/elevation      301
+/backend/maps        /.netlify/functions/maps           301
+
+# Handle old backend proxy URLs
+/backend/*           /api/:splat                        301
+
+# SPA routing for single page application sections
+/gem-optimizer      /gem-optimizer.html                 200
+/weekend-planner    /weekend-planner.html               200
+/route-map          /route-map.html                     200
+/mcp-integration    /mcp-integration.html               200
+
+# Handle test pages
+/test-*             /test-:splat.html                   200
+
+# Legacy redirects
+/optimizer          /gem-optimizer.html                 301
+/planner            /weekend-planner.html               301
+/routes             /route-map.html                     301
+
+# Force HTTPS
+http://gem-optimizer.netlify.app/*  https://gem-optimizer.netlify.app/:splat  301!
+http://www.gem-optimizer.netlify.app/*  https://gem-optimizer.netlify.app/:splat  301!
+
+# Handle 404s
+/*                  /404.html                           404

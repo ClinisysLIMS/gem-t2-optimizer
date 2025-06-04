@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local AI System Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">Local AI System Test</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- TensorFlow.js ML Engine Test -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border">
+                <h2 class="text-xl font-semibold mb-4">TensorFlow.js ML Engine</h2>
+                <div id="tensorflow-status" class="mb-4">Loading...</div>
+                <button id="test-tensorflow" class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50">
+                    Test ML Optimization
+                </button>
+                <div id="tensorflow-result" class="mt-4 text-sm"></div>
+            </div>
+            
+            <!-- Rule-Based Optimizer Test -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border">
+                <h2 class="text-xl font-semibold mb-4">Rule-Based Optimizer</h2>
+                <div id="rules-status" class="mb-4">Loading...</div>
+                <button id="test-rules" class="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50">
+                    Test Rule-Based Optimization
+                </button>
+                <div id="rules-result" class="mt-4 text-sm"></div>
+            </div>
+            
+            <!-- Optimization Cache Test -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border">
+                <h2 class="text-xl font-semibold mb-4">Optimization Cache</h2>
+                <div id="cache-status" class="mb-4">Loading...</div>
+                <button id="test-cache" class="bg-purple-500 text-white px-4 py-2 rounded disabled:opacity-50">
+                    Test Cache Lookup
+                </button>
+                <div id="cache-result" class="mt-4 text-sm"></div>
+            </div>
+            
+            <!-- API Manager Local AI Test -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border">
+                <h2 class="text-xl font-semibold mb-4">API Manager Local AI</h2>
+                <div id="api-status" class="mb-4">Loading...</div>
+                <button id="test-api" class="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50">
+                    Test Local AI Request
+                </button>
+                <div id="api-result" class="mt-4 text-sm"></div>
+            </div>
+        </div>
+        
+        <div class="mt-8 bg-white p-6 rounded-lg shadow-sm border">
+            <h2 class="text-xl font-semibold mb-4">System Summary</h2>
+            <div id="system-summary"></div>
+        </div>
+    </div>
+
+    <!-- Load all local AI systems -->
+    <script src="js/secure-storage.js"></script>
+    <script src="js/api-manager.js"></script>
+    <script src="js/tensorflow-ml-engine.js"></script>
+    <script src="js/rule-based-optimizer.js"></script>
+    <script src="js/optimization-cache.js"></script>
+    
+    <script>
+        // Test system availability
+        function checkSystemAvailability() {
+            const systems = {
+                tensorflowML: !!window.tensorflowMLEngine,
+                ruleBasedOptimizer: !!window.ruleBasedOptimizer,
+                optimizationCache: !!window.optimizationCache,
+                apiManager: !!window.apiManager
+            };
+            
+            // Update status displays
+            document.getElementById('tensorflow-status').innerHTML = 
+                systems.tensorflowML ? 
+                '<span class="text-green-600">✓ Available</span>' : 
+                '<span class="text-red-600">✗ Not Available</span>';
+            
+            document.getElementById('rules-status').innerHTML = 
+                systems.ruleBasedOptimizer ? 
+                '<span class="text-green-600">✓ Available</span>' : 
+                '<span class="text-red-600">✗ Not Available</span>';
+            
+            document.getElementById('cache-status').innerHTML = 
+                systems.optimizationCache ? 
+                '<span class="text-green-600">✓ Available</span>' : 
+                '<span class="text-red-600">✗ Not Available</span>';
+            
+            document.getElementById('api-status').innerHTML = 
+                systems.apiManager ? 
+                '<span class="text-green-600">✓ Available</span>' : 
+                '<span class="text-red-600">✗ Not Available</span>';
+            
+            // Enable/disable buttons
+            document.getElementById('test-tensorflow').disabled = !systems.tensorflowML;
+            document.getElementById('test-rules').disabled = !systems.ruleBasedOptimizer;
+            document.getElementById('test-cache').disabled = !systems.optimizationCache;
+            document.getElementById('test-api').disabled = !systems.apiManager;
+            
+            // Update summary
+            const availableCount = Object.values(systems).filter(Boolean).length;
+            document.getElementById('system-summary').innerHTML = 
+                `<p class="text-lg">${availableCount}/4 local AI systems available</p>
+                <p class="text-sm text-gray-600 mt-2">
+                    ${availableCount === 4 ? 
+                        '🎉 All systems operational! The app can run completely offline without external AI APIs.' : 
+                        '⚠️ Some systems may not be fully loaded yet. Check browser console for details.'}
+                </p>`;
+            
+            return systems;
+        }
+        
+        // Test TensorFlow.js ML Engine
+        document.getElementById('test-tensorflow').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('tensorflow-result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const vehicleData = { model: 'e4', year: 2020 };
+                const priorities = { speed: 7, range: 5, acceleration: 6, efficiency: 4 };
+                
+                const result = await window.tensorflowMLEngine.optimizeController(vehicleData, priorities);
+                
+                resultDiv.innerHTML = `
+                    <strong>Result:</strong> ${result.success ? 'SUCCESS' : 'FAILED'}<br>
+                    <strong>Method:</strong> ${result.method || 'N/A'}<br>
+                    <strong>Confidence:</strong> ${result.confidence || 'N/A'}<br>
+                    <strong>Settings:</strong> ${result.optimizedSettings ? 'Generated' : 'None'}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+        
+        // Test Rule-Based Optimizer
+        document.getElementById('test-rules').addEventListener('click', () => {
+            const resultDiv = document.getElementById('rules-result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const vehicleData = { model: 'e4' };
+                const priorities = { speed: 6, range: 7, acceleration: 5, efficiency: 8 };
+                const conditions = { temperature: 70, grade: 0, load: 0 };
+                
+                const result = window.ruleBasedOptimizer.optimize(vehicleData, priorities, [], conditions);
+                
+                resultDiv.innerHTML = `
+                    <strong>Result:</strong> ${result.success ? 'SUCCESS' : 'FAILED'}<br>
+                    <strong>Strategy:</strong> ${result.strategy || 'N/A'}<br>
+                    <strong>Confidence:</strong> ${result.confidence || 'N/A'}<br>
+                    <strong>Recommendations:</strong> ${result.recommendations?.length || 0} items
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+        
+        // Test Optimization Cache
+        document.getElementById('test-cache').addEventListener('click', () => {
+            const resultDiv = document.getElementById('cache-result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const vehicleData = { model: 'e4' };
+                const priorities = { speed: 8, range: 4, acceleration: 7, efficiency: 3 };
+                const conditions = { temperature: 70, grade: 0, load: 0 };
+                
+                const result = window.optimizationCache.getOptimization(vehicleData, priorities, conditions);
+                const stats = window.optimizationCache.getCacheStats();
+                
+                resultDiv.innerHTML = `
+                    <strong>Cache Hit:</strong> ${result ? 'YES' : 'NO'}<br>
+                    <strong>Cache Size:</strong> ${stats.size} scenarios<br>
+                    <strong>Hit Rate:</strong> ${stats.hitRate}%<br>
+                    <strong>Method:</strong> ${result?.method || 'Cache miss'}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+        
+        // Test API Manager Local AI
+        document.getElementById('test-api').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const result = await window.apiManager.makeAPIRequest('localAI', '/optimize', {
+                    method: 'POST',
+                    body: {
+                        vehicleData: { model: 'e4' },
+                        priorities: { speed: 6, range: 6, acceleration: 6, efficiency: 6 },
+                        conditions: { temperature: 70 }
+                    }
+                });
+                
+                resultDiv.innerHTML = `
+                    <strong>Result:</strong> ${result.success ? 'SUCCESS' : 'FAILED'}<br>
+                    <strong>Source:</strong> ${result.source || 'N/A'}<br>
+                    <strong>Local:</strong> ${result.local ? 'YES' : 'NO'}<br>
+                    <strong>Data:</strong> ${result.data ? 'Generated' : 'None'}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="text-red-600">Error: ${error.message}</span>`;
+            }
+        });
+        
+        // Check systems on load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait a moment for all scripts to load
+            setTimeout(checkSystemAvailability, 1000);
+        });
+    </script>
+</body>
+</html>

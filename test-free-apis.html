@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Free APIs - GEM Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-blue-700 text-white p-4">
+        <div class="container mx-auto">
+            <h1 class="text-2xl font-bold">🧪 Free API Services Test</h1>
+            <p class="text-sm opacity-90">Testing all free alternatives to paid APIs</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+        <div class="grid lg:grid-cols-2 gap-6">
+            <!-- Left Panel: Service Tests -->
+            <div class="space-y-6">
+                <!-- Geocoding Test -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🌍 Free Geocoding (Nominatim)</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="geocode-input" placeholder="Enter address" 
+                               value="1600 Amphitheatre Parkway, Mountain View, CA"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <button id="test-geocoding" class="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                            Test Geocoding
+                        </button>
+                        <div id="geocoding-result" class="text-xs bg-gray-50 p-2 rounded hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Weather Test -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🌤️ Free Weather (Open-Meteo)</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="weather-input" placeholder="Enter location" 
+                               value="San Francisco, CA"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <button id="test-weather" class="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
+                            Test Weather
+                        </button>
+                        <div id="weather-result" class="text-xs bg-gray-50 p-2 rounded hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Elevation Test -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🏔️ Free Elevation (OpenTopoData)</h3>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="elevation-lat" placeholder="Latitude" 
+                                   value="37.4419" step="0.0001"
+                                   class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <input type="number" id="elevation-lng" placeholder="Longitude" 
+                                   value="-122.1430" step="0.0001"
+                                   class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <button id="test-elevation" class="w-full py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
+                            Test Elevation
+                        </button>
+                        <div id="elevation-result" class="text-xs bg-gray-50 p-2 rounded hidden"></div>
+                    </div>
+                </div>
+
+                <!-- On-Device AI Test -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🤖 On-Device AI</h3>
+                    <div class="space-y-3">
+                        <select id="ai-test-type" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <option value="optimize">Optimize Controller</option>
+                            <option value="trip">Analyze Trip</option>
+                            <option value="nlp">Natural Language</option>
+                        </select>
+                        <button id="test-ai" class="w-full py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                            Test AI Engine
+                        </button>
+                        <div id="ai-result" class="text-xs bg-gray-50 p-2 rounded hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Local Storage Test -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">💾 Local Storage (IndexedDB)</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="storage-key" placeholder="Test key" 
+                               value="test-profile"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="test-storage-save" class="py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm">
+                                Save Test Data
+                            </button>
+                            <button id="test-storage-load" class="py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm">
+                                Load Test Data
+                            </button>
+                        </div>
+                        <div id="storage-result" class="text-xs bg-gray-50 p-2 rounded hidden"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div class="space-y-6">
+                <!-- Service Status -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">📊 Service Status</h3>
+                    <div id="service-status" class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Geocoding:</span>
+                            <span id="status-geocoding" class="text-gray-500">Not tested</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Weather:</span>
+                            <span id="status-weather" class="text-gray-500">Not tested</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Elevation:</span>
+                            <span id="status-elevation" class="text-gray-500">Not tested</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>AI Engine:</span>
+                            <span id="status-ai" class="text-gray-500">Not tested</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Local Storage:</span>
+                            <span id="status-storage" class="text-gray-500">Not tested</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test All -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🚀 Comprehensive Test</h3>
+                    <button id="test-all" class="w-full py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium">
+                        Test All Services
+                    </button>
+                    <div id="comprehensive-result" class="mt-3 text-xs bg-gray-50 p-2 rounded hidden"></div>
+                </div>
+
+                <!-- Performance Info -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">⚡ Performance</h3>
+                    <div id="performance-info" class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Total Tests:</span>
+                            <span id="total-tests">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Successful:</span>
+                            <span id="successful-tests" class="text-green-600">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Failed:</span>
+                            <span id="failed-tests" class="text-red-600">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Avg Response:</span>
+                            <span id="avg-response">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Comparison -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">📈 Free vs Paid APIs</h3>
+                    <div class="text-xs space-y-2">
+                        <div class="grid grid-cols-3 font-medium text-gray-700">
+                            <span>Service</span>
+                            <span>Free Option</span>
+                            <span>Status</span>
+                        </div>
+                        <div class="grid grid-cols-3">
+                            <span>Geocoding</span>
+                            <span>Nominatim</span>
+                            <span class="text-green-600">✓ Replaced</span>
+                        </div>
+                        <div class="grid grid-cols-3">
+                            <span>Weather</span>
+                            <span>Open-Meteo</span>
+                            <span class="text-green-600">✓ Replaced</span>
+                        </div>
+                        <div class="grid grid-cols-3">
+                            <span>Elevation</span>
+                            <span>OpenTopoData</span>
+                            <span class="text-green-600">✓ Replaced</span>
+                        </div>
+                        <div class="grid grid-cols-3">
+                            <span>AI/ML</span>
+                            <span>On-Device</span>
+                            <span class="text-green-600">✓ Replaced</span>
+                        </div>
+                        <div class="grid grid-cols-3">
+                            <span>User Data</span>
+                            <span>IndexedDB</span>
+                            <span class="text-green-600">✓ Replaced</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/free-geocoding-service.js"></script>
+    <script src="js/free-weather-service.js"></script>
+    <script src="js/free-elevation-service.js"></script>
+    <script src="js/on-device-ai.js"></script>
+    <script src="js/local-storage-service.js"></script>
+    <script>
+        let testResults = {
+            total: 0,
+            successful: 0,
+            failed: 0,
+            responseTimes: []
+        };
+
+        // Initialize services
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Initializing free API services...');
+            
+            // Check service availability
+            updateServiceStatus('geocoding', 'Initializing...');
+            updateServiceStatus('weather', 'Initializing...');
+            updateServiceStatus('elevation', 'Initializing...');
+            updateServiceStatus('ai', 'Initializing...');
+            updateServiceStatus('storage', 'Initializing...');
+
+            // Setup event listeners
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('test-geocoding').addEventListener('click', testGeocoding);
+            document.getElementById('test-weather').addEventListener('click', testWeather);
+            document.getElementById('test-elevation').addEventListener('click', testElevation);
+            document.getElementById('test-ai').addEventListener('click', testAI);
+            document.getElementById('test-storage-save').addEventListener('click', testStorageSave);
+            document.getElementById('test-storage-load').addEventListener('click', testStorageLoad);
+            document.getElementById('test-all').addEventListener('click', testAllServices);
+        }
+
+        async function testGeocoding() {
+            const address = document.getElementById('geocode-input').value;
+            const startTime = Date.now();
+            
+            try {
+                const result = await window.freeGeocodingService.geocodeAddress(address);
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success && result.results.length > 0) {
+                    const location = result.results[0];
+                    showResult('geocoding-result', 
+                        `✅ Success: ${location.formattedAddress}\n` +
+                        `Coordinates: ${location.location.lat}, ${location.location.lng}\n` +
+                        `Response time: ${responseTime}ms\n` +
+                        `Source: ${result.source}`
+                    );
+                    updateServiceStatus('geocoding', '✅ Working');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('geocoding-result', `❌ No results found for: ${address}`);
+                    updateServiceStatus('geocoding', '❌ Failed');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('geocoding-result', `❌ Error: ${error.message}`);
+                updateServiceStatus('geocoding', '❌ Error');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testWeather() {
+            const location = document.getElementById('weather-input').value;
+            const startTime = Date.now();
+            
+            try {
+                const result = await window.freeWeatherService.getCurrentWeather(location);
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success) {
+                    const weather = result.data.current;
+                    showResult('weather-result', 
+                        `✅ Success: ${weather.description}\n` +
+                        `Temperature: ${weather.temperature}°F\n` +
+                        `Humidity: ${weather.humidity}%\n` +
+                        `Wind: ${weather.windSpeed} mph\n` +
+                        `Response time: ${responseTime}ms\n` +
+                        `Source: ${result.source}`
+                    );
+                    updateServiceStatus('weather', '✅ Working');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('weather-result', `❌ Failed: ${result.error}`);
+                    updateServiceStatus('weather', '❌ Failed');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('weather-result', `❌ Error: ${error.message}`);
+                updateServiceStatus('weather', '❌ Error');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testElevation() {
+            const lat = parseFloat(document.getElementById('elevation-lat').value);
+            const lng = parseFloat(document.getElementById('elevation-lng').value);
+            const startTime = Date.now();
+            
+            try {
+                const result = await window.freeElevationService.getElevation(lat, lng);
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success) {
+                    showResult('elevation-result', 
+                        `✅ Success: ${result.elevation} feet\n` +
+                        `Meters: ${result.elevationMeters} m\n` +
+                        `Response time: ${responseTime}ms\n` +
+                        `Source: ${result.source}`
+                    );
+                    updateServiceStatus('elevation', '✅ Working');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('elevation-result', `❌ Failed: ${result.error}`);
+                    updateServiceStatus('elevation', '❌ Failed');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('elevation-result', `❌ Error: ${error.message}`);
+                updateServiceStatus('elevation', '❌ Error');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testAI() {
+            const testType = document.getElementById('ai-test-type').value;
+            const startTime = Date.now();
+            
+            try {
+                let result;
+                
+                if (testType === 'optimize') {
+                    result = await window.onDeviceAI.optimizeController(
+                        { model: 'e4', year: 2020 },
+                        { speed: 7, range: 5, acceleration: 6 },
+                        [22, 245, 60, 225, 43] // Base settings
+                    );
+                } else if (testType === 'trip') {
+                    result = await window.onDeviceAI.analyzeTrip(
+                        { distance: 10, duration: 30 },
+                        { model: 'e4' },
+                        { weather: { temperature: 75 }, terrain: { grade: 5 } }
+                    );
+                } else {
+                    result = await window.onDeviceAI.processNaturalLanguage(
+                        'How can I optimize my GEM for better range?'
+                    );
+                }
+                
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success !== false) {
+                    showResult('ai-result', 
+                        `✅ Success: AI engine working\n` +
+                        `Response time: ${responseTime}ms\n` +
+                        `Test type: ${testType}\n` +
+                        `Source: on_device_ai`
+                    );
+                    updateServiceStatus('ai', '✅ Working');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('ai-result', `❌ Failed: ${result.error}`);
+                    updateServiceStatus('ai', '❌ Failed');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('ai-result', `❌ Error: ${error.message}`);
+                updateServiceStatus('ai', '❌ Error');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testStorageSave() {
+            const key = document.getElementById('storage-key').value;
+            const startTime = Date.now();
+            
+            try {
+                const testData = {
+                    username: 'TestUser',
+                    email: 'test@example.com',
+                    vehicles: [{ model: 'e4', year: 2020 }],
+                    testDate: new Date().toISOString()
+                };
+                
+                const result = await window.localStorageService.createUserProfile(testData);
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success) {
+                    showResult('storage-result', 
+                        `✅ Save Success: Profile created\n` +
+                        `ID: ${result.id}\n` +
+                        `Response time: ${responseTime}ms\n` +
+                        `Storage: IndexedDB`
+                    );
+                    updateServiceStatus('storage', '✅ Working');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('storage-result', `❌ Save Failed: ${result.error}`);
+                    updateServiceStatus('storage', '❌ Failed');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('storage-result', `❌ Save Error: ${error.message}`);
+                updateServiceStatus('storage', '❌ Error');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testStorageLoad() {
+            const startTime = Date.now();
+            
+            try {
+                const stats = await window.localStorageService.getStorageStats();
+                const responseTime = Date.now() - startTime;
+                
+                showResult('storage-result', 
+                    `✅ Load Success: Database stats\n` +
+                    `Stores: ${stats.totalStores}\n` +
+                    `Profiles: ${stats.stores.userProfiles?.count || 0}\n` +
+                    `Response time: ${responseTime}ms\n` +
+                    `Storage: IndexedDB`
+                );
+                updateServiceStatus('storage', '✅ Working');
+                recordTest(true, responseTime);
+            } catch (error) {
+                showResult('storage-result', `❌ Load Error: ${error.message}`);
+                updateServiceStatus('storage', '❌ Error');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testAllServices() {
+            document.getElementById('test-all').disabled = true;
+            document.getElementById('test-all').textContent = 'Testing...';
+            
+            showResult('comprehensive-result', 'Running comprehensive tests...\n');
+            
+            // Reset counters
+            testResults = { total: 0, successful: 0, failed: 0, responseTimes: [] };
+            
+            // Test all services
+            await testGeocoding();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testWeather();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testElevation();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testAI();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testStorageSave();
+            
+            // Show final results
+            const avgResponseTime = testResults.responseTimes.length > 0 
+                ? testResults.responseTimes.reduce((a, b) => a + b, 0) / testResults.responseTimes.length 
+                : 0;
+            
+            showResult('comprehensive-result', 
+                `🎉 Comprehensive test completed!\n` +
+                `Total tests: ${testResults.total}\n` +
+                `Successful: ${testResults.successful}\n` +
+                `Failed: ${testResults.failed}\n` +
+                `Success rate: ${Math.round((testResults.successful / testResults.total) * 100)}%\n` +
+                `Average response: ${Math.round(avgResponseTime)}ms\n\n` +
+                `All free APIs are ${testResults.successful === testResults.total ? 'working perfectly!' : 'mostly functional.'}`
+            );
+            
+            document.getElementById('test-all').disabled = false;
+            document.getElementById('test-all').textContent = 'Test All Services';
+        }
+
+        function showResult(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.remove('hidden');
+        }
+
+        function updateServiceStatus(service, status) {
+            document.getElementById(`status-${service}`).textContent = status;
+            if (status.includes('✅')) {
+                document.getElementById(`status-${service}`).className = 'text-green-600';
+            } else if (status.includes('❌')) {
+                document.getElementById(`status-${service}`).className = 'text-red-600';
+            } else {
+                document.getElementById(`status-${service}`).className = 'text-yellow-600';
+            }
+        }
+
+        function recordTest(success, responseTime) {
+            testResults.total++;
+            if (success) {
+                testResults.successful++;
+            } else {
+                testResults.failed++;
+            }
+            testResults.responseTimes.push(responseTime);
+            
+            // Update performance display
+            document.getElementById('total-tests').textContent = testResults.total;
+            document.getElementById('successful-tests').textContent = testResults.successful;
+            document.getElementById('failed-tests').textContent = testResults.failed;
+            
+            const avgResponseTime = testResults.responseTimes.length > 0 
+                ? testResults.responseTimes.reduce((a, b) => a + b, 0) / testResults.responseTimes.length 
+                : 0;
+            document.getElementById('avg-response').textContent = Math.round(avgResponseTime) + 'ms';
+        }
+    </script>
+</body>
+</html>

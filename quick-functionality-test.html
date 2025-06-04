@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Functionality Test - GEM Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🚀 Quick Functionality Test</h1>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Test Status</h2>
+            <div id="test-status" class="space-y-2">
+                <p>Loading test framework...</p>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Quick Tests</h2>
+            <div class="flex gap-4 flex-wrap">
+                <button onclick="testBasicOptimization()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Test Optimization
+                </button>
+                <button onclick="testPDFParsing()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Test PDF Parsing
+                </button>
+                <button onclick="testFallbackSystems()" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
+                    Test Fallbacks
+                </button>
+                <button onclick="testValidation()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    Test Validation
+                </button>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Test Results</h2>
+            <div id="test-results" class="space-y-3">
+                <p class="text-gray-500">Run a test to see results...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load JavaScript dependencies -->
+    <script src="js/secure-storage.js"></script>
+    <script src="js/api-manager.js"></script>
+    <script src="js/fallback-calculations.js"></script>
+    <script src="js/fallback-system.js"></script>
+    <script src="js/optimizer.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/pdf-parser.js"></script>
+    <script src="js/vehicle-classifier.js"></script>
+    <script src="js/presets.js"></script>
+
+    <script>
+        let testCount = 0;
+        
+        function addResult(name, status, message) {
+            testCount++;
+            const resultsDiv = document.getElementById('test-results');
+            const statusColor = status === 'passed' ? 'text-green-600' : status === 'failed' ? 'text-red-600' : 'text-yellow-600';
+            const icon = status === 'passed' ? '✅' : status === 'failed' ? '❌' : '⚠️';
+            
+            const resultHtml = `
+                <div class="border-l-4 ${status === 'passed' ? 'border-green-500' : status === 'failed' ? 'border-red-500' : 'border-yellow-500'} pl-4">
+                    <h4 class="font-semibold ${statusColor}">${icon} Test ${testCount}: ${name}</h4>
+                    <p class="text-sm text-gray-700">${message}</p>
+                </div>
+            `;
+            
+            if (testCount === 1) {
+                resultsDiv.innerHTML = resultHtml;
+            } else {
+                resultsDiv.innerHTML += resultHtml;
+            }
+        }
+        
+        function updateStatus() {
+            const statusDiv = document.getElementById('test-status');
+            const checks = [
+                { name: 'GEMOptimizer', available: typeof GEMOptimizer !== 'undefined' },
+                { name: 'FallbackCalculations', available: typeof FallbackCalculations !== 'undefined' },
+                { name: 'ValidationSystem', available: typeof ValidationSystem !== 'undefined' },
+                { name: 'PDFParser', available: typeof PDFParser !== 'undefined' }
+            ];
+            
+            let html = '';
+            checks.forEach(check => {
+                const icon = check.available ? '✅' : '❌';
+                const color = check.available ? 'text-green-600' : 'text-red-600';
+                html += `<p class="${color}">${icon} ${check.name}: ${check.available ? 'Available' : 'Not loaded'}</p>`;
+            });
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        async function testBasicOptimization() {
+            try {
+                if (typeof GEMOptimizer === 'undefined') {
+                    addResult('Basic Optimization', 'failed', 'GEMOptimizer class not available');
+                    return;
+                }
+                
+                const optimizer = new GEMOptimizer();
+                const vehicleData = {
+                    model: 'e4',
+                    year: '2016+',
+                    motorType: 'dc-stock',
+                    batteryVoltage: 48,
+                    currentSpeed: 25
+                };
+                
+                const result = await optimizer.optimizeSettings(vehicleData);
+                
+                if (result && result.settings && Object.keys(result.settings).length > 0) {
+                    addResult('Basic Optimization', 'passed', 
+                        `Successfully generated ${Object.keys(result.settings).length} controller settings`);
+                } else {
+                    addResult('Basic Optimization', 'failed', 'No settings generated');
+                }
+                
+            } catch (error) {
+                addResult('Basic Optimization', 'failed', `Error: ${error.message}`);
+            }
+        }
+        
+        async function testPDFParsing() {
+            try {
+                if (typeof PDFParser === 'undefined') {
+                    addResult('PDF Parsing', 'failed', 'PDFParser class not available');
+                    return;
+                }
+                
+                const parser = new PDFParser();
+                const sampleText = `
+                    GEM T2 Controller Settings
+                    F.No. 1    Counts 75
+                    F.No. 2    Counts 0
+                    F.No. 3    Counts 20
+                    Vehicle: e4 2018
+                `;
+                
+                const result = parser.extractSettingsFromText(sampleText);
+                
+                if (result && result.settings && Object.keys(result.settings).length > 0) {
+                    addResult('PDF Parsing', 'passed', 
+                        `Successfully extracted ${Object.keys(result.settings).length} settings from text`);
+                } else {
+                    addResult('PDF Parsing', 'failed', 'No settings extracted from sample text');
+                }
+                
+            } catch (error) {
+                addResult('PDF Parsing', 'failed', `Error: ${error.message}`);
+            }
+        }
+        
+        async function testFallbackSystems() {
+            try {
+                if (typeof FallbackCalculations === 'undefined') {
+                    addResult('Fallback Systems', 'failed', 'FallbackCalculations class not available');
+                    return;
+                }
+                
+                const fallback = new FallbackCalculations();
+                
+                // Test weather estimation
+                const weather = fallback.estimateWeather('San Diego, CA', new Date());
+                if (!weather || weather.temperature === undefined) {
+                    addResult('Fallback Systems', 'failed', 'Weather estimation failed');
+                    return;
+                }
+                
+                // Test terrain estimation
+                const terrain = fallback.estimateTerrain('Mountain Area');
+                if (!terrain || !terrain.type) {
+                    addResult('Fallback Systems', 'failed', 'Terrain estimation failed');
+                    return;
+                }
+                
+                addResult('Fallback Systems', 'passed', 
+                    `Weather: ${weather.temperature}°F, Terrain: ${terrain.type}`);
+                
+            } catch (error) {
+                addResult('Fallback Systems', 'failed', `Error: ${error.message}`);
+            }
+        }
+        
+        async function testValidation() {
+            try {
+                if (typeof ValidationSystem === 'undefined') {
+                    addResult('Validation System', 'failed', 'ValidationSystem class not available');
+                    return;
+                }
+                
+                const validator = new ValidationSystem();
+                
+                // Test valid data
+                const validData = {
+                    vehicle: { model: 'e4', motorCondition: 'good' },
+                    battery: { voltage: 48, type: 'lead-acid', capacity: 105 },
+                    wheel: { tireDiameter: 22.5, gearRatio: '10.35:1' }
+                };
+                
+                const validResult = validator.validateConfiguration(validData);
+                
+                // Test invalid data
+                const invalidData = {
+                    vehicle: { model: '', motorCondition: '' }
+                };
+                
+                const invalidResult = validator.validateConfiguration(invalidData);
+                
+                if (validResult.isValid && !invalidResult.isValid) {
+                    addResult('Validation System', 'passed', 
+                        `Validation working correctly (${invalidResult.errors.length} errors caught)`);
+                } else {
+                    addResult('Validation System', 'failed', 
+                        `Validation logic issue: valid=${validResult.isValid}, invalid=${invalidResult.isValid}`);
+                }
+                
+            } catch (error) {
+                addResult('Validation System', 'failed', `Error: ${error.message}`);
+            }
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(updateStatus, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Serverless APIs - GEM Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white p-4">
+        <div class="container mx-auto">
+            <h1 class="text-2xl font-bold">🚀 Serverless API Test Suite</h1>
+            <p class="text-sm opacity-90">Testing serverless functions on Netlify/Vercel</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+        <!-- Status Overview -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">🔍 System Status</h2>
+            <div class="grid md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div id="environment" class="text-2xl font-bold text-gray-900">Detecting...</div>
+                    <div class="text-xs text-gray-600">Environment</div>
+                </div>
+                <div class="text-center">
+                    <div id="base-url" class="text-sm font-medium text-gray-900 break-all">Detecting...</div>
+                    <div class="text-xs text-gray-600">Base URL</div>
+                </div>
+                <div class="text-center">
+                    <div id="serverless-status" class="text-2xl font-bold text-gray-900">Testing...</div>
+                    <div class="text-xs text-gray-600">Serverless Status</div>
+                </div>
+                <div class="text-center">
+                    <div id="overall-health" class="text-2xl font-bold text-gray-900">-</div>
+                    <div class="text-xs text-gray-600">Overall Health</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+            <!-- Left Panel: Function Tests -->
+            <div class="space-y-6">
+                <!-- Weather Function Test -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🌤️ Weather Function</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="weather-location" placeholder="Location" 
+                               value="San Francisco, CA"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="test-weather-current" class="py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                                Current Weather
+                            </button>
+                            <button id="test-weather-forecast" class="py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm">
+                                Forecast
+                            </button>
+                        </div>
+                        <div id="weather-result" class="text-xs bg-gray-50 p-2 rounded hidden max-h-32 overflow-y-auto"></div>
+                        <div id="weather-status" class="text-center">
+                            <span class="text-sm text-gray-500">Not tested</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Geocoding Function Test -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🌍 Geocoding Function</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="geocoding-address" placeholder="Address" 
+                               value="1600 Amphitheatre Parkway, Mountain View, CA"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="test-geocoding-forward" class="py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
+                                Forward Geocode
+                            </button>
+                            <button id="test-geocoding-reverse" class="py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm">
+                                Reverse Geocode
+                            </button>
+                        </div>
+                        <div id="geocoding-result" class="text-xs bg-gray-50 p-2 rounded hidden max-h-32 overflow-y-auto"></div>
+                        <div id="geocoding-status" class="text-center">
+                            <span class="text-sm text-gray-500">Not tested</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Elevation Function Test -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🏔️ Elevation Function</h3>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="elevation-lat" placeholder="Latitude" 
+                                   value="37.4419" step="0.0001"
+                                   class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <input type="number" id="elevation-lng" placeholder="Longitude" 
+                                   value="-122.1430" step="0.0001"
+                                   class="px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <button id="test-elevation" class="w-full py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
+                            Get Elevation
+                        </button>
+                        <div id="elevation-result" class="text-xs bg-gray-50 p-2 rounded hidden max-h-32 overflow-y-auto"></div>
+                        <div id="elevation-status" class="text-center">
+                            <span class="text-sm text-gray-500">Not tested</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maps Function Test -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🗺️ Maps Function</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="maps-origin" placeholder="Origin" 
+                               value="New York, NY"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <input type="text" id="maps-destination" placeholder="Destination" 
+                               value="Boston, MA"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        <button id="test-maps" class="w-full py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                            Get Directions
+                        </button>
+                        <div id="maps-result" class="text-xs bg-gray-50 p-2 rounded hidden max-h-32 overflow-y-auto"></div>
+                        <div id="maps-status" class="text-center">
+                            <span class="text-sm text-gray-500">Not tested</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Results & Tools -->
+            <div class="space-y-6">
+                <!-- Health Check -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🏥 Health Check</h3>
+                    <button id="run-health-check" class="w-full py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium mb-3">
+                        Run Full Health Check
+                    </button>
+                    <div id="health-results" class="space-y-2 text-sm"></div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">⚡ Performance</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Tests Run:</span>
+                            <span id="tests-run" class="font-medium">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Successful:</span>
+                            <span id="tests-successful" class="font-medium text-green-600">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Failed:</span>
+                            <span id="tests-failed" class="font-medium text-red-600">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Avg Response:</span>
+                            <span id="avg-response-time" class="font-medium">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Success Rate:</span>
+                            <span id="success-rate" class="font-medium">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Configuration -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">⚙️ Configuration</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="p-2 bg-gray-50 rounded">
+                            <div class="font-medium">Deployment Platform:</div>
+                            <div id="platform-info" class="text-gray-600">Detecting...</div>
+                        </div>
+                        <div class="p-2 bg-gray-50 rounded">
+                            <div class="font-medium">API Endpoint:</div>
+                            <div id="api-endpoint" class="text-gray-600 break-all">Detecting...</div>
+                        </div>
+                        <div class="p-2 bg-gray-50 rounded">
+                            <div class="font-medium">Function Timeout:</div>
+                            <div class="text-gray-600">10 seconds</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test All Button -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🚀 Comprehensive Test</h3>
+                    <button id="test-all-functions" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-md hover:from-indigo-700 hover:to-purple-700 font-medium">
+                        Test All Functions
+                    </button>
+                    <div id="comprehensive-results" class="mt-3 text-xs bg-gray-50 p-2 rounded hidden max-h-40 overflow-y-auto"></div>
+                </div>
+
+                <!-- API Keys Status -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="font-semibold mb-3">🔑 API Keys Status</h3>
+                    <div id="api-keys-status" class="space-y-2 text-sm">
+                        <div class="text-gray-600">Testing API key availability...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/serverless-api-client.js"></script>
+    <script>
+        let testMetrics = {
+            total: 0,
+            successful: 0,
+            failed: 0,
+            responseTimes: []
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Initializing serverless test suite...');
+            
+            // Update environment info
+            updateEnvironmentInfo();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Auto-run health check
+            setTimeout(runHealthCheck, 1000);
+        });
+
+        function updateEnvironmentInfo() {
+            const client = window.serverlessAPIClient;
+            const status = client.getStatus();
+            
+            document.getElementById('environment').textContent = status.environment;
+            document.getElementById('base-url').textContent = status.baseUrl;
+            document.getElementById('api-endpoint').textContent = status.baseUrl + '/api/*';
+            
+            // Detect platform
+            let platform = 'Unknown';
+            if (status.baseUrl.includes('netlify')) {
+                platform = 'Netlify';
+            } else if (status.baseUrl.includes('vercel')) {
+                platform = 'Vercel';
+            } else if (status.environment === 'development') {
+                platform = 'Local Development';
+            }
+            
+            document.getElementById('platform-info').textContent = platform;
+        }
+
+        function setupEventListeners() {
+            document.getElementById('test-weather-current').addEventListener('click', testWeatherCurrent);
+            document.getElementById('test-weather-forecast').addEventListener('click', testWeatherForecast);
+            document.getElementById('test-geocoding-forward').addEventListener('click', testGeocodingForward);
+            document.getElementById('test-geocoding-reverse').addEventListener('click', testGeocodingReverse);
+            document.getElementById('test-elevation').addEventListener('click', testElevation);
+            document.getElementById('test-maps').addEventListener('click', testMaps);
+            document.getElementById('run-health-check').addEventListener('click', runHealthCheck);
+            document.getElementById('test-all-functions').addEventListener('click', testAllFunctions);
+        }
+
+        async function testWeatherCurrent() {
+            const location = document.getElementById('weather-location').value;
+            const startTime = Date.now();
+            
+            try {
+                const result = await window.serverlessAPIClient.getCurrentWeather(location);
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success) {
+                    showResult('weather-result', 
+                        `✅ Success: ${result.data.current?.description || 'Weather data received'}\n` +
+                        `Temperature: ${result.data.current?.temperature || 'N/A'}°F\n` +
+                        `Source: ${result.source || 'serverless'}\n` +
+                        `Response time: ${responseTime}ms`
+                    );
+                    updateStatus('weather-status', '✅ Working', 'text-green-600');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('weather-result', `❌ Failed: ${result.error}`);
+                    updateStatus('weather-status', '❌ Failed', 'text-red-600');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('weather-result', `❌ Error: ${error.message}`);
+                updateStatus('weather-status', '❌ Error', 'text-red-600');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testWeatherForecast() {
+            const location = document.getElementById('weather-location').value;
+            const startTime = Date.now();
+            
+            try {
+                const result = await window.serverlessAPIClient.getWeatherForecast(location, 3);
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success) {
+                    showResult('weather-result', 
+                        `✅ Forecast Success: ${result.data.forecast?.length || 0} days\n` +
+                        `Source: ${result.source || 'serverless'}\n` +
+                        `Response time: ${responseTime}ms`
+                    );
+                    updateStatus('weather-status', '✅ Working', 'text-green-600');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('weather-result', `❌ Forecast Failed: ${result.error}`);
+                    updateStatus('weather-status', '❌ Failed', 'text-red-600');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('weather-result', `❌ Error: ${error.message}`);
+                updateStatus('weather-status', '❌ Error', 'text-red-600');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testGeocodingForward() {
+            const address = document.getElementById('geocoding-address').value;
+            const startTime = Date.now();
+            
+            try {
+                const result = await window.serverlessAPIClient.geocodeAddress(address);
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success && result.results?.length > 0) {
+                    const location = result.results[0];
+                    showResult('geocoding-result', 
+                        `✅ Success: ${location.formattedAddress || location.location}\n` +
+                        `Coordinates: ${location.location?.lat}, ${location.location?.lng}\n` +
+                        `Source: ${result.source || 'serverless'}\n` +
+                        `Response time: ${responseTime}ms`
+                    );
+                    updateStatus('geocoding-status', '✅ Working', 'text-green-600');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('geocoding-result', `❌ No results: ${result.error || 'No locations found'}`);
+                    updateStatus('geocoding-status', '❌ Failed', 'text-red-600');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('geocoding-result', `❌ Error: ${error.message}`);
+                updateStatus('geocoding-status', '❌ Error', 'text-red-600');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testGeocodingReverse() {
+            const lat = 37.4419;
+            const lng = -122.1430;
+            const startTime = Date.now();
+            
+            try {
+                const result = await window.serverlessAPIClient.reverseGeocode(lat, lng);
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success && result.results?.length > 0) {
+                    const location = result.results[0];
+                    showResult('geocoding-result', 
+                        `✅ Reverse Success: ${location.formattedAddress}\n` +
+                        `Source: ${result.source || 'serverless'}\n` +
+                        `Response time: ${responseTime}ms`
+                    );
+                    updateStatus('geocoding-status', '✅ Working', 'text-green-600');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('geocoding-result', `❌ Reverse Failed: ${result.error || 'No address found'}`);
+                    updateStatus('geocoding-status', '❌ Failed', 'text-red-600');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('geocoding-result', `❌ Error: ${error.message}`);
+                updateStatus('geocoding-status', '❌ Error', 'text-red-600');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testElevation() {
+            const lat = parseFloat(document.getElementById('elevation-lat').value);
+            const lng = parseFloat(document.getElementById('elevation-lng').value);
+            const startTime = Date.now();
+            
+            try {
+                const result = await window.serverlessAPIClient.getElevation(lat, lng);
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success) {
+                    showResult('elevation-result', 
+                        `✅ Success: ${result.elevation || result.data?.elevation || 'N/A'} feet\n` +
+                        `Source: ${result.source || 'serverless'}\n` +
+                        `Response time: ${responseTime}ms`
+                    );
+                    updateStatus('elevation-status', '✅ Working', 'text-green-600');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('elevation-result', `❌ Failed: ${result.error}`);
+                    updateStatus('elevation-status', '❌ Failed', 'text-red-600');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('elevation-result', `❌ Error: ${error.message}`);
+                updateStatus('elevation-status', '❌ Error', 'text-red-600');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function testMaps() {
+            const origin = document.getElementById('maps-origin').value;
+            const destination = document.getElementById('maps-destination').value;
+            const startTime = Date.now();
+            
+            try {
+                const result = await window.serverlessAPIClient.getDirections(origin, destination);
+                const responseTime = Date.now() - startTime;
+                
+                if (result.success && result.routes?.length > 0) {
+                    const route = result.routes[0];
+                    showResult('maps-result', 
+                        `✅ Success: ${route.distance?.text || 'Route found'}\n` +
+                        `Duration: ${route.duration?.text || 'N/A'}\n` +
+                        `Source: ${result.source || 'serverless'}\n` +
+                        `Response time: ${responseTime}ms`
+                    );
+                    updateStatus('maps-status', '✅ Working', 'text-green-600');
+                    recordTest(true, responseTime);
+                } else {
+                    showResult('maps-result', `❌ Failed: ${result.error || 'No routes found'}`);
+                    updateStatus('maps-status', '❌ Failed', 'text-red-600');
+                    recordTest(false, responseTime);
+                }
+            } catch (error) {
+                showResult('maps-result', `❌ Error: ${error.message}`);
+                updateStatus('maps-status', '❌ Error', 'text-red-600');
+                recordTest(false, Date.now() - startTime);
+            }
+        }
+
+        async function runHealthCheck() {
+            document.getElementById('run-health-check').disabled = true;
+            document.getElementById('run-health-check').textContent = 'Running...';
+            
+            try {
+                const healthCheck = await window.serverlessAPIClient.healthCheck();
+                
+                // Update overall status
+                const overallHealth = healthCheck.overall.healthy ? '✅ Healthy' : '❌ Issues';
+                document.getElementById('serverless-status').textContent = healthCheck.overall.healthy ? '✅ Online' : '❌ Issues';
+                document.getElementById('overall-health').textContent = overallHealth;
+                document.getElementById('overall-health').className = `text-2xl font-bold ${healthCheck.overall.healthy ? 'text-green-600' : 'text-red-600'}`;
+                
+                // Show detailed results
+                const healthResults = document.getElementById('health-results');
+                healthResults.innerHTML = healthCheck.endpoints.map(endpoint => 
+                    `<div class="flex justify-between items-center p-2 rounded ${endpoint.available ? 'bg-green-50' : 'bg-red-50'}">
+                        <span class="font-medium">${endpoint.endpoint.replace('/api/', '')}</span>
+                        <span class="${endpoint.available ? 'text-green-600' : 'text-red-600'}">
+                            ${endpoint.available ? `✅ ${endpoint.responseTime}ms` : `❌ ${endpoint.error}`}
+                        </span>
+                    </div>`
+                ).join('');
+                
+            } catch (error) {
+                document.getElementById('health-results').innerHTML = 
+                    `<div class="p-2 bg-red-50 text-red-600 rounded">❌ Health check failed: ${error.message}</div>`;
+            } finally {
+                document.getElementById('run-health-check').disabled = false;
+                document.getElementById('run-health-check').textContent = 'Run Full Health Check';
+            }
+        }
+
+        async function testAllFunctions() {
+            document.getElementById('test-all-functions').disabled = true;
+            document.getElementById('test-all-functions').textContent = 'Testing...';
+            
+            showResult('comprehensive-results', 'Running comprehensive test suite...\n');
+            
+            // Reset metrics
+            testMetrics = { total: 0, successful: 0, failed: 0, responseTimes: [] };
+            
+            // Test all functions sequentially
+            await testWeatherCurrent();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testGeocodingForward();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testElevation();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testMaps();
+            
+            // Show final results
+            const avgResponseTime = testMetrics.responseTimes.length > 0 
+                ? testMetrics.responseTimes.reduce((a, b) => a + b, 0) / testMetrics.responseTimes.length 
+                : 0;
+            
+            const successRate = testMetrics.total > 0 ? (testMetrics.successful / testMetrics.total * 100) : 0;
+            
+            showResult('comprehensive-results', 
+                `🎉 Comprehensive test completed!\n` +
+                `Total tests: ${testMetrics.total}\n` +
+                `Successful: ${testMetrics.successful}\n` +
+                `Failed: ${testMetrics.failed}\n` +
+                `Success rate: ${Math.round(successRate)}%\n` +
+                `Average response: ${Math.round(avgResponseTime)}ms\n\n` +
+                `Serverless functions are ${successRate === 100 ? 'working perfectly!' : 'mostly functional.'}`
+            );
+            
+            document.getElementById('test-all-functions').disabled = false;
+            document.getElementById('test-all-functions').textContent = 'Test All Functions';
+        }
+
+        function showResult(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.remove('hidden');
+        }
+
+        function updateStatus(elementId, text, className) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<span class="${className}">${text}</span>`;
+        }
+
+        function recordTest(success, responseTime) {
+            testMetrics.total++;
+            if (success) {
+                testMetrics.successful++;
+            } else {
+                testMetrics.failed++;
+            }
+            testMetrics.responseTimes.push(responseTime);
+            
+            // Update performance display
+            document.getElementById('tests-run').textContent = testMetrics.total;
+            document.getElementById('tests-successful').textContent = testMetrics.successful;
+            document.getElementById('tests-failed').textContent = testMetrics.failed;
+            
+            const avgResponseTime = testMetrics.responseTimes.length > 0 
+                ? testMetrics.responseTimes.reduce((a, b) => a + b, 0) / testMetrics.responseTimes.length 
+                : 0;
+            document.getElementById('avg-response-time').textContent = Math.round(avgResponseTime) + 'ms';
+            
+            const successRate = testMetrics.total > 0 ? (testMetrics.successful / testMetrics.total * 100) : 0;
+            document.getElementById('success-rate').textContent = Math.round(successRate) + '%';
+        }
+    </script>
+</body>
+</html>

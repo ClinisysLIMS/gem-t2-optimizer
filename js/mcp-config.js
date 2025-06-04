@@ -14,7 +14,8 @@ class MCPConfigManager {
             apiKey: '',
             timeout: 30000, // 30 second timeout
             retryAttempts: 3,
-            enableLocalFallback: true
+            enableLocalFallback: true,
+            enabled: true // Enable MCP by default
         };
         
         this.loadConfig();
@@ -119,6 +120,12 @@ class MCPConfigManager {
      * Call MCP tool (with local fallback)
      */
     async callTool(toolName, parameters) {
+        // If MCP is disabled, always use local calculations
+        if (!this.config.enabled) {
+            console.log('MCP disabled, using local calculations only');
+            return this.executeLocalTool(toolName, parameters);
+        }
+        
         if (this.isLocal || this.connectionStatus !== 'connected') {
             return this.executeLocalTool(toolName, parameters);
         }
@@ -381,7 +388,8 @@ class MCPConfigManager {
                 serverUrl: this.config.serverUrl ? '***configured***' : '',
                 hasApiKey: !!this.config.apiKey,
                 timeout: this.config.timeout,
-                enableLocalFallback: this.config.enableLocalFallback
+                enableLocalFallback: this.config.enableLocalFallback,
+                enabled: this.config.enabled
             }
         };
     }
@@ -619,7 +627,8 @@ class MCPConfigManager {
             apiKey: '',
             timeout: 30000,
             retryAttempts: 3,
-            enableLocalFallback: true
+            enableLocalFallback: true,
+            enabled: true
         };
         this.storage.removeItem('mcp_config');
         this.resetToLocal();

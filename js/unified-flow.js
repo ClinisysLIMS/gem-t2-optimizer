@@ -636,12 +636,33 @@ class UnifiedFlowController {
                 // Use trip optimizer for weekend outings
                 optimizedSettings = await this.optimizeTripSettings();
             } else {
-                // Use standard optimization
-                optimizedSettings = this.optimizer.optimizeByMode(
-                    baseSettings,
-                    this.tripData.optimizationMode || profile,
-                    this.vehicleData
-                );
+                // Try MCP-enhanced optimization first
+                try {
+                    if (window.mcpConfig) {
+                        const mcpResult = await window.mcpConfig.callTool('optimize_controller', {
+                            vehicleData: this.vehicleData,
+                            priorities: this.convertModeToPriorities(this.tripData.optimizationMode || profile),
+                            baseline: baseSettings
+                        });
+                        
+                        if (mcpResult.success) {
+                            optimizedSettings = mcpResult.optimizedSettings;
+                            console.log(`Controller optimization via ${mcpResult.source}`);
+                        } else {
+                            throw new Error('MCP optimization failed');
+                        }
+                    } else {
+                        throw new Error('MCP not available');
+                    }
+                } catch (e) {
+                    console.warn('MCP optimization failed, using local optimizer:', e);
+                    // Fallback to standard optimization
+                    optimizedSettings = this.optimizer.optimizeByMode(
+                        baseSettings,
+                        this.tripData.optimizationMode || profile,
+                        this.vehicleData
+                    );
+                }
             }
             
             // Store optimized settings for sharing
@@ -677,13 +698,43 @@ class UnifiedFlowController {
             throw new Error('Trip optimizer not available');
         }
         
-        // Get weather and terrain data if available
+        // Get weather and terrain data using MCP or fallback
         let conditions = {
             weather: { temperature: 75, conditions: 'Clear' },
             terrain: { type: 'mixed', maxGrade: 10 }
         };
         
-        if (this.weatherService?.isConfigured() && this.tripData.destination && this.tripData.date) {
+        // Try MCP-enhanced data collection first
+        if (window.mcpConfig && this.tripData.destination && this.tripData.date) {
+            try {
+                // Get enhanced weather data via MCP
+                const weatherResult = await window.mcpConfig.callTool('get_weather', {
+                    location: this.tripData.destination,
+                    date: this.tripData.date
+                });
+                
+                if (weatherResult.success) {
+                    conditions.weather = weatherResult.weather;
+                    console.log(`Weather data via ${weatherResult.source}:`, weatherResult.weather);
+                }
+                
+                // Get terrain data via MCP
+                const terrainResult = await window.mcpConfig.callTool('get_terrain', {
+                    location: this.tripData.destination
+                });
+                
+                if (terrainResult.success) {
+                    conditions.terrain = terrainResult.terrain;
+                    console.log(`Terrain data via ${terrainResult.source}:`, terrainResult.terrain);
+                }
+                
+            } catch (e) {
+                console.warn('MCP data collection failed, using defaults:', e);
+            }
+        }
+        
+        // Fallback to original weather service if needed
+        if (!conditions.weather.source && this.weatherService?.isConfigured() && this.tripData.destination && this.tripData.date) {
             try {
                 const weather = await this.weatherService.getWeatherForDate(
                     this.tripData.destination,
@@ -695,7 +746,7 @@ class UnifiedFlowController {
             }
         }
         
-        // Optimize for trip
+        // Optimize for trip with enhanced conditions
         return this.tripOptimizer.optimizeForTrip({
             vehicleData: this.vehicleData,
             tripData: this.tripData,
@@ -884,9 +935,13 @@ class UnifiedFlowController {
      * Show MCP configuration modal
      */
     showMCPConfiguration() {
-        // This would open the MCP configuration interface
-        // For now, show a simple message
-        alert('MCP Configuration: This feature allows AI-powered optimization using Model Context Protocol. Configuration interface coming soon!');
+        // Show the working MCP configuration panel
+        if (window.mcpConfigUI) {
+            window.mcpConfigUI.show();
+        } else {
+            // Fallback if UI not loaded
+            alert('MCP Configuration UI not available. Please refresh the page and try again.');
+        }
     }
 
     /**
@@ -1152,6 +1207,21 @@ class UnifiedFlowController {
         }
     }
     
+    /**
+     * Convert optimization mode to MCP priorities
+     */
+    convertModeToPriorities(mode) {
+        const priorityMaps = {
+            'performance': { speed: 9, acceleration: 9, hillClimbing: 7, range: 5, regen: 5 },
+            'efficiency': { speed: 5, acceleration: 5, hillClimbing: 6, range: 9, regen: 9 },
+            'balanced': { speed: 7, acceleration: 7, hillClimbing: 7, range: 7, regen: 7 },
+            'turf': { speed: 3, acceleration: 4, hillClimbing: 6, range: 8, regen: 7 },
+            'commute': { speed: 6, acceleration: 7, hillClimbing: 6, range: 8, regen: 7 }
+        };
+        
+        return priorityMaps[mode] || priorityMaps['balanced'];
+    }
+
     /**
      * Share current configuration with the community
      */

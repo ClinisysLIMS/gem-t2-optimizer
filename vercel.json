@@ -1,0 +1,173 @@
+{
+  "version": 2,
+  "name": "gem-t2-optimizer",
+  "description": "GEM T2 Controller Optimizer with Serverless API",
+  "builds": [
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 10
+    }
+  },
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/index-new.html"
+    },
+    {
+      "src": "/api/weather",
+      "dest": "/api/weather.js"
+    },
+    {
+      "src": "/api/weather/(.*)",
+      "dest": "/api/weather.js"
+    },
+    {
+      "src": "/api/geocoding",
+      "dest": "/api/geocoding.js"
+    },
+    {
+      "src": "/api/geocoding/(.*)",
+      "dest": "/api/geocoding.js"
+    },
+    {
+      "src": "/api/elevation",
+      "dest": "/api/elevation.js"
+    },
+    {
+      "src": "/api/elevation/(.*)",
+      "dest": "/api/elevation.js"
+    },
+    {
+      "src": "/api/maps",
+      "dest": "/api/maps.js"
+    },
+    {
+      "src": "/api/maps/(.*)",
+      "dest": "/api/maps.js"
+    },
+    {
+      "src": "/gem-optimizer",
+      "dest": "/gem-optimizer.html"
+    },
+    {
+      "src": "/weekend-planner",
+      "dest": "/weekend-planner.html"
+    },
+    {
+      "src": "/route-map",
+      "dest": "/route-map.html"
+    },
+    {
+      "src": "/mcp-integration",
+      "dest": "/mcp-integration.html"
+    },
+    {
+      "src": "/test-(.*)",
+      "dest": "/test-$1.html"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|html))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/404.html",
+      "status": 404
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Requested-With"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=()"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(js|css))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|woff|woff2))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.html)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "regions": ["iad1"],
+  "github": {
+    "silent": true
+  }
+}

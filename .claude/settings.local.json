@@ -17,7 +17,11 @@
       "Bash(git push:*)",
       "Bash(node:*)",
       "Bash(git commit:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(cat:*)",
+      "Bash(rg:*)",
+      "Bash(pkill:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

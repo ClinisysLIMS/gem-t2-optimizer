@@ -1,15 +1,12 @@
 /**
  * AI PDF Service
- * OpenAI/Claude API integration for advanced PDF text extraction and analysis
+ * Local AI integration for PDF text extraction and analysis using pattern matching and rule-based systems
  */
 class AIPDFService {
     constructor() {
         this.apiManager = window.apiManager || new APIManager();
-        this.preferredAI = 'claude'; // Default to Claude for better PDF understanding
-        this.modelVersions = {
-            openai: 'gpt-4-vision-preview',
-            claude: 'claude-3-opus-20240229'
-        };
+        this.preferredAI = 'localAI'; // Use local AI systems
+        this.fallbackSystems = ['pattern_matching', 'rule_based_analysis'];
         
         this.extractionCache = new Map();
         this.analysisCache = new Map();
@@ -30,18 +27,20 @@ class AIPDFService {
             // Convert PDF to images for AI vision analysis
             const images = await this.convertPDFToImages(file);
             
-            // Try AI extraction first
-            let result = null;
+            // Use local pattern matching as primary method
+            let result = await this.extractWithPatternMatching(file);
             
-            if (this.apiManager.apis[this.preferredAI].isConfigured) {
-                result = await this.extractWithAI(images, this.preferredAI);
-            } else if (this.apiManager.apis[this.getAlternativeAI()].isConfigured) {
-                result = await this.extractWithAI(images, this.getAlternativeAI());
-            }
-            
-            // Fallback to pattern matching if AI fails
-            if (!result || !result.success) {
-                result = await this.extractWithPatternMatching(file);
+            // Enhance with local AI analysis if available
+            if (result.success && window.ruleBasedOptimizer) {
+                try {
+                    const enhancedResult = await this.enhanceWithLocalAI(result.data);
+                    if (enhancedResult.success) {
+                        result = enhancedResult;
+                    }
+                } catch (error) {
+                    console.warn('Local AI enhancement failed:', error);
+                    // Continue with pattern matching result
+                }
             }
             
             // Cache result
@@ -96,147 +95,79 @@ class AIPDFService {
     }
     
     /**
-     * Extract text using AI vision
+     * Enhance extracted data with local AI analysis
      */
-    async extractWithAI(images, aiProvider) {
-        if (aiProvider === 'claude') {
-            return await this.extractWithClaude(images);
-        } else if (aiProvider === 'openai') {
-            return await this.extractWithOpenAI(images);
-        }
-        
-        return { success: false, error: 'Invalid AI provider' };
-    }
-    
-    /**
-     * Extract with Claude API
-     */
-    async extractWithClaude(images) {
-        const messages = [{
-            role: 'user',
-            content: [
-                {
-                    type: 'text',
-                    text: `Please extract all text from these PDF pages, paying special attention to:
-                    1. Controller settings in the format F.XX = YYY
-                    2. Vehicle information (model, year, motor type)
-                    3. Table data with parameter values
-                    4. Any technical specifications
-                    
-                    Format the extracted data as structured JSON with these sections:
-                    - controller_settings: Object with F.XX as keys
-                    - vehicle_info: Object with model, year, motor details
-                    - tables: Array of table data
-                    - raw_text: Complete extracted text`
-                },
-                ...images.map(img => ({
-                    type: 'image',
-                    source: {
-                        type: 'base64',
-                        media_type: 'image/png',
-                        data: img.data.split(',')[1] // Remove data:image/png;base64, prefix
-                    }
-                }))
-            ]
-        }];
-        
+    async enhanceWithLocalAI(extractedData) {
         try {
-            const response = await this.apiManager.makeAPIRequest('claude', '/messages', {
-                method: 'POST',
-                body: {
-                    model: this.modelVersions.claude,
-                    messages: messages,
-                    max_tokens: 4096
+            // Use rule-based optimizer to analyze settings if available
+            if (window.ruleBasedOptimizer && extractedData.controller_settings) {
+                const settingsArray = Object.keys(extractedData.controller_settings)
+                    .sort((a, b) => parseInt(a.replace('F.', '')) - parseInt(b.replace('F.', '')))
+                    .map(key => extractedData.controller_settings[key]);
+                
+                const analysis = window.ruleBasedOptimizer.optimize(
+                    extractedData.vehicle_info,
+                    { speed: 5, range: 5, acceleration: 5, efficiency: 5 },
+                    settingsArray
+                );
+                
+                if (analysis.success) {
+                    extractedData.ai_analysis = {
+                        safety_assessment: this.generateSafetyAssessment(extractedData.controller_settings),
+                        performance_prediction: analysis.performance,
+                        recommendations: analysis.recommendations,
+                        optimization_strategy: analysis.strategy,
+                        confidence: analysis.confidence
+                    };
                 }
-            });
-            
-            if (response.success) {
-                const extractedData = this.parseAIResponse(response.data.content[0].text);
-                return {
-                    success: true,
-                    data: extractedData,
-                    provider: 'claude',
-                    confidence: 0.95
-                };
             }
             
+            return {
+                success: true,
+                data: extractedData,
+                provider: 'local_ai_enhanced',
+                confidence: 0.90
+            };
+            
         } catch (error) {
-            console.error('Claude extraction failed:', error);
+            console.error('Local AI enhancement failed:', error);
+            return { success: false, error: error.message };
         }
-        
-        return { success: false, error: 'Claude extraction failed' };
     }
     
     /**
-     * Extract with OpenAI API
+     * Generate safety assessment for controller settings
      */
-    async extractWithOpenAI(images) {
-        const messages = [{
-            role: 'user',
-            content: [
-                {
-                    type: 'text',
-                    text: `Extract all text from these PDF pages, focusing on:
-                    1. Controller settings (F.XX = YYY format)
-                    2. Vehicle specifications
-                    3. Table data
-                    4. Technical parameters
-                    
-                    Return structured JSON with:
-                    - controller_settings: Object mapping F.XX to values
-                    - vehicle_info: Vehicle details
-                    - tables: Extracted table data
-                    - raw_text: Complete text`
-                },
-                ...images.map(img => ({
-                    type: 'image_url',
-                    image_url: {
-                        url: img.data
-                    }
-                }))
-            ]
-        }];
+    generateSafetyAssessment(settings) {
+        const warnings = [];
+        const recommendations = [];
         
-        try {
-            const response = await this.apiManager.makeAPIRequest('openai', '/chat/completions', {
-                method: 'POST',
-                body: {
-                    model: this.modelVersions.openai,
-                    messages: messages,
-                    max_tokens: 4096,
-                    response_format: { type: 'json_object' }
-                }
-            });
-            
-            if (response.success) {
-                const extractedData = this.parseAIResponse(response.data.choices[0].message.content);
-                return {
-                    success: true,
-                    data: extractedData,
-                    provider: 'openai',
-                    confidence: 0.93
-                };
-            }
-            
-        } catch (error) {
-            console.error('OpenAI extraction failed:', error);
+        // Check critical settings
+        if (settings['F.1'] && settings['F.1'] > 30) {
+            warnings.push('Speed scaling (F.1) exceeds typical safe limits');
         }
         
-        return { success: false, error: 'OpenAI extraction failed' };
-    }
-    
-    /**
-     * Parse AI response
-     */
-    parseAIResponse(responseText) {
-        try {
-            // Try to parse as JSON first
-            const data = JSON.parse(responseText);
-            return this.normalizeExtractedData(data);
-        } catch (error) {
-            // Fallback to text parsing
-            return this.parseTextResponse(responseText);
+        if (settings['F.4'] && settings['F.4'] > 320) {
+            warnings.push('Armature current (F.4) is very high - monitor motor temperature');
         }
+        
+        if (settings['F.6'] && settings['F.6'] < 30) {
+            recommendations.push('Consider increasing acceleration rate (F.6) for better responsiveness');
+        }
+        
+        if (settings['F.9'] && settings['F.9'] < 200) {
+            recommendations.push('Increase regenerative braking (F.9) for better efficiency');
+        }
+        
+        if (settings['F.24'] && settings['F.24'] > 55) {
+            warnings.push('Field weakening (F.24) is high - ensure proper motor cooling');
+        }
+        
+        return {
+            warnings: warnings,
+            recommendations: recommendations,
+            overall_safety: warnings.length === 0 ? 'SAFE' : warnings.length < 3 ? 'CAUTION' : 'REVIEW_REQUIRED'
+        };
     }
     
     /**
@@ -380,198 +311,306 @@ class AIPDFService {
         }
         
         try {
-            let result = null;
-            
-            if (this.apiManager.apis[this.preferredAI].isConfigured) {
-                result = await this.analyzeWithAI(extractedData, analysisType, this.preferredAI);
-            } else if (this.apiManager.apis[this.getAlternativeAI()].isConfigured) {
-                result = await this.analyzeWithAI(extractedData, analysisType, this.getAlternativeAI());
-            } else {
-                result = await this.analyzeWithRules(extractedData, analysisType);
-            }
+            // Use local rule-based analysis only
+            const result = await this.analyzeWithRules(extractedData, analysisType);
             
             this.analysisCache.set(cacheKey, result);
             return result;
             
         } catch (error) {
             console.error('PDF analysis failed:', error);
-            return this.analyzeWithRules(extractedData, analysisType);
+            return {
+                success: false,
+                error: 'Local analysis failed',
+                fallback: true
+            };
         }
     }
     
     /**
-     * Analyze with AI
+     * Enhanced local analysis using rule-based systems
      */
-    async analyzeWithAI(extractedData, analysisType, aiProvider) {
-        const prompt = this.buildAnalysisPrompt(extractedData, analysisType);
-        
-        if (aiProvider === 'claude') {
-            return await this.analyzeWithClaude(prompt, extractedData);
-        } else if (aiProvider === 'openai') {
-            return await this.analyzeWithOpenAI(prompt, extractedData);
-        }
-        
-        return { success: false };
-    }
-    
-    /**
-     * Build analysis prompt
-     */
-    buildAnalysisPrompt(extractedData, analysisType) {
-        const settings = JSON.stringify(extractedData.controller_settings, null, 2);
-        const vehicleInfo = JSON.stringify(extractedData.vehicle_info, null, 2);
-        
-        const prompts = {
-            comprehensive: `Analyze these GEM vehicle controller settings and provide:
-                1. Safety assessment (any dangerous values?)
-                2. Performance analysis (speed, acceleration, efficiency)
-                3. Optimization suggestions
-                4. Compatibility check with vehicle specs
-                5. Comparison to standard presets
-                
-                Controller Settings:
-                ${settings}
-                
-                Vehicle Info:
-                ${vehicleInfo}`,
-            
-            safety: `Perform a safety analysis of these controller settings:
-                ${settings}
-                
-                Check for:
-                - Unsafe current limits
-                - Dangerous speed settings
-                - Improper temperature limits
-                - Any values that could damage the motor`,
-            
-            optimization: `Suggest optimizations for these settings:
-                ${settings}
-                
-                Vehicle: ${vehicleInfo.model || 'Unknown'}
-                
-                Provide specific value recommendations for better:
-                - Performance
-                - Efficiency
-                - Motor longevity
-                - Battery life`
-        };
-        
-        return prompts[analysisType] || prompts.comprehensive;
-    }
-    
-    /**
-     * Analyze with Claude
-     */
-    async analyzeWithClaude(prompt, extractedData) {
-        try {
-            const response = await this.apiManager.makeAPIRequest('claude', '/messages', {
-                method: 'POST',
-                body: {
-                    model: this.modelVersions.claude,
-                    messages: [{
-                        role: 'user',
-                        content: prompt
-                    }],
-                    max_tokens: 2048
-                }
-            });
-            
-            if (response.success) {
-                return {
-                    success: true,
-                    analysis: response.data.content[0].text,
-                    provider: 'claude',
-                    extractedData: extractedData,
-                    timestamp: new Date().toISOString()
-                };
-            }
-            
-        } catch (error) {
-            console.error('Claude analysis failed:', error);
-        }
-        
-        return { success: false };
-    }
-    
-    /**
-     * Analyze with OpenAI
-     */
-    async analyzeWithOpenAI(prompt, extractedData) {
-        try {
-            const response = await this.apiManager.makeAPIRequest('openai', '/chat/completions', {
-                method: 'POST',
-                body: {
-                    model: 'gpt-4',
-                    messages: [{
-                        role: 'system',
-                        content: 'You are an expert in GEM electric vehicle controller optimization.'
-                    }, {
-                        role: 'user',
-                        content: prompt
-                    }],
-                    max_tokens: 2048
-                }
-            });
-            
-            if (response.success) {
-                return {
-                    success: true,
-                    analysis: response.data.choices[0].message.content,
-                    provider: 'openai',
-                    extractedData: extractedData,
-                    timestamp: new Date().toISOString()
-                };
-            }
-            
-        } catch (error) {
-            console.error('OpenAI analysis failed:', error);
-        }
-        
-        return { success: false };
-    }
-    
-    /**
-     * Rule-based analysis fallback
-     */
-    async analyzeWithRules(extractedData, analysisType) {
+    async performLocalAnalysis(extractedData, analysisType) {
         const settings = extractedData.controller_settings;
-        const analysis = {
+        const vehicleInfo = extractedData.vehicle_info;
+        
+        let analysis = {
             safety: [],
             warnings: [],
             suggestions: [],
-            optimizations: []
+            optimizations: [],
+            performance: null,
+            compatibility: null
         };
         
-        // Safety checks
-        if (settings['F.1'] > 120) {
-            analysis.warnings.push('Speed setting exceeds safe limits for most GEM vehicles');
+        // Use rule-based optimizer if available
+        if (window.ruleBasedOptimizer && Object.keys(settings).length > 0) {
+            try {
+                const settingsArray = Object.keys(settings)
+                    .sort((a, b) => parseInt(a.replace('F.', '')) - parseInt(b.replace('F.', '')))
+                    .map(key => settings[key]);
+                
+                const optimizerResult = window.ruleBasedOptimizer.optimize(
+                    vehicleInfo,
+                    { speed: 5, range: 5, acceleration: 5, efficiency: 5 },
+                    settingsArray
+                );
+                
+                if (optimizerResult.success) {
+                    analysis.performance = optimizerResult.performance;
+                    analysis.optimizations = optimizerResult.recommendations || [];
+                    analysis.strategy = optimizerResult.strategy;
+                }
+            } catch (error) {
+                console.warn('Rule-based optimizer analysis failed:', error);
+            }
         }
         
-        if (settings['F.4'] > 350) {
-            analysis.warnings.push('Armature current limit may cause motor damage');
-        }
-        
-        if (settings['F.12'] < 5) {
-            analysis.warnings.push('Temperature limit too low - motor may overheat');
-        }
-        
-        // Optimization suggestions
-        if (settings['F.6'] < 40) {
-            analysis.suggestions.push('Consider increasing acceleration rate (F.6) for better performance');
-        }
-        
-        if (settings['F.9'] < 200) {
-            analysis.suggestions.push('Increase regenerative braking (F.9) for better battery efficiency');
+        // Perform specific analysis based on type
+        switch (analysisType) {
+            case 'safety':
+                analysis = { ...analysis, ...this.performSafetyAnalysis(settings, vehicleInfo) };
+                break;
+            case 'optimization':
+                analysis = { ...analysis, ...this.performOptimizationAnalysis(settings, vehicleInfo) };
+                break;
+            case 'comprehensive':
+            default:
+                analysis = { ...analysis, ...this.performComprehensiveAnalysis(settings, vehicleInfo) };
+                break;
         }
         
         return {
             success: true,
             analysis: analysis,
-            provider: 'rule_based',
+            provider: 'local_enhanced',
             extractedData: extractedData,
-            fallback: true,
             timestamp: new Date().toISOString()
         };
+    }
+    
+    /**
+     * Perform safety-focused analysis
+     */
+    performSafetyAnalysis(settings, vehicleInfo) {
+        const safety = [];
+        const warnings = [];
+        
+        // Critical safety checks
+        if (settings['F.1'] > 30) {
+            warnings.push('CRITICAL: Speed scaling (F.1) exceeds safe limits - risk of exceeding 25mph legal limit');
+        }
+        
+        if (settings['F.4'] > 350) {
+            warnings.push('CRITICAL: Armature current (F.4) extremely high - severe motor damage risk');
+        } else if (settings['F.4'] > 300) {
+            warnings.push('WARNING: Armature current (F.4) very high - monitor motor temperature closely');
+        }
+        
+        if (settings['F.24'] > 60) {
+            warnings.push('WARNING: Field weakening (F.24) at maximum - ensure adequate motor cooling');
+        }
+        
+        if (settings['F.9'] > 300) {
+            warnings.push('WARNING: Regenerative current (F.9) very high - may stress battery');
+        }
+        
+        // Positive safety notes
+        if (settings['F.1'] && settings['F.1'] <= 25) {
+            safety.push('Speed scaling within safe range');
+        }
+        
+        if (settings['F.4'] && settings['F.4'] <= 280) {
+            safety.push('Armature current within safe operating range');
+        }
+        
+        return { safety, warnings };
+    }
+    
+    /**
+     * Perform optimization-focused analysis
+     */
+    performOptimizationAnalysis(settings, vehicleInfo) {
+        const suggestions = [];
+        const optimizations = [];
+        
+        // Performance optimizations
+        if (settings['F.6'] && settings['F.6'] < 50) {
+            optimizations.push('Increase acceleration rate (F.6) to 60-70 for better responsiveness');
+        }
+        
+        if (settings['F.9'] && settings['F.9'] < 220) {
+            optimizations.push('Increase regenerative braking (F.9) to 240-260 for better efficiency');
+        }
+        
+        if (settings['F.1'] && settings['F.4']) {
+            const speedToCurrentRatio = settings['F.1'] / settings['F.4'];
+            if (speedToCurrentRatio < 0.08) {
+                suggestions.push('Speed-to-current ratio suggests potential for better performance balance');
+            }
+        }
+        
+        // Vehicle-specific optimizations
+        if (vehicleInfo.model?.toLowerCase().includes('e4')) {
+            if (settings['F.4'] && settings['F.4'] < 260) {
+                optimizations.push('E4 vehicles can typically handle F.4 = 260-280 for better performance');
+            }
+        }
+        
+        if (vehicleInfo.model?.toLowerCase().includes('el-xd')) {
+            if (settings['F.4'] && settings['F.4'] < 280) {
+                optimizations.push('eL XD vehicles can typically handle F.4 = 280-300 with lithium batteries');
+            }
+        }
+        
+        return { suggestions, optimizations };
+    }
+    
+    /**
+     * Perform comprehensive analysis
+     */
+    performComprehensiveAnalysis(settings, vehicleInfo) {
+        const safetyAnalysis = this.performSafetyAnalysis(settings, vehicleInfo);
+        const optimizationAnalysis = this.performOptimizationAnalysis(settings, vehicleInfo);
+        
+        const compatibility = this.assessVehicleCompatibility(settings, vehicleInfo);
+        const summary = this.generateAnalysisSummary(settings, vehicleInfo, safetyAnalysis, optimizationAnalysis);
+        
+        return {
+            ...safetyAnalysis,
+            ...optimizationAnalysis,
+            compatibility,
+            summary
+        };
+    }
+    
+    /**
+     * Assess vehicle compatibility
+     */
+    assessVehicleCompatibility(settings, vehicleInfo) {
+        const model = vehicleInfo.model?.toLowerCase();
+        const compatibility = [];
+        
+        if (model?.includes('e2')) {
+            if (settings['F.4'] > 280) {
+                compatibility.push('WARNING: Current settings may exceed E2 motor capabilities');
+            } else {
+                compatibility.push('Settings appear compatible with E2 specifications');
+            }
+        } else if (model?.includes('e4')) {
+            if (settings['F.4'] > 320) {
+                compatibility.push('WARNING: Current settings may exceed E4 motor capabilities');
+            } else {
+                compatibility.push('Settings appear compatible with E4 specifications');
+            }
+        } else if (model?.includes('el-xd')) {
+            if (settings['F.4'] > 350) {
+                compatibility.push('WARNING: Current settings may exceed eL XD motor capabilities');
+            } else {
+                compatibility.push('Settings appear compatible with eL XD specifications');
+            }
+        } else {
+            compatibility.push('Vehicle model unknown - exercise caution with high-performance settings');
+        }
+        
+        return compatibility;
+    }
+    
+    /**
+     * Generate analysis summary
+     */
+    generateAnalysisSummary(settings, vehicleInfo, safetyAnalysis, optimizationAnalysis) {
+        const totalWarnings = safetyAnalysis.warnings.length;
+        const totalOptimizations = optimizationAnalysis.optimizations.length;
+        
+        let riskLevel = 'LOW';
+        if (totalWarnings > 2) riskLevel = 'HIGH';
+        else if (totalWarnings > 0) riskLevel = 'MEDIUM';
+        
+        let optimizationPotential = 'LOW';
+        if (totalOptimizations > 3) optimizationPotential = 'HIGH';
+        else if (totalOptimizations > 1) optimizationPotential = 'MEDIUM';
+        
+        return {
+            risk_level: riskLevel,
+            optimization_potential: optimizationPotential,
+            total_warnings: totalWarnings,
+            total_optimizations: totalOptimizations,
+            overall_assessment: this.generateOverallAssessment(riskLevel, optimizationPotential)
+        };
+    }
+    
+    /**
+     * Generate overall assessment
+     */
+    generateOverallAssessment(riskLevel, optimizationPotential) {
+        if (riskLevel === 'HIGH') {
+            return 'REVIEW REQUIRED: Settings contain potential safety risks that should be addressed';
+        } else if (riskLevel === 'MEDIUM') {
+            return 'CAUTION ADVISED: Some settings may need adjustment for optimal safety';
+        } else if (optimizationPotential === 'HIGH') {
+            return 'OPTIMIZATION RECOMMENDED: Settings are safe but significant improvements possible';
+        } else if (optimizationPotential === 'MEDIUM') {
+            return 'MINOR IMPROVEMENTS: Settings are good with some optimization opportunities';
+        } else {
+            return 'WELL OPTIMIZED: Settings appear safe and well-tuned for the vehicle';
+        }
+    }
+    
+    /**
+     * Rule-based analysis using enhanced local systems
+     */
+    async analyzeWithRules(extractedData, analysisType) {
+        try {
+            // Use enhanced local analysis
+            const result = await this.performLocalAnalysis(extractedData, analysisType);
+            
+            // Add fallback flag and ensure compatibility
+            result.fallback = false;
+            result.local = true;
+            
+            return result;
+            
+        } catch (error) {
+            console.error('Enhanced local analysis failed, using basic rules:', error);
+            
+            // Basic fallback analysis
+            const settings = extractedData.controller_settings;
+            const analysis = {
+                safety: [],
+                warnings: [],
+                suggestions: [],
+                optimizations: []
+            };
+            
+            // Basic safety checks
+            if (settings['F.1'] > 30) {
+                analysis.warnings.push('Speed setting may exceed safe limits');
+            }
+            
+            if (settings['F.4'] > 320) {
+                analysis.warnings.push('Armature current limit very high');
+            }
+            
+            // Basic optimization suggestions
+            if (settings['F.6'] < 50) {
+                analysis.suggestions.push('Consider increasing acceleration rate (F.6)');
+            }
+            
+            if (settings['F.9'] < 220) {
+                analysis.suggestions.push('Increase regenerative braking (F.9) for better efficiency');
+            }
+            
+            return {
+                success: true,
+                analysis: analysis,
+                provider: 'basic_rules',
+                extractedData: extractedData,
+                fallback: true,
+                local: true,
+                timestamp: new Date().toISOString()
+            };
+        }
     }
     
     /**
@@ -592,12 +631,6 @@ class AIPDFService {
         });
     }
     
-    /**
-     * Get alternative AI provider
-     */
-    getAlternativeAI() {
-        return this.preferredAI === 'claude' ? 'openai' : 'claude';
-    }
     
     /**
      * Clear caches

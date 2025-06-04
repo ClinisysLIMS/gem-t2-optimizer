@@ -178,40 +178,71 @@ class LegalRoutingSystem {
     }
 
     /**
-     * Initialize map with Leaflet
+     * Initialize map using unified maps service
      * @param {Object} container - DOM element for map
      */
     async initializeMap(container) {
-        // Load Leaflet if not already loaded
-        if (typeof L === 'undefined') {
-            await this.loadLeaflet();
+        // Use unified maps service if available
+        if (window.unifiedMapsService) {
+            this.mapsService = window.unifiedMapsService;
+            this.map = await this.mapsService.initializeMap(container.id || 'route-map', {
+                center: [32.7157, -117.1611],
+                zoom: 13
+            });
+            
+            // The unified service handles map initialization
+            // We just need to handle our custom overlays
+            if (this.mapsService.getCurrentService() === 'osm') {
+                // For OSM/Leaflet, add our custom layers
+                this.routeLayers.legal = L.layerGroup().addTo(this.map);
+                this.routeLayers.caution = L.layerGroup().addTo(this.map);
+                this.routeLayers.illegal = L.layerGroup().addTo(this.map);
+                this.routeLayers.cartPaths = L.layerGroup().addTo(this.map);
+                this.routeLayers.lsvLanes = L.layerGroup().addTo(this.map);
+
+                // Add layer control
+                const overlays = {
+                    "Legal Routes": this.routeLayers.legal,
+                    "Caution Routes": this.routeLayers.caution,
+                    "Illegal Routes": this.routeLayers.illegal,
+                    "Cart Paths": this.routeLayers.cartPaths,
+                    "LSV Lanes": this.routeLayers.lsvLanes
+                };
+                L.control.layers(null, overlays).addTo(this.map);
+            }
+        } else {
+            // Fallback to direct Leaflet initialization
+            // Load Leaflet if not already loaded
+            if (typeof L === 'undefined') {
+                await this.loadLeaflet();
+            }
+
+            // Create map centered on San Diego
+            this.map = L.map(container).setView([32.7157, -117.1611], 13);
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(this.map);
+
+            // Initialize route layers
+            this.routeLayers.legal = L.layerGroup().addTo(this.map);
+            this.routeLayers.caution = L.layerGroup().addTo(this.map);
+            this.routeLayers.illegal = L.layerGroup().addTo(this.map);
+            this.routeLayers.cartPaths = L.layerGroup().addTo(this.map);
+            this.routeLayers.lsvLanes = L.layerGroup().addTo(this.map);
+
+            // Add layer control
+            const overlays = {
+                "Legal Routes": this.routeLayers.legal,
+                "Caution Routes": this.routeLayers.caution,
+                "Illegal Routes": this.routeLayers.illegal,
+                "Cart Paths": this.routeLayers.cartPaths,
+                "LSV Lanes": this.routeLayers.lsvLanes
+            };
+            L.control.layers(null, overlays).addTo(this.map);
         }
-
-        // Create map centered on San Diego
-        this.map = L.map(container).setView([32.7157, -117.1611], 13);
-
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(this.map);
-
-        // Initialize route layers
-        this.routeLayers.legal = L.layerGroup().addTo(this.map);
-        this.routeLayers.caution = L.layerGroup().addTo(this.map);
-        this.routeLayers.illegal = L.layerGroup().addTo(this.map);
-        this.routeLayers.cartPaths = L.layerGroup().addTo(this.map);
-        this.routeLayers.lsvLanes = L.layerGroup().addTo(this.map);
-
-        // Add layer control
-        const overlays = {
-            "Legal Routes": this.routeLayers.legal,
-            "Caution Routes": this.routeLayers.caution,
-            "Illegal Routes": this.routeLayers.illegal,
-            "Cart Paths": this.routeLayers.cartPaths,
-            "LSV Lanes": this.routeLayers.lsvLanes
-        };
-        L.control.layers(null, overlays).addTo(this.map);
 
         // Add legend
         this.addMapLegend();
@@ -355,35 +386,76 @@ class LegalRoutingSystem {
      */
     async planLegalRoute(start, end) {
         try {
-            // Use OSRM for routing (free, no API key required)
-            const url = `https://router.project-osrm.org/route/v1/driving/${start.lon},${start.lat};${end.lon},${end.lat}?overview=full&geometries=geojson&steps=true`;
-            
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            if (data.code !== 'Ok') {
-                throw new Error('Route not found');
+            // Use unified maps service if available
+            if (window.unifiedMapsService) {
+                // Convert coordinates to format expected by unified service
+                const origin = { lat: start.lat, lng: start.lon };
+                const destination = { lat: end.lat, lng: end.lon };
+                
+                // Get legal routes using unified service
+                const result = await window.unifiedMapsService.findLegalRoutes(
+                    origin, 
+                    destination, 
+                    this.vehicleClassification.type
+                );
+                
+                if (result.success && result.routes.length > 0) {
+                    // Use the first (best) route
+                    const route = result.routes[0];
+                    const segments = this.analyzeUnifiedRouteSegments(route);
+                    
+                    // Check if route is legal
+                    const illegalSegments = segments.filter(s => s.legality.status === 'illegal');
+                    const cautionSegments = segments.filter(s => s.legality.status === 'caution');
+                    
+                    return {
+                        success: true,
+                        route: route,
+                        distance: this.extractDistance(route),
+                        duration: this.extractDuration(route),
+                        segments: segments,
+                        isLegal: route.isFullyLegal || illegalSegments.length === 0,
+                        hasCautions: cautionSegments.length > 0,
+                        illegalCount: illegalSegments.length,
+                        cautionCount: cautionSegments.length,
+                        alternativeNeeded: illegalSegments.length > 0,
+                        mapService: result.mapService
+                    };
+                } else {
+                    throw new Error(result.error || 'No routes found');
+                }
+            } else {
+                // Fallback to direct OSRM routing
+                const url = `https://router.project-osrm.org/route/v1/driving/${start.lon},${start.lat};${end.lon},${end.lat}?overview=full&geometries=geojson&steps=true`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.code !== 'Ok') {
+                    throw new Error('Route not found');
+                }
+                
+                const route = data.routes[0];
+                const segments = this.analyzeRouteSegments(route);
+                
+                // Check if route is legal
+                const illegalSegments = segments.filter(s => s.legality.status === 'illegal');
+                const cautionSegments = segments.filter(s => s.legality.status === 'caution');
+                
+                return {
+                    success: true,
+                    route: route,
+                    distance: (route.distance / 1609.34).toFixed(1), // Convert to miles
+                    duration: Math.round(route.duration / 60), // Convert to minutes
+                    segments: segments,
+                    isLegal: illegalSegments.length === 0,
+                    hasCautions: cautionSegments.length > 0,
+                    illegalCount: illegalSegments.length,
+                    cautionCount: cautionSegments.length,
+                    alternativeNeeded: illegalSegments.length > 0,
+                    mapService: 'osm'
+                };
             }
-            
-            const route = data.routes[0];
-            const segments = this.analyzeRouteSegments(route);
-            
-            // Check if route is legal
-            const illegalSegments = segments.filter(s => s.legality.status === 'illegal');
-            const cautionSegments = segments.filter(s => s.legality.status === 'caution');
-            
-            return {
-                success: true,
-                route: route,
-                distance: (route.distance / 1609.34).toFixed(1), // Convert to miles
-                duration: Math.round(route.duration / 60), // Convert to minutes
-                segments: segments,
-                isLegal: illegalSegments.length === 0,
-                hasCautions: cautionSegments.length > 0,
-                illegalCount: illegalSegments.length,
-                cautionCount: cautionSegments.length,
-                alternativeNeeded: illegalSegments.length > 0
-            };
             
         } catch (error) {
             console.error('Routing error:', error);
@@ -425,6 +497,154 @@ class LegalRoutingSystem {
         });
         
         return segments;
+    }
+
+    /**
+     * Analyze unified route segments for legality
+     * @param {Object} route - Route from unified maps service
+     * @returns {Array} Analyzed segments
+     */
+    analyzeUnifiedRouteSegments(route) {
+        const segments = [];
+        
+        // Handle segments if already analyzed
+        if (route.segments) {
+            return route.segments.map(segment => ({
+                name: segment.roadInfo?.name || segment.instruction || 'Unnamed Road',
+                distance: this.extractSegmentDistance(segment),
+                duration: this.extractSegmentDuration(segment),
+                instruction: segment.instruction,
+                legality: segment.isLegal !== undefined ? {
+                    status: segment.isLegal ? 'legal' : 'illegal',
+                    message: segment.isLegal ? '✅ Legal road' : '❌ Illegal - exceeds speed limit',
+                    speedLimit: segment.roadInfo?.speedLimit || 25
+                } : this.checkRoadLegality(segment.roadInfo || { name: segment.instruction })
+            }));
+        }
+        
+        // Otherwise analyze legs and steps
+        if (route.legs) {
+            route.legs.forEach(leg => {
+                if (leg.steps) {
+                    leg.steps.forEach(step => {
+                        const distance = this.extractSegmentDistance(step);
+                        
+                        // Skip very short segments
+                        if (distance < 0.01) return; // Less than 0.01 miles
+                        
+                        const road = {
+                            name: step.roadInfo?.name || step.instruction || 'Unnamed Road',
+                            distance: distance.toFixed(2),
+                            duration: this.extractSegmentDuration(step),
+                            instruction: step.instruction
+                        };
+                        
+                        // Check legality
+                        road.legality = step.roadInfo ? 
+                            this.checkRoadLegality(step.roadInfo) :
+                            this.checkRoadLegality({ name: road.name });
+                        
+                        segments.push(road);
+                    });
+                }
+            });
+        }
+        
+        return segments;
+    }
+
+    /**
+     * Extract distance from various route formats
+     */
+    extractDistance(route) {
+        if (route.distance) {
+            if (typeof route.distance === 'number') {
+                return (route.distance / 1609.34).toFixed(1); // Convert meters to miles
+            } else if (route.distance.value) {
+                return (route.distance.value / 1609.34).toFixed(1);
+            } else if (route.distance.text) {
+                return parseFloat(route.distance.text).toFixed(1);
+            }
+        }
+        
+        // Sum up leg distances
+        let totalDistance = 0;
+        if (route.legs) {
+            route.legs.forEach(leg => {
+                if (leg.distance) {
+                    if (typeof leg.distance === 'number') {
+                        totalDistance += leg.distance;
+                    } else if (leg.distance.value) {
+                        totalDistance += leg.distance.value;
+                    }
+                }
+            });
+        }
+        
+        return (totalDistance / 1609.34).toFixed(1);
+    }
+
+    /**
+     * Extract duration from various route formats
+     */
+    extractDuration(route) {
+        if (route.duration) {
+            if (typeof route.duration === 'number') {
+                return Math.round(route.duration / 60); // Convert seconds to minutes
+            } else if (route.duration.value) {
+                return Math.round(route.duration.value / 60);
+            } else if (route.duration.text) {
+                return parseInt(route.duration.text);
+            }
+        }
+        
+        // Sum up leg durations
+        let totalDuration = 0;
+        if (route.legs) {
+            route.legs.forEach(leg => {
+                if (leg.duration) {
+                    if (typeof leg.duration === 'number') {
+                        totalDuration += leg.duration;
+                    } else if (leg.duration.value) {
+                        totalDuration += leg.duration.value;
+                    }
+                }
+            });
+        }
+        
+        return Math.round(totalDuration / 60);
+    }
+
+    /**
+     * Extract segment distance
+     */
+    extractSegmentDistance(segment) {
+        if (segment.distance) {
+            if (typeof segment.distance === 'number') {
+                return segment.distance / 1609.34; // Convert meters to miles
+            } else if (segment.distance.value) {
+                return segment.distance.value / 1609.34;
+            } else if (segment.distance.text) {
+                return parseFloat(segment.distance.text);
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Extract segment duration
+     */
+    extractSegmentDuration(segment) {
+        if (segment.duration) {
+            if (typeof segment.duration === 'number') {
+                return Math.round(segment.duration / 60); // Convert seconds to minutes
+            } else if (segment.duration.value) {
+                return Math.round(segment.duration.value / 60);
+            } else if (segment.duration.text) {
+                return parseInt(segment.duration.text);
+            }
+        }
+        return 0;
     }
 
     /**
