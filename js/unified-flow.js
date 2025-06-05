@@ -89,6 +89,11 @@ class UnifiedFlowController {
         window.addEventListener('manualSettingsLoaded', (e) => {
             this.handleManualSettings(e.detail.settings, e.detail.source);
         });
+        
+        // Run initial validation after a brief delay to ensure DOM is ready
+        setTimeout(() => {
+            this.validateStep1();
+        }, 100);
     }
 
     /**
@@ -244,11 +249,43 @@ class UnifiedFlowController {
     }
 
     /**
+     * Sync form data to vehicleData object to ensure validation has latest values
+     */
+    syncFormDataToVehicleData() {
+        // Read current form values directly from DOM
+        const modelField = document.getElementById('vehicle-model');
+        const yearField = document.getElementById('vehicle-year');
+        const controllerField = document.getElementById('controller-type');
+        const motorField = document.getElementById('motor-type');
+        const speedField = document.getElementById('current-speed');
+        const voltageField = document.getElementById('battery-voltage');
+        const batteryTypeField = document.getElementById('battery-type');
+        const capacityField = document.getElementById('battery-capacity');
+        const tireField = document.getElementById('tire-diameter');
+        const gearField = document.getElementById('gear-ratio');
+        
+        // Sync values
+        if (modelField && modelField.value) this.vehicleData.model = modelField.value;
+        if (yearField && yearField.value) this.vehicleData.year = yearField.value;
+        if (controllerField && controllerField.value) this.vehicleData.controller = controllerField.value;
+        if (motorField && motorField.value) this.vehicleData.motorType = motorField.value;
+        if (speedField && speedField.value) this.vehicleData.currentSpeed = parseInt(speedField.value) || null;
+        if (voltageField && voltageField.value) this.vehicleData.batteryVoltage = parseInt(voltageField.value) || null;
+        if (batteryTypeField && batteryTypeField.value) this.vehicleData.batteryType = batteryTypeField.value;
+        if (capacityField && capacityField.value) this.vehicleData.batteryCapacity = parseInt(capacityField.value) || null;
+        if (tireField && tireField.value) this.vehicleData.tireDiameter = parseFloat(tireField.value) || null;
+        if (gearField && gearField.value) this.vehicleData.gearRatio = gearField.value;
+    }
+
+    /**
      * Validate Step 1 (Vehicle Information) - Smart validation based on PDF upload status
      */
     validateStep1() {
         const continueBtn = document.getElementById('continue-to-planning');
         const validationMessage = document.getElementById('validation-message') || this.createValidationMessage();
+        
+        // Ensure we have the latest form values by reading directly from DOM
+        this.syncFormDataToVehicleData();
         
         // Check if PDF was successfully uploaded with substantial controller data
         const hasPDFData = this.pdfSettings && Object.keys(this.pdfSettings).length >= 5;
@@ -276,7 +313,8 @@ class UnifiedFlowController {
             
             // Check each required field
             requiredFields.forEach(field => {
-                if (!this.vehicleData[field]) {
+                const value = this.vehicleData[field];
+                if (!value || value === '' || value === null || value === undefined) {
                     missingFields.push(fieldLabels[field]);
                 }
             });
@@ -290,7 +328,8 @@ class UnifiedFlowController {
             
             // Check each required field
             requiredFields.forEach(field => {
-                if (!this.vehicleData[field]) {
+                const value = this.vehicleData[field];
+                if (!value || value === '' || value === null || value === undefined) {
                     missingFields.push(fieldLabels[field]);
                 }
             });
@@ -298,9 +337,16 @@ class UnifiedFlowController {
         
         const isValid = missingFields.length === 0;
         
+        // Debug logging
+        console.log('🔍 Vehicle data:', this.vehicleData);
+        console.log('🔍 Required fields:', requiredFields);
+        console.log('🔍 Missing fields:', missingFields);
+        
         // Update continue button
         if (continueBtn) {
             continueBtn.disabled = !isValid;
+            continueBtn.style.opacity = isValid ? '1' : '0.5';
+            console.log(`🔘 Continue button ${isValid ? 'ENABLED' : 'DISABLED'}`);
         }
         
         // Update validation message
@@ -2177,7 +2223,7 @@ class UnifiedFlowController {
     }
     
     /**
-     * Handle Firebase authentication state changes
+     * Handle local authentication state changes
      */
     handleAuthStateChange(user) {
         if (user) {
@@ -2190,12 +2236,12 @@ class UnifiedFlowController {
     }
     
     /**
-     * Enable auto-save to Firebase when user is authenticated
+     * Enable auto-save when user is authenticated
      */
     enableAutoSave() {
         this.autoSaveEnabled = true;
         this.setupAutoSaveListeners();
-        console.log('Auto-save to Firebase enabled');
+        console.log('Auto-save enabled');
     }
     
     /**
@@ -2203,7 +2249,7 @@ class UnifiedFlowController {
      */
     disableAutoSave() {
         this.autoSaveEnabled = false;
-        console.log('Auto-save to Firebase disabled');
+        console.log('Auto-save disabled');
     }
     
     /**

@@ -8,6 +8,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Anonymous Analytics -->
+    <script src="js/anonymous-analytics.js"></script>
+    <script src="js/analytics-integration.js"></script>
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
@@ -21,10 +25,10 @@
                 <div class="flex items-center space-x-4">
                     <!-- Profile Management -->
                     <div class="flex items-center space-x-2">
-                        <button id="save-profile-btn" class="text-xs bg-green-600 hover:bg-green-500 px-2 py-1 rounded transition-colors">
+                        <button id="save-profile-btn" class="text-xs bg-green-600 hover:bg-green-500 hover:shadow-md active:bg-green-700 px-2 py-1 rounded transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
                             💾 Save Profile
                         </button>
-                        <button id="load-profile-btn" class="text-xs bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded transition-colors">
+                        <button id="load-profile-btn" class="text-xs bg-blue-600 hover:bg-blue-500 hover:shadow-md active:bg-blue-700 px-2 py-1 rounded transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
                             📂 Load Profile
                         </button>
                         <div class="relative group">
@@ -40,6 +44,8 @@
                     
                     <!-- Navigation -->
                     <nav class="hidden lg:flex space-x-2">
+                        <a href="help.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">❓ Help</a>
+                        <a href="analytics-dashboard.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">📊 Analytics</a>
                         <a href="user-guide.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">📚 Guide</a>
                         <a href="community.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">🌟 Community</a>
                         <a href="weekend-planner.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">Planner</a>
@@ -788,6 +794,17 @@ Function 6 = 60
             </section>
         </div>
     </main>
+
+    <!-- Floating Feedback Button -->
+    <div id="feedback-button" class="fixed bottom-4 right-4 z-40">
+        <a href="feedback-form.html" 
+           class="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all duration-200 transform hover:scale-110 flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+            </svg>
+            <span class="hidden sm:inline text-sm font-medium">Feedback</span>
+        </a>
+    </div>
 
     <footer class="bg-gray-800 text-white py-2 px-4 mt-4 no-print border-t border-gray-700">
         <div class="container mx-auto text-center text-xs">
@@ -2181,6 +2198,37 @@ Export directly from your programming software when possible.`;
                 document.getElementById('load-profile-modal').addEventListener('click', (e) => {
                     if (e.target === e.currentTarget) this.hideLoadModal();
                 });
+                
+                // Setup keyboard shortcuts
+                this.setupKeyboardShortcuts();
+            }
+            
+            setupKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    // Ctrl+S or Cmd+S to save profile
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                        e.preventDefault();
+                        this.showSaveModal();
+                    }
+                    
+                    // Ctrl+O or Cmd+O to load profile
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+                        e.preventDefault();
+                        this.showLoadModal();
+                    }
+                    
+                    // Escape to close modals
+                    if (e.key === 'Escape') {
+                        this.hideSaveModal();
+                        this.hideLoadModal();
+                    }
+                    
+                    // Enter to confirm save when in save modal
+                    if (e.key === 'Enter' && !document.getElementById('save-profile-modal').classList.contains('hidden')) {
+                        e.preventDefault();
+                        this.saveProfile();
+                    }
+                });
             }
             
             showSaveModal() {
@@ -2260,29 +2308,57 @@ Export directly from your programming software when possible.`;
                 };
             }
             
-            saveProfile() {
+            async saveProfile() {
                 const name = document.getElementById('profile-name').value.trim();
+                const saveButton = document.getElementById('confirm-save-profile');
+                
                 if (!name) {
-                    alert('Please enter a profile name');
+                    this.showNotification('Please enter a profile name', 'error');
+                    document.getElementById('profile-name').focus();
                     return;
                 }
                 
-                const config = this.getCurrentConfiguration();
-                const profiles = this.getProfiles();
+                // Show loading state
+                const originalText = saveButton.innerHTML;
+                saveButton.disabled = true;
+                saveButton.innerHTML = '<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>Saving...';
                 
-                // Generate unique ID
-                const id = Date.now().toString();
-                
-                profiles[id] = {
-                    id,
-                    name,
-                    ...config
-                };
-                
-                localStorage.setItem(this.storageKey, JSON.stringify(profiles));
-                
-                this.hideSaveModal();
-                this.showNotification(`Profile "${name}" saved successfully!`, 'success');
+                try {
+                    // Simulate async operation
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    const config = this.getCurrentConfiguration();
+                    const profiles = this.getProfiles();
+                    
+                    // Generate unique ID
+                    const id = Date.now().toString();
+                    
+                    profiles[id] = {
+                        id,
+                        name,
+                        ...config
+                    };
+                    
+                    localStorage.setItem(this.storageKey, JSON.stringify(profiles));
+                    
+                    // Success animation
+                    saveButton.innerHTML = '<span class="text-green-200">✅ Saved!</span>';
+                    saveButton.classList.add('bg-green-700');
+                    
+                    setTimeout(() => {
+                        this.hideSaveModal();
+                        this.showNotification(`Profile "${name}" saved successfully!`, 'success');
+                    }, 800);
+                    
+                } catch (error) {
+                    this.showNotification('Failed to save profile: ' + error.message, 'error');
+                } finally {
+                    setTimeout(() => {
+                        saveButton.disabled = false;
+                        saveButton.innerHTML = originalText;
+                        saveButton.classList.remove('bg-green-700');
+                    }, 1200);
+                }
             }
             
             loadProfile(profileId) {

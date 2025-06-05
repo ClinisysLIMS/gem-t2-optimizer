@@ -46,7 +46,7 @@
                 </div>
                 
                 <div class="flex items-end">
-                    <button id="save-settings-btn" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                    <button id="save-settings-btn" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 hover:shadow-md active:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105">
                         💾 Save Current Settings
                     </button>
                 </div>
@@ -59,7 +59,7 @@
                 </div>
                 
                 <div class="flex items-end">
-                    <button id="delete-profile-btn" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors" disabled>
+                    <button id="delete-profile-btn" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 hover:shadow-md active:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105" disabled>
                         🗑️ Delete Profile
                     </button>
                 </div>
@@ -67,10 +67,10 @@
             
             <!-- Export/Import Controls -->
             <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
-                <button id="export-profiles-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                <button id="export-profiles-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 hover:shadow-md active:bg-blue-800 transition-all duration-200 transform hover:scale-105">
                     📤 Export All Profiles
                 </button>
-                <button id="import-profiles-btn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors">
+                <button id="import-profiles-btn" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 hover:shadow-md active:bg-purple-800 transition-all duration-200 transform hover:scale-105">
                     📥 Import Profiles
                 </button>
                 <input type="file" id="import-file" accept=".json" class="hidden">
@@ -265,10 +265,11 @@
 
             init() {
                 this.setupEventListeners();
+                this.setupKeyboardShortcuts();
                 this.updateProfileDropdown();
                 this.updateProfilesDisplay();
                 this.updateProfileCount();
-                this.log('Local profile system initialized');
+                this.log('Local profile system initialized with keyboard shortcuts');
             }
 
             setupEventListeners() {
@@ -319,8 +320,9 @@
                 });
             }
 
-            saveCurrentSettings() {
+            async saveCurrentSettings() {
                 const profileName = document.getElementById('profile-name').value.trim();
+                const saveButton = document.getElementById('save-settings-btn');
                 
                 if (!profileName) {
                     this.showNotification('Please enter a profile name', 'error');
@@ -328,15 +330,24 @@
                     return;
                 }
 
-                // Get current form data
-                const profileData = this.getCurrentFormData();
-                
-                // Check if we have any data to save
-                const hasData = Object.values(profileData).some(value => value && value.trim() !== '');
-                if (!hasData) {
-                    this.showNotification('No configuration data to save', 'warning');
-                    return;
-                }
+                // Show loading state
+                const originalText = saveButton.innerHTML;
+                saveButton.disabled = true;
+                saveButton.innerHTML = '<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>Saving...';
+
+                try {
+                    // Simulate async operation (even though it's localStorage)
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    // Get current form data
+                    const profileData = this.getCurrentFormData();
+                    
+                    // Check if we have any data to save
+                    const hasData = Object.values(profileData).some(value => value && value.trim() !== '');
+                    if (!hasData) {
+                        this.showNotification('No configuration data to save', 'warning');
+                        return;
+                    }
 
                 // Generate unique ID
                 const profileId = Date.now().toString();
@@ -360,11 +371,24 @@
                 this.updateProfilesDisplay();
                 this.updateProfileCount();
                 
-                // Clear profile name input
-                document.getElementById('profile-name').value = '';
-                
-                this.showNotification(`Profile "${profileName}" saved successfully!`, 'success');
-                this.log(`Saved profile: ${profileName} (ID: ${profileId})`);
+                    // Clear profile name input
+                    document.getElementById('profile-name').value = '';
+                    
+                    // Show success animation
+                    this.showSuccessAnimation(saveButton);
+                    this.showNotification(`Profile "${profileName}" saved successfully!`, 'success');
+                    this.log(`Saved profile: ${profileName} (ID: ${profileId})`);
+                    
+                } catch (error) {
+                    this.showNotification('Failed to save profile: ' + error.message, 'error');
+                    this.log(`Error saving profile: ${error.message}`);
+                } finally {
+                    // Restore button state
+                    setTimeout(() => {
+                        saveButton.disabled = false;
+                        saveButton.innerHTML = originalText;
+                    }, 1000);
+                }
             }
 
             loadProfile(profileId) {
@@ -652,6 +676,48 @@
             }
             
             /**
+             * Show success animation on button
+             */
+            showSuccessAnimation(button) {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<span class="text-green-600">✅ Saved!</span>';
+                button.classList.add('bg-green-100', 'border-green-300');
+                
+                setTimeout(() => {
+                    button.classList.remove('bg-green-100', 'border-green-300');
+                }, 2000);
+            }
+            
+            /**
+             * Setup keyboard shortcuts
+             */
+            setupKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    // Ctrl+S or Cmd+S to save profile
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                        e.preventDefault();
+                        const profileName = document.getElementById('profile-name').value.trim();
+                        if (profileName) {
+                            this.saveCurrentSettings();
+                        } else {
+                            document.getElementById('profile-name').focus();
+                            this.showNotification('Press Ctrl+S after entering a profile name', 'info');
+                        }
+                    }
+                    
+                    // Escape to close modals
+                    if (e.key === 'Escape') {
+                        const modals = document.querySelectorAll('.fixed');
+                        modals.forEach(modal => {
+                            if (!modal.classList.contains('hidden')) {
+                                modal.classList.add('hidden');
+                            }
+                        });
+                    }
+                });
+            }
+
+            /**
              * Check available storage space and show warning if low
              */
             async checkStorageSpace() {
@@ -765,13 +831,13 @@
                 demoDiv.innerHTML = `
                     <h4 class="font-medium text-blue-900 mb-2">Demo Data (for testing)</h4>
                     <div class="flex space-x-2">
-                        <button onclick="fillSampleData('e4_72v')" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                        <button onclick="fillSampleData('e4_72v')" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 hover:shadow-md active:bg-blue-800 transition-all duration-200 transform hover:scale-105">
                             Fill e4 72V Sample
                         </button>
-                        <button onclick="fillSampleData('e6_96v')" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                        <button onclick="fillSampleData('e6_96v')" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 hover:shadow-md active:bg-blue-800 transition-all duration-200 transform hover:scale-105">
                             Fill e6 96V Sample
                         </button>
-                        <button onclick="profileSystem.clearAllProfiles()" class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">
+                        <button onclick="profileSystem.clearAllProfiles()" class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 hover:shadow-md active:bg-red-800 transition-all duration-200 transform hover:scale-105">
                             Clear All Profiles
                         </button>
                     </div>
