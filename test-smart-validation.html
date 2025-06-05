@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Smart Validation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Test Smart Validation Feature</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Smart Continue Button Validation</h2>
+            <p class="text-gray-600 mb-6">
+                Tests the new smart validation that requires fewer fields when PDF settings are uploaded.
+            </p>
+            
+            <!-- Test Controls -->
+            <div class="mb-6">
+                <h3 class="font-medium mb-3">Test Scenarios</h3>
+                <div class="space-y-3">
+                    <button class="test-btn w-full px-4 py-2 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200" 
+                            data-test="no-pdf">
+                        Scenario 1: No PDF Uploaded (All Fields Required)
+                    </button>
+                    <button class="test-btn w-full px-4 py-2 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200" 
+                            data-test="with-pdf">
+                        Scenario 2: PDF Uploaded with 46 Functions (Critical Fields Only)
+                    </button>
+                    <button class="test-btn w-full px-4 py-2 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200" 
+                            data-test="partial-pdf">
+                        Scenario 3: PDF with Few Functions (Standard Validation)
+                    </button>
+                    <button class="test-btn w-full px-4 py-2 bg-orange-100 text-orange-700 rounded text-sm hover:bg-orange-200" 
+                            data-test="critical-missing">
+                        Scenario 4: PDF + Some Critical Fields Missing
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Manual Field Testing -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-medium mb-3">Manual Field Testing</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                    <button onclick="fillField('vehicle-model', 'e4')" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Set Model
+                    </button>
+                    <button onclick="fillField('vehicle-year', '2016+')" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Set Year
+                    </button>
+                    <button onclick="fillField('battery-type', 'lead-acid')" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Set Battery Type
+                    </button>
+                    <button onclick="fillField('tire-diameter', '22.5')" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Set Tire Diameter
+                    </button>
+                    <button onclick="clearAllFields()" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                        Clear All
+                    </button>
+                    <button onclick="simulatePDFUpload()" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600">
+                        Simulate PDF Upload
+                    </button>
+                    <button onclick="removePDFData()" class="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                        Remove PDF Data
+                    </button>
+                    <button onclick="triggerValidation()" class="px-2 py-1 bg-purple-500 text-white rounded hover:bg-purple-600">
+                        Trigger Validation
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulated Vehicle Form -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Vehicle Information Form</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Column 1: Vehicle Details -->
+                <div class="space-y-3">
+                    <h3 class="font-medium text-gray-800">Vehicle Details</h3>
+                    
+                    <div>
+                        <label for="vehicle-model" class="text-sm font-medium text-gray-700">Model * <span class="critical-field">(Critical)</span></label>
+                        <select id="vehicle-model" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="e2">e2 (2-pass)</option>
+                            <option value="e4">e4 (4-pass)</option>
+                            <option value="e6">e6 (6-pass)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="vehicle-year" class="text-sm font-medium text-gray-700">Year * <span class="critical-field">(Critical)</span></label>
+                        <select id="vehicle-year" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="2016+">2016+</option>
+                            <option value="2010-2015">2010-2015</option>
+                            <option value="2005-2009">2005-2009</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="controller-type" class="text-sm font-medium text-gray-700">Controller * <span class="optional-with-pdf">(Optional with PDF)</span></label>
+                        <select id="controller-type" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="T2">T2</option>
+                            <option value="T4">T4</option>
+                            <option value="T1">T1 (Legacy)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="current-speed" class="text-sm font-medium text-gray-700">Current Speed * <span class="optional-with-pdf">(Optional with PDF)</span></label>
+                        <input type="number" id="current-speed" min="15" max="40" 
+                               class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                    </div>
+                </div>
+
+                <!-- Column 2: Motor Details -->
+                <div class="space-y-3">
+                    <h3 class="font-medium text-gray-800">Motor Details</h3>
+                    
+                    <div>
+                        <label for="motor-type" class="text-sm font-medium text-gray-700">Type * <span class="optional-with-pdf">(Optional with PDF)</span></label>
+                        <select id="motor-type" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="dc-stock">DC Stock (3.5HP)</option>
+                            <option value="dc-upgrade">DC Upgrade (5HP+)</option>
+                            <option value="ac-stock">AC Stock</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Column 3: Battery & Drivetrain -->
+                <div class="space-y-3">
+                    <h3 class="font-medium text-gray-800">Battery & Drivetrain</h3>
+                    
+                    <div>
+                        <label for="battery-voltage" class="text-sm font-medium text-gray-700">Voltage * <span class="optional-with-pdf">(Optional with PDF)</span></label>
+                        <select id="battery-voltage" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="48">48V</option>
+                            <option value="60">60V</option>
+                            <option value="72">72V</option>
+                            <option value="82">82V</option>
+                            <option value="96">96V</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="battery-type" class="text-sm font-medium text-gray-700">Type * <span class="critical-field">(Critical)</span></label>
+                        <select id="battery-type" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="lead-acid">Lead Acid</option>
+                            <option value="agm">AGM</option>
+                            <option value="gel">Gel</option>
+                            <option value="lithium">Lithium</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="battery-capacity" class="text-sm font-medium text-gray-700">Capacity * <span class="optional-with-pdf">(Optional with PDF)</span></label>
+                        <input type="number" id="battery-capacity" min="50" max="500" step="5" 
+                               class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                    </div>
+                    
+                    <div>
+                        <label for="tire-diameter" class="text-sm font-medium text-gray-700">Tire Diameter * <span class="critical-field">(Critical)</span></label>
+                        <input type="number" id="tire-diameter" min="18" max="26" step="0.5" 
+                               class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                    </div>
+                    
+                    <div>
+                        <label for="gear-ratio" class="text-sm font-medium text-gray-700">Gear Ratio * <span class="optional-with-pdf">(Optional with PDF)</span></label>
+                        <input type="text" id="gear-ratio" pattern="[0-9]+\.?[0-9]*:1"
+                               class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Continue Button -->
+            <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end">
+                <button id="continue-to-planning" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Continue to Trip Planning →
+                </button>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Validation Status</h2>
+            <div id="validation-status" class="min-h-16 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div class="text-gray-500 text-center">Click a test scenario or manually fill fields to see validation...</div>
+            </div>
+        </div>
+
+        <!-- PDF Status -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">PDF Upload Status</h2>
+            <div id="pdf-status" class="min-h-16 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div class="text-gray-500 text-center">No PDF data loaded</div>
+            </div>
+        </div>
+
+        <!-- Debug Log -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-bold mb-3">Debug Log</h2>
+            <div id="debug-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                Smart validation test initialized...
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the unified flow controller -->
+    <script src="js/unified-flow.js"></script>
+
+    <script>
+        // Test scenarios
+        const testScenarios = {
+            'no-pdf': {
+                name: "No PDF Uploaded",
+                description: "Standard validation requiring all fields",
+                pdfSettings: null,
+                presetFields: {}
+            },
+            'with-pdf': {
+                name: "PDF with 46 Functions",
+                description: "PDF uploaded with substantial controller data - only critical fields required",
+                pdfSettings: generateMockPDFSettings(46),
+                presetFields: {}
+            },
+            'partial-pdf': {
+                name: "PDF with Few Functions",
+                description: "PDF with insufficient data - still requires all fields",
+                pdfSettings: generateMockPDFSettings(3),
+                presetFields: {}
+            },
+            'critical-missing': {
+                name: "PDF + Some Critical Missing",
+                description: "PDF uploaded but critical fields missing",
+                pdfSettings: generateMockPDFSettings(46),
+                presetFields: {
+                    'vehicle-model': 'e4',
+                    'vehicle-year': '2016+',
+                    // Missing battery-type and tire-diameter
+                }
+            }
+        };
+
+        // Generate mock PDF settings
+        function generateMockPDFSettings(count) {
+            const settings = {};
+            for (let i = 1; i <= count; i++) {
+                settings[i] = Math.floor(Math.random() * 200) + 50;
+            }
+            return settings;
+        }
+
+        // Global variables
+        let unifiedFlow = null;
+        const debugLog = document.getElementById('debug-log');
+        const validationStatus = document.getElementById('validation-status');
+        const pdfStatus = document.getElementById('pdf-status');
+
+        function log(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            debugLog.innerHTML += `[${timestamp}] ${message}\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+
+        function clearAllFields() {
+            const fields = [
+                'vehicle-model', 'vehicle-year', 'controller-type', 'current-speed',
+                'motor-type', 'battery-voltage', 'battery-type', 'battery-capacity',
+                'tire-diameter', 'gear-ratio'
+            ];
+            
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = '';
+                }
+            });
+            
+            // Clear vehicle data
+            if (unifiedFlow) {
+                unifiedFlow.vehicleData = {};
+            }
+            
+            log('🧹 All fields cleared');
+            updateValidationStatus();
+        }
+
+        function fillField(fieldId, value) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.value = value;
+                
+                // Update vehicle data
+                if (unifiedFlow) {
+                    const dataField = fieldId.replace('vehicle-', '').replace('battery-', 'battery').replace('tire-', 'tire').replace('gear-', 'gear').replace('-', '');
+                    const mapping = {
+                        'vehiclemodel': 'model',
+                        'vehicleyear': 'year',
+                        'controllertype': 'controller',
+                        'currentspeed': 'currentSpeed',
+                        'motortype': 'motorType',
+                        'batteryvoltage': 'batteryVoltage',
+                        'batterytype': 'batteryType',
+                        'batterycapacity': 'batteryCapacity',
+                        'tirediameter': 'tireDiameter',
+                        'gearratio': 'gearRatio'
+                    };
+                    
+                    const mappedField = mapping[dataField] || dataField;
+                    if (mappedField === 'batteryCapacity' || mappedField === 'tireDiameter' || mappedField === 'currentSpeed') {
+                        unifiedFlow.vehicleData[mappedField] = parseFloat(value);
+                    } else {
+                        unifiedFlow.vehicleData[mappedField] = value;
+                    }
+                    
+                    log(`📝 Set ${fieldId}: ${value}`);
+                }
+                
+                updateValidationStatus();
+            }
+        }
+
+        function simulatePDFUpload() {
+            const mockSettings = generateMockPDFSettings(46);
+            if (unifiedFlow) {
+                unifiedFlow.pdfSettings = mockSettings;
+                log(`📄 Simulated PDF upload with ${Object.keys(mockSettings).length} functions`);
+                updatePDFStatus();
+                updateValidationStatus();
+            }
+        }
+
+        function removePDFData() {
+            if (unifiedFlow) {
+                unifiedFlow.pdfSettings = null;
+                log('🗑️ Removed PDF data');
+                updatePDFStatus();
+                updateValidationStatus();
+            }
+        }
+
+        function triggerValidation() {
+            if (unifiedFlow && typeof unifiedFlow.validateStep1 === 'function') {
+                const result = unifiedFlow.validateStep1();
+                log(`🔍 Manual validation triggered: ${result ? 'PASSED' : 'FAILED'}`);
+                updateValidationStatus();
+            }
+        }
+
+        function updateValidationStatus() {
+            if (!unifiedFlow) return;
+            
+            const hasPDFData = unifiedFlow.pdfSettings && Object.keys(unifiedFlow.pdfSettings).length >= 5;
+            const pdfFunctionCount = hasPDFData ? Object.keys(unifiedFlow.pdfSettings).length : 0;
+            const continueBtn = document.getElementById('continue-to-planning');
+            const isEnabled = continueBtn && !continueBtn.disabled;
+            
+            // Count filled fields
+            const allFields = ['model', 'year', 'controller', 'motorType', 'currentSpeed', 'batteryVoltage', 'batteryType', 'batteryCapacity', 'tireDiameter', 'gearRatio'];
+            const criticalFields = ['model', 'year', 'batteryType', 'tireDiameter'];
+            
+            const filledFields = allFields.filter(field => unifiedFlow.vehicleData[field]);
+            const filledCritical = criticalFields.filter(field => unifiedFlow.vehicleData[field]);
+            
+            let statusHTML = '';
+            
+            if (hasPDFData) {
+                statusHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-medium text-blue-900">PDF Validation Mode</h4>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">${pdfFunctionCount} functions</span>
+                        </div>
+                        <div class="text-sm text-blue-700">
+                            Only critical fields required: Model, Year, Battery Type, Tire Diameter
+                        </div>
+                        <div class="text-sm">
+                            Critical fields filled: ${filledCritical.length}/4 (${filledCritical.join(', ') || 'None'})
+                        </div>
+                        <div class="text-sm">
+                            All fields filled: ${filledFields.length}/10 (${Math.round(filledFields.length/10*100)}% complete)
+                        </div>
+                        <div class="flex items-center">
+                            <span class="mr-2">${isEnabled ? '✅' : '❌'}</span>
+                            <span class="${isEnabled ? 'text-green-600' : 'text-red-600'} font-medium">
+                                Continue Button: ${isEnabled ? 'Enabled' : 'Disabled'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                statusHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-medium text-orange-900">Standard Validation Mode</h4>
+                            <span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs">No PDF</span>
+                        </div>
+                        <div class="text-sm text-orange-700">
+                            All fields required: Model, Year, Controller, Motor, Speed, Battery Voltage, Battery Type, Battery Capacity, Tire Diameter, Gear Ratio
+                        </div>
+                        <div class="text-sm">
+                            Fields filled: ${filledFields.length}/10 (${Math.round(filledFields.length/10*100)}% complete)
+                        </div>
+                        <div class="text-sm">
+                            Missing: ${allFields.filter(field => !unifiedFlow.vehicleData[field]).join(', ') || 'None'}
+                        </div>
+                        <div class="flex items-center">
+                            <span class="mr-2">${isEnabled ? '✅' : '❌'}</span>
+                            <span class="${isEnabled ? 'text-green-600' : 'text-red-600'} font-medium">
+                                Continue Button: ${isEnabled ? 'Enabled' : 'Disabled'}
+                            </span>
+                        </div>
+                        <div class="text-xs text-orange-600 mt-2">
+                            💡 Upload PDF settings to reduce required fields to just the critical ones.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            validationStatus.innerHTML = statusHTML;
+        }
+
+        function updatePDFStatus() {
+            if (!unifiedFlow) return;
+            
+            const hasPDFData = unifiedFlow.pdfSettings && Object.keys(unifiedFlow.pdfSettings).length > 0;
+            
+            if (hasPDFData) {
+                const functionCount = Object.keys(unifiedFlow.pdfSettings).length;
+                const isSubstantial = functionCount >= 5;
+                
+                pdfStatus.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-medium text-green-900">PDF Data Loaded</h4>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">${functionCount} functions</span>
+                        </div>
+                        <div class="text-sm ${isSubstantial ? 'text-green-700' : 'text-yellow-700'}">
+                            ${isSubstantial ? 
+                                `✅ Substantial controller data - enables simplified validation` : 
+                                `⚠️ Limited controller data - standard validation still required`
+                            }
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            Sample functions: ${Object.keys(unifiedFlow.pdfSettings).slice(0, 5).map(f => `F.${f}: ${unifiedFlow.pdfSettings[f]}`).join(', ')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                pdfStatus.innerHTML = `
+                    <div class="text-gray-500 text-center">
+                        No PDF data loaded - using standard validation
+                    </div>
+                `;
+            }
+        }
+
+        function runTestScenario(scenarioKey) {
+            const scenario = testScenarios[scenarioKey];
+            if (!scenario) {
+                log(`❌ Test scenario not found: ${scenarioKey}`);
+                return;
+            }
+            
+            log(`🧪 Running test: ${scenario.name}`);
+            log(`📝 ${scenario.description}`);
+            
+            // Clear everything first
+            clearAllFields();
+            
+            // Set PDF data
+            if (unifiedFlow) {
+                unifiedFlow.pdfSettings = scenario.pdfSettings;
+                
+                // Set preset fields
+                Object.entries(scenario.presetFields).forEach(([fieldId, value]) => {
+                    fillField(fieldId, value);
+                });
+                
+                // Update displays
+                updatePDFStatus();
+                updateValidationStatus();
+                
+                log(`✅ Test scenario setup complete`);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                if (typeof UnifiedFlowController !== 'undefined') {
+                    unifiedFlow = new UnifiedFlowController();
+                    log('✅ UnifiedFlowController initialized successfully');
+                } else {
+                    log('❌ UnifiedFlowController not available');
+                }
+                
+                // Update initial status
+                updatePDFStatus();
+                updateValidationStatus();
+                
+                // Add field change listeners
+                const fields = ['vehicle-model', 'vehicle-year', 'controller-type', 'current-speed', 'motor-type', 'battery-voltage', 'battery-type', 'battery-capacity', 'tire-diameter', 'gear-ratio'];
+                fields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.addEventListener('change', () => {
+                            const value = field.value;
+                            if (value && unifiedFlow) {
+                                // Update vehicle data (simplified mapping)
+                                const mapping = {
+                                    'vehicle-model': 'model',
+                                    'vehicle-year': 'year',
+                                    'controller-type': 'controller',
+                                    'current-speed': 'currentSpeed',
+                                    'motor-type': 'motorType',
+                                    'battery-voltage': 'batteryVoltage',
+                                    'battery-type': 'batteryType',
+                                    'battery-capacity': 'batteryCapacity',
+                                    'tire-diameter': 'tireDiameter',
+                                    'gear-ratio': 'gearRatio'
+                                };
+                                
+                                const dataField = mapping[fieldId];
+                                if (dataField) {
+                                    if (dataField === 'batteryCapacity' || dataField === 'tireDiameter' || dataField === 'currentSpeed') {
+                                        unifiedFlow.vehicleData[dataField] = parseFloat(value);
+                                    } else {
+                                        unifiedFlow.vehicleData[dataField] = value;
+                                    }
+                                }
+                            }
+                            updateValidationStatus();
+                        });
+                    }
+                });
+                
+            } catch (error) {
+                log(`❌ Failed to initialize: ${error.message}`);
+            }
+        });
+
+        // Event listeners
+        document.querySelectorAll('.test-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const testId = this.dataset.test;
+                runTestScenario(testId);
+            });
+        });
+    </script>
+    
+    <style>
+        .critical-field {
+            color: #059669;
+            font-weight: 500;
+        }
+        .optional-with-pdf {
+            color: #0369a1;
+            font-weight: 500;
+        }
+    </style>
+</body>
+</html>

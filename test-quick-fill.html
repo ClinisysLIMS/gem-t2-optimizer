@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Quick Fill Defaults</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Test Quick Fill Defaults Feature</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Quick Fill Defaults Test</h2>
+            <p class="text-gray-600 mb-6">
+                Tests the Quick Fill Defaults button that appears after successful PDF upload and automatically fills common vehicle details.
+            </p>
+            
+            <!-- Test Controls -->
+            <div class="mb-6">
+                <h3 class="font-medium mb-3">Test Scenarios</h3>
+                <div class="space-y-3">
+                    <button class="test-btn w-full px-4 py-2 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200" 
+                            data-test="simulate-pdf">
+                        Step 1: Simulate PDF Upload Success (Shows Quick Fill Button)
+                    </button>
+                    <button class="test-btn w-full px-4 py-2 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200" 
+                            data-test="test-quick-fill">
+                        Step 2: Test Quick Fill Defaults
+                    </button>
+                    <button class="test-btn w-full px-4 py-2 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200" 
+                            data-test="test-with-some-fields">
+                        Step 3: Test Quick Fill with Some Fields Pre-filled
+                    </button>
+                    <button class="test-btn w-full px-4 py-2 bg-orange-100 text-orange-700 rounded text-sm hover:bg-orange-200" 
+                            data-test="clear-form">
+                        Reset: Clear All Fields
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Expected Quick Fill Values -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-medium mb-3">Expected Quick Fill Values</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                    <div class="p-2 bg-white rounded border">
+                        <div class="font-medium">Model</div>
+                        <div class="text-blue-600">e4 (most common)</div>
+                    </div>
+                    <div class="p-2 bg-white rounded border">
+                        <div class="font-medium">Year</div>
+                        <div class="text-blue-600">2010-2015</div>
+                    </div>
+                    <div class="p-2 bg-white rounded border">
+                        <div class="font-medium">Controller</div>
+                        <div class="text-blue-600">T2</div>
+                    </div>
+                    <div class="p-2 bg-white rounded border">
+                        <div class="font-medium">Motor Type</div>
+                        <div class="text-blue-600">DC Stock</div>
+                    </div>
+                    <div class="p-2 bg-white rounded border">
+                        <div class="font-medium">Battery Type</div>
+                        <div class="text-blue-600">Lead Acid</div>
+                    </div>
+                    <div class="p-2 bg-white rounded border">
+                        <div class="font-medium">Capacity</div>
+                        <div class="text-blue-600">150 Ah</div>
+                    </div>
+                    <div class="p-2 bg-white rounded border">
+                        <div class="font-medium">Tire Diameter</div>
+                        <div class="text-blue-600">22 inches</div>
+                    </div>
+                    <div class="p-2 bg-white rounded border">
+                        <div class="font-medium">Gear Ratio</div>
+                        <div class="text-blue-600">8.91:1</div>
+                    </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-600">
+                    💡 Quick Fill only updates empty fields - existing values are preserved
+                </div>
+            </div>
+        </div>
+
+        <!-- PDF Success Simulation Area -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">PDF Upload Success Simulation</h2>
+            <div id="pdf-analysis-result" class="hidden">
+                <div id="pdf-analysis-content"></div>
+            </div>
+            <div id="no-pdf-message" class="text-gray-500 text-center">Simulate PDF upload to see Quick Fill button...</div>
+        </div>
+
+        <!-- Vehicle Form -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Vehicle Information Form</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Column 1: Vehicle Details -->
+                <div class="space-y-3">
+                    <h3 class="font-medium text-gray-800">Vehicle Details</h3>
+                    
+                    <div>
+                        <label for="vehicle-model" class="text-sm font-medium text-gray-700">Model *</label>
+                        <select id="vehicle-model" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="e2">e2 (2-pass)</option>
+                            <option value="e4">e4 (4-pass)</option>
+                            <option value="e6">e6 (6-pass)</option>
+                            <option value="eS">eS (2-pass utility)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="vehicle-year" class="text-sm font-medium text-gray-700">Year *</label>
+                        <select id="vehicle-year" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="2016+">2016+</option>
+                            <option value="2010-2015">2010-2015</option>
+                            <option value="2005-2009">2005-2009</option>
+                            <option value="1999-2004">1999-2004</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="controller-type" class="text-sm font-medium text-gray-700">Controller *</label>
+                        <select id="controller-type" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="T2">T2</option>
+                            <option value="T4">T4</option>
+                            <option value="T1">T1 (Legacy)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="current-speed" class="text-sm font-medium text-gray-700">Current Speed *</label>
+                        <input type="number" id="current-speed" min="15" max="40" 
+                               class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                    </div>
+                </div>
+
+                <!-- Column 2: Motor Details -->
+                <div class="space-y-3">
+                    <h3 class="font-medium text-gray-800">Motor Details</h3>
+                    
+                    <div>
+                        <label for="motor-type" class="text-sm font-medium text-gray-700">Type *</label>
+                        <select id="motor-type" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="dc-stock">DC Stock (3.5HP)</option>
+                            <option value="dc-upgrade">DC Upgrade (5HP+)</option>
+                            <option value="ac-stock">AC Stock</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Column 3: Battery & Drivetrain -->
+                <div class="space-y-3">
+                    <h3 class="font-medium text-gray-800">Battery & Drivetrain</h3>
+                    
+                    <div>
+                        <label for="battery-voltage" class="text-sm font-medium text-gray-700">Voltage *</label>
+                        <select id="battery-voltage" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="48">48V</option>
+                            <option value="60">60V</option>
+                            <option value="72">72V</option>
+                            <option value="82">82V</option>
+                            <option value="96">96V</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="battery-type" class="text-sm font-medium text-gray-700">Type *</label>
+                        <select id="battery-type" class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                            <option value="">Select...</option>
+                            <option value="lead-acid">Lead Acid</option>
+                            <option value="agm">AGM</option>
+                            <option value="gel">Gel</option>
+                            <option value="lithium">Lithium</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="battery-capacity" class="text-sm font-medium text-gray-700">Capacity *</label>
+                        <input type="number" id="battery-capacity" min="50" max="500" step="5" 
+                               class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                    </div>
+                    
+                    <div>
+                        <label for="tire-diameter" class="text-sm font-medium text-gray-700">Tire Diameter *</label>
+                        <input type="number" id="tire-diameter" min="18" max="26" step="0.5" 
+                               class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                    </div>
+                    
+                    <div>
+                        <label for="gear-ratio" class="text-sm font-medium text-gray-700">Gear Ratio *</label>
+                        <input type="text" id="gear-ratio" pattern="[0-9]+\.?[0-9]*:1"
+                               class="mt-1 w-full px-2 py-1.5 text-sm border border-gray-300 rounded">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Continue Button -->
+            <div class="mt-6 pt-4 border-t border-gray-200 flex justify-end">
+                <button id="continue-to-planning" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Continue to Trip Planning →
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Fill Results -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Quick Fill Results</h2>
+            <div id="settings-input-result" class="hidden">
+                <div id="settings-input-content"></div>
+            </div>
+            <div id="no-results-message" class="text-gray-500 text-center">No Quick Fill results yet...</div>
+        </div>
+
+        <!-- Field Status -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Current Field Status</h2>
+            <div id="field-status" class="min-h-16 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div class="text-gray-500 text-center">Field status will appear here...</div>
+            </div>
+        </div>
+
+        <!-- Debug Log -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-bold mb-3">Debug Log</h2>
+            <div id="debug-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                Quick Fill test initialized...
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the unified flow controller -->
+    <script src="js/unified-flow.js"></script>
+
+    <script>
+        // Global variables
+        let unifiedFlow = null;
+        const debugLog = document.getElementById('debug-log');
+
+        function log(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            debugLog.innerHTML += `[${timestamp}] ${message}\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+
+        function clearAllFields() {
+            const fields = [
+                'vehicle-model', 'vehicle-year', 'controller-type', 'current-speed',
+                'motor-type', 'battery-voltage', 'battery-type', 'battery-capacity',
+                'tire-diameter', 'gear-ratio'
+            ];
+            
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = '';
+                }
+            });
+            
+            // Clear vehicle data
+            if (unifiedFlow) {
+                unifiedFlow.vehicleData = {};
+                unifiedFlow.pdfSettings = null;
+            }
+            
+            // Clear results
+            document.getElementById('settings-input-result').classList.add('hidden');
+            document.getElementById('no-results-message').style.display = 'block';
+            document.getElementById('pdf-analysis-result').classList.add('hidden');
+            document.getElementById('no-pdf-message').style.display = 'block';
+            
+            // Clear quick fill results
+            const quickFillResults = document.getElementById('quick-fill-results');
+            if (quickFillResults) {
+                quickFillResults.remove();
+            }
+            
+            log('🧹 All fields and data cleared');
+            updateFieldStatus();
+        }
+
+        function simulatePDFUpload() {
+            if (!unifiedFlow) {
+                log('❌ UnifiedFlow not available for PDF simulation');
+                return;
+            }
+            
+            // Create mock PDF settings with F.15 = 72 (typical 72V system)
+            const mockSettings = {
+                1: 100,   // MPH Scaling
+                3: 15,    // Controlled Acceleration  
+                4: 245,   // Max Armature Current
+                6: 60,    // Armature Acceleration Rate
+                7: 75,    // Minimum Field Current
+                15: 72,   // Battery Volts (key for voltage detection)
+                20: 30,   // MPH Overspeed
+                24: 50    // Field Weakening Start
+            };
+            
+            // Simulate 46 functions for substantial PDF data
+            for (let i = 8; i <= 46; i++) {
+                if (!mockSettings[i]) {
+                    mockSettings[i] = Math.floor(Math.random() * 200) + 50;
+                }
+            }
+            
+            unifiedFlow.pdfSettings = mockSettings;
+            
+            // Simulate the PDF success UI
+            const resultDiv = document.getElementById('pdf-analysis-result');
+            const contentDiv = document.getElementById('pdf-analysis-content');
+            const noMessage = document.getElementById('no-pdf-message');
+            
+            if (resultDiv && contentDiv) {
+                resultDiv.classList.remove('hidden');
+                noMessage.style.display = 'none';
+                
+                contentDiv.innerHTML = `
+                    <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                        <div class="flex items-start">
+                            <span class="text-green-600 mr-2">✅</span>
+                            <div class="flex-grow">
+                                <h4 class="font-medium text-green-900">PDF Analysis Successful</h4>
+                                <p class="text-sm text-green-700 mt-1">
+                                    Extracted ${Object.keys(mockSettings).length} controller settings with 95% confidence
+                                </p>
+                                <div class="text-xs text-green-600 mt-2 space-y-1">
+                                    <div>Parser: 🔍 Advanced Parser</div>
+                                    <div>Extraction method: Multi-pattern</div>
+                                    <div>File: test-settings.pdf</div>
+                                </div>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <button onclick="showPDFDetails()" class="text-xs text-green-600 hover:text-green-800 underline">
+                                        View detailed settings →
+                                    </button>
+                                    <button onclick="testQuickFill()" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors">
+                                        ⚡ Quick Fill Defaults
+                                    </button>
+                                </div>
+                                <div class="mt-2 text-xs text-blue-600">
+                                    💡 Quick Fill automatically completes common vehicle details to get you started faster
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            log(`📄 Simulated PDF upload with ${Object.keys(mockSettings).length} functions`);
+            log(`🔋 Detected F.15 Battery Volts: ${mockSettings[15]}V`);
+            updateFieldStatus();
+        }
+
+        function testQuickFill() {
+            if (!unifiedFlow || typeof unifiedFlow.quickFillDefaults !== 'function') {
+                log('❌ quickFillDefaults method not available');
+                return;
+            }
+            
+            log('🚀 Testing Quick Fill Defaults...');
+            
+            try {
+                const result = unifiedFlow.quickFillDefaults();
+                
+                if (result.success) {
+                    log(`✅ Quick Fill successful: ${result.fieldsUpdated} fields updated`);
+                    log(`📋 Details: ${result.details.join(', ')}`);
+                    document.getElementById('no-results-message').style.display = 'none';
+                } else {
+                    log(`❌ Quick Fill failed: ${result.error}`);
+                }
+                
+                updateFieldStatus();
+                
+            } catch (error) {
+                log(`❌ Quick Fill error: ${error.message}`);
+            }
+        }
+
+        function testWithSomeFields() {
+            // First clear everything
+            clearAllFields();
+            
+            // Simulate PDF upload
+            simulatePDFUpload();
+            
+            // Pre-fill some fields to test that Quick Fill doesn't overwrite them
+            setTimeout(() => {
+                document.getElementById('vehicle-model').value = 'e6'; // Different from default e4
+                document.getElementById('battery-type').value = 'lithium'; // Different from default lead-acid
+                
+                if (unifiedFlow) {
+                    unifiedFlow.vehicleData.model = 'e6';
+                    unifiedFlow.vehicleData.batteryType = 'lithium';
+                }
+                
+                log('📝 Pre-filled some fields: Model=e6, Battery Type=Lithium');
+                log('🧪 Now test Quick Fill - it should preserve existing values');
+                updateFieldStatus();
+            }, 500);
+        }
+
+        function updateFieldStatus() {
+            const fieldStatus = document.getElementById('field-status');
+            if (!fieldStatus) return;
+            
+            const fields = [
+                {id: 'vehicle-model', label: 'Model'},
+                {id: 'vehicle-year', label: 'Year'},
+                {id: 'controller-type', label: 'Controller'},
+                {id: 'current-speed', label: 'Speed'},
+                {id: 'motor-type', label: 'Motor'},
+                {id: 'battery-voltage', label: 'Voltage'},
+                {id: 'battery-type', label: 'Battery Type'},
+                {id: 'battery-capacity', label: 'Capacity'},
+                {id: 'tire-diameter', label: 'Tire Diameter'},
+                {id: 'gear-ratio', label: 'Gear Ratio'}
+            ];
+            
+            let filledCount = 0;
+            let statusHTML = '<div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">';
+            
+            fields.forEach(field => {
+                const element = document.getElementById(field.id);
+                const isFilled = element && element.value && element.value !== '';
+                if (isFilled) filledCount++;
+                
+                statusHTML += `
+                    <div class="flex items-center p-2 rounded ${isFilled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
+                        <span class="mr-1">${isFilled ? '✅' : '⭕'}</span>
+                        <span class="font-medium">${field.label}</span>
+                        ${isFilled ? `<div class="text-xs mt-0.5 truncate" title="${element.value}">${element.value}</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            statusHTML += '</div>';
+            
+            const pdfStatus = unifiedFlow && unifiedFlow.pdfSettings ? `PDF: ${Object.keys(unifiedFlow.pdfSettings).length} functions` : 'No PDF';
+            const continueBtn = document.getElementById('continue-to-planning');
+            const continueStatus = continueBtn && !continueBtn.disabled ? 'Enabled' : 'Disabled';
+            
+            fieldStatus.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-medium">Fields Status: ${filledCount}/10 filled</h4>
+                        <div class="text-sm space-x-2">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded">${pdfStatus}</span>
+                            <span class="px-2 py-1 ${continueStatus === 'Enabled' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} rounded">Continue: ${continueStatus}</span>
+                        </div>
+                    </div>
+                    ${statusHTML}
+                </div>
+            `;
+        }
+
+        function showPDFDetails() {
+            if (unifiedFlow && unifiedFlow.pdfSettings) {
+                const settings = unifiedFlow.pdfSettings;
+                const details = Object.entries(settings).slice(0, 10).map(([f, v]) => `F.${f}: ${v}`).join(', ');
+                log(`📊 PDF Settings sample: ${details}... (${Object.keys(settings).length} total)`);
+            }
+        }
+
+        function runTest(testId) {
+            switch(testId) {
+                case 'simulate-pdf':
+                    simulatePDFUpload();
+                    break;
+                case 'test-quick-fill':
+                    testQuickFill();
+                    break;
+                case 'test-with-some-fields':
+                    testWithSomeFields();
+                    break;
+                case 'clear-form':
+                    clearAllFields();
+                    break;
+                default:
+                    log(`❌ Unknown test: ${testId}`);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                if (typeof UnifiedFlowController !== 'undefined') {
+                    unifiedFlow = new UnifiedFlowController();
+                    log('✅ UnifiedFlowController initialized successfully');
+                } else {
+                    log('❌ UnifiedFlowController not available');
+                }
+                
+                updateFieldStatus();
+                
+                // Add field change listeners
+                const fields = ['vehicle-model', 'vehicle-year', 'controller-type', 'current-speed', 'motor-type', 'battery-voltage', 'battery-type', 'battery-capacity', 'tire-diameter', 'gear-ratio'];
+                fields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.addEventListener('change', updateFieldStatus);
+                        field.addEventListener('input', updateFieldStatus);
+                    }
+                });
+                
+            } catch (error) {
+                log(`❌ Failed to initialize: ${error.message}`);
+            }
+        });
+
+        // Event listeners
+        document.querySelectorAll('.test-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const testId = this.dataset.test;
+                runTest(testId);
+            });
+        });
+
+        // Global functions for button clicks
+        window.testQuickFill = testQuickFill;
+        window.showPDFDetails = showPDFDetails;
+    </script>
+</body>
+</html>

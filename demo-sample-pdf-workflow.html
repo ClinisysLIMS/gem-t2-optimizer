@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete PDF Workflow Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🔄 Complete PDF Workflow Demo</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">End-to-End PDF Testing Workflow</h2>
+            <p class="text-gray-600 mb-6">
+                This demo shows the complete workflow: Generate → Download → Upload → Parse → Validate
+            </p>
+            
+            <!-- Step 1: Generate PDF -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-3 flex items-center">
+                    <span class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3">1</span>
+                    Generate Sample PDF
+                </h3>
+                
+                <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                    <div class="flex flex-wrap gap-3 mb-4">
+                        <select id="pdf-format" class="px-3 py-2 border border-gray-300 rounded text-sm">
+                            <option value="sentry">GE Sentry Export Format</option>
+                            <option value="table">Table Format</option>
+                            <option value="simple">Simple List Format</option>
+                            <option value="mixed">Mixed Format (Real-world)</option>
+                        </select>
+                        
+                        <button id="generate-pdf" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                            📄 Generate PDF
+                        </button>
+                        
+                        <button id="generate-editable" class="px-4 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">
+                            ✏️ Generate Editable Template
+                        </button>
+                    </div>
+                    
+                    <div id="generation-status" class="text-sm text-gray-600">
+                        Click "Generate PDF" to create a sample file...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Upload and Parse -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-3 flex items-center">
+                    <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3">2</span>
+                    Upload and Parse PDF
+                </h3>
+                
+                <div class="bg-green-50 rounded-lg p-4 mb-4">
+                    <input type="file" id="pdf-upload" accept=".pdf" class="w-full p-3 border-2 border-dashed border-green-300 rounded-lg text-center">
+                    <div class="text-xs text-gray-500 mt-2">Upload the generated PDF or any other controller settings PDF</div>
+                    
+                    <div class="mt-4 flex gap-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="use-advanced-parser" checked class="mr-2">
+                            <span class="text-sm">Try Advanced Parser</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" id="use-simple-parser" checked class="mr-2">
+                            <span class="text-sm">Try Simple Parser (Fallback)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Results -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-3 flex items-center">
+                    <span class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3">3</span>
+                    Parsing Results
+                </h3>
+                
+                <div id="parsing-results" class="bg-purple-50 rounded-lg p-4 min-h-32">
+                    <div class="text-gray-500 text-center">Upload a PDF to see parsing results...</div>
+                </div>
+            </div>
+            
+            <!-- Step 4: Workflow Summary -->
+            <div>
+                <h3 class="text-lg font-semibold mb-3 flex items-center">
+                    <span class="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3">4</span>
+                    Workflow Summary
+                </h3>
+                
+                <div id="workflow-summary" class="bg-orange-50 rounded-lg p-4">
+                    <div class="text-gray-500">Complete the workflow above to see summary...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Debug Log -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+            <h2 class="text-lg font-bold mb-3">Debug Log</h2>
+            <div id="debug-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-48 overflow-y-auto">
+                Workflow demo initialized...\n
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF.js setup -->
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
+    <!-- Load parsers and generator -->
+    <script src="js/simple-pdf-parser.js"></script>
+    <script src="js/pdf-parser.js"></script>
+    <script src="js/sample-pdf-generator.js"></script>
+
+    <script>
+        // Global variables
+        let generator = null;
+        let advancedParser = null;
+        let simpleParser = null;
+        let lastGeneratedPDF = null;
+        let workflowSteps = {
+            generated: false,
+            uploaded: false,
+            parsed: false,
+            results: null
+        };
+
+        // DOM elements
+        const debugLog = document.getElementById('debug-log');
+        const generationStatus = document.getElementById('generation-status');
+        const parsingResults = document.getElementById('parsing-results');
+        const workflowSummary = document.getElementById('workflow-summary');
+
+        function log(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            debugLog.innerHTML += `[${timestamp}] ${message}\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+
+        function updateGenerationStatus(message, success = true) {
+            const className = success ? 'text-green-600' : 'text-red-600';
+            const icon = success ? '✅' : '❌';
+            generationStatus.innerHTML = `<span class="${className}">${icon} ${message}</span>`;
+        }
+
+        function updateParsingResults(results) {
+            const hasResults = results && results.length > 0;
+            
+            if (!hasResults) {
+                parsingResults.innerHTML = '<div class="text-gray-500 text-center">No parsing results yet...</div>';
+                return;
+            }
+
+            let html = '<div class="space-y-4">';
+            
+            results.forEach((result, index) => {
+                const success = result.success && Object.keys(result.settings || {}).length > 0;
+                const bgColor = success ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300';
+                const textColor = success ? 'text-green-800' : 'text-red-800';
+                const icon = success ? '✅' : '❌';
+                
+                html += `
+                    <div class="border rounded-lg p-3 ${bgColor}">
+                        <div class="flex items-start">
+                            <span class="mr-2">${icon}</span>
+                            <div class="flex-grow">
+                                <h4 class="font-medium ${textColor}">${result.parser} Parser</h4>
+                                ${success ? 
+                                    `<p class="text-sm mt-1">Found ${Object.keys(result.settings).length} settings</p>
+                                     <p class="text-xs mt-1">Method: ${result.metadata?.extractionMethod || 'Unknown'}</p>` :
+                                    `<p class="text-sm mt-1">Failed: ${result.error}</p>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            parsingResults.innerHTML = html;
+        }
+
+        function updateWorkflowSummary() {
+            if (!workflowSteps.generated && !workflowSteps.uploaded && !workflowSteps.parsed) {
+                return;
+            }
+
+            let html = '<div class="space-y-2 text-sm">';
+            
+            // Generation step
+            html += `
+                <div class="flex items-center">
+                    <span class="${workflowSteps.generated ? 'text-green-600' : 'text-gray-400'}">${workflowSteps.generated ? '✅' : '⭕'}</span>
+                    <span class="ml-2">PDF Generated: ${lastGeneratedPDF || 'None'}</span>
+                </div>
+            `;
+            
+            // Upload step
+            html += `
+                <div class="flex items-center">
+                    <span class="${workflowSteps.uploaded ? 'text-green-600' : 'text-gray-400'}">${workflowSteps.uploaded ? '✅' : '⭕'}</span>
+                    <span class="ml-2">PDF Uploaded: ${workflowSteps.uploaded ? 'Yes' : 'No'}</span>
+                </div>
+            `;
+            
+            // Parsing step
+            html += `
+                <div class="flex items-center">
+                    <span class="${workflowSteps.parsed ? 'text-green-600' : 'text-gray-400'}">${workflowSteps.parsed ? '✅' : '⭕'}</span>
+                    <span class="ml-2">PDF Parsed: ${workflowSteps.parsed ? 'Yes' : 'No'}</span>
+                </div>
+            `;
+
+            if (workflowSteps.results && workflowSteps.results.length > 0) {
+                const successfulParsers = workflowSteps.results.filter(r => r.success).length;
+                html += `
+                    <div class="mt-3 p-2 bg-blue-100 rounded">
+                        <div class="font-medium text-blue-800">Workflow Complete!</div>
+                        <div class="text-xs text-blue-600 mt-1">
+                            ${successfulParsers}/${workflowSteps.results.length} parsers succeeded
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            workflowSummary.innerHTML = html;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                generator = new SamplePDFGenerator();
+                log('✅ Sample PDF generator ready');
+            } catch (error) {
+                log(`❌ Sample PDF generator failed: ${error.message}`);
+            }
+
+            try {
+                advancedParser = new PDFParser();
+                log('✅ Advanced PDF parser ready');
+            } catch (error) {
+                log(`⚠️ Advanced PDF parser not available: ${error.message}`);
+            }
+
+            try {
+                simpleParser = new SimplePDFParser();
+                log('✅ Simple PDF parser ready');
+            } catch (error) {
+                log(`⚠️ Simple PDF parser not available: ${error.message}`);
+            }
+        });
+
+        // Generate PDF
+        document.getElementById('generate-pdf').addEventListener('click', function() {
+            const format = document.getElementById('pdf-format').value;
+            log(`Generating PDF in ${format} format...`);
+            
+            try {
+                const filename = generator.generateSamplePDF(format);
+                lastGeneratedPDF = filename;
+                workflowSteps.generated = true;
+                
+                updateGenerationStatus(`Generated: ${filename}`, true);
+                updateWorkflowSummary();
+                log(`✅ PDF generated successfully: ${filename}`);
+            } catch (error) {
+                updateGenerationStatus(`Generation failed: ${error.message}`, false);
+                log(`❌ PDF generation failed: ${error.message}`);
+            }
+        });
+
+        // Generate editable PDF
+        document.getElementById('generate-editable').addEventListener('click', function() {
+            log('Generating editable PDF template...');
+            
+            try {
+                const filename = generator.generateEditablePDF();
+                lastGeneratedPDF = filename;
+                workflowSteps.generated = true;
+                
+                updateGenerationStatus(`Generated editable template: ${filename}`, true);
+                updateWorkflowSummary();
+                log(`✅ Editable PDF generated: ${filename}`);
+            } catch (error) {
+                updateGenerationStatus(`Generation failed: ${error.message}`, false);
+                log(`❌ Editable PDF generation failed: ${error.message}`);
+            }
+        });
+
+        // Upload and parse PDF
+        document.getElementById('pdf-upload').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            workflowSteps.uploaded = true;
+            updateWorkflowSummary();
+            
+            log(`📁 Uploaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+            
+            const useAdvanced = document.getElementById('use-advanced-parser').checked;
+            const useSimple = document.getElementById('use-simple-parser').checked;
+            const results = [];
+
+            // Try advanced parser
+            if (useAdvanced && advancedParser) {
+                try {
+                    log('🔍 Testing advanced parser...');
+                    const result = await advancedParser.parsePDF(file);
+                    results.push({
+                        parser: 'Advanced',
+                        success: result.success,
+                        settings: result.settings || {},
+                        error: result.error,
+                        metadata: result.metadata
+                    });
+                    log(`Advanced parser: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+                } catch (error) {
+                    results.push({
+                        parser: 'Advanced',
+                        success: false,
+                        settings: {},
+                        error: error.message
+                    });
+                    log(`Advanced parser error: ${error.message}`);
+                }
+            }
+
+            // Try simple parser
+            if (useSimple && simpleParser) {
+                try {
+                    log('⚡ Testing simple parser...');
+                    const result = await simpleParser.parsePDF(file);
+                    results.push({
+                        parser: 'Simple',
+                        success: result.success,
+                        settings: result.settings || {},
+                        error: result.error,
+                        metadata: result.metadata
+                    });
+                    log(`Simple parser: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+                } catch (error) {
+                    results.push({
+                        parser: 'Simple',
+                        success: false,
+                        settings: {},
+                        error: error.message
+                    });
+                    log(`Simple parser error: ${error.message}`);
+                }
+            }
+
+            workflowSteps.parsed = true;
+            workflowSteps.results = results;
+            
+            updateParsingResults(results);
+            updateWorkflowSummary();
+            
+            const successCount = results.filter(r => r.success).length;
+            log(`📊 Parsing complete: ${successCount}/${results.length} parsers succeeded`);
+        });
+
+        // Initial summary update
+        updateWorkflowSummary();
+    </script>
+</body>
+</html>

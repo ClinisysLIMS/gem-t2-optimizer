@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PDF Parser Syntax Fix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🔧 PDF Parser Syntax Fix Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Syntax Error Fix Verification</h2>
+            <p class="text-gray-600 mb-4">
+                Testing if the "Unexpected identifier errorContent" syntax error has been resolved.
+            </p>
+            
+            <div id="test-results" class="min-h-32 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div class="text-gray-500 text-center">Initializing test...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-bold mb-3">Test Log</h2>
+            <div id="test-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                Starting syntax fix verification...\n
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the PDF parser to test for syntax errors -->
+    <script src="js/pdf-parser.js"></script>
+
+    <script>
+        // Test elements
+        const testResults = document.getElementById('test-results');
+        const testLog = document.getElementById('test-log');
+
+        function log(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            testLog.innerHTML += `[${timestamp}] ${message}\n`;
+            testLog.scrollTop = testLog.scrollHeight;
+            console.log(message);
+        }
+
+        function updateResults(success, message, details = '') {
+            const bgColor = success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+            const textColor = success ? 'text-green-800' : 'text-red-800';
+            const icon = success ? '✅' : '❌';
+            
+            testResults.className = `min-h-32 border rounded-lg p-4 ${bgColor}`;
+            testResults.innerHTML = `
+                <div class="flex items-start">
+                    <span class="${textColor} mr-2">${icon}</span>
+                    <div class="flex-grow">
+                        <h4 class="font-medium ${textColor}">${message}</h4>
+                        ${details ? `<p class="text-sm mt-1 ${textColor.replace('800', '700')}">${details}</p>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Test the PDF parser initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🔧 Testing PDF parser initialization...');
+            
+            try {
+                // Test 1: Can we create a PDFParser instance?
+                log('📝 Creating PDFParser instance...');
+                const parser = new PDFParser();
+                log('✅ PDFParser instance created successfully');
+                
+                // Test 2: Can we access basic methods?
+                log('📝 Testing basic methods...');
+                if (typeof parser.log === 'function') {
+                    log('✅ log method is accessible');
+                } else {
+                    throw new Error('log method not found');
+                }
+                
+                if (typeof parser.extractHudsGemstatsFormat === 'function') {
+                    log('✅ extractHudsGemstatsFormat method is accessible');
+                } else {
+                    throw new Error('extractHudsGemstatsFormat method not found');
+                }
+                
+                // Test 3: Can we call methods without errors?
+                log('📝 Testing method calls...');
+                const testText = "1 MPH Scaling 100 100 Cnts";
+                const result = parser.extractHudsGemstatsFormat(testText, 'test');
+                log(`✅ extractHudsGemstatsFormat executed successfully, found ${Object.keys(result).length} settings`);
+                
+                // Test 4: Check if patterns are properly defined
+                log('📝 Testing pattern definitions...');
+                if (parser.patterns && parser.patterns.hudsGemstatsPatterns) {
+                    log('✅ HudsGemstats patterns are properly defined');
+                    log(`📊 Found ${Object.keys(parser.patterns.hudsGemstatsPatterns).length} HudsGemstats patterns`);
+                } else {
+                    throw new Error('HudsGemstats patterns not found');
+                }
+                
+                // All tests passed
+                log('🎉 All syntax and functionality tests passed!');
+                updateResults(true, 'Syntax Error Fixed Successfully', 
+                    'The PDF parser is now working correctly. The "errorContent" syntax error has been resolved.');
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`);
+                log(`📍 Error stack: ${error.stack}`);
+                updateResults(false, 'Syntax Error Still Present', 
+                    `Error: ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

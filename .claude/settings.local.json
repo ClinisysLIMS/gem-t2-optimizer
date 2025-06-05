@@ -22,7 +22,8 @@
       "Bash(rg:*)",
       "Bash(pkill:*)",
       "Bash(find:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }

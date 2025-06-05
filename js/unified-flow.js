@@ -31,7 +31,30 @@ class UnifiedFlowController {
             this.pdfParser = null;
         }
         
+        try {
+            this.simplePdfParser = typeof SimplePDFParser !== 'undefined' ? new SimplePDFParser() : null;
+        } catch (error) {
+            console.warn('SimplePDFParser not available:', error);
+            this.simplePdfParser = null;
+        }
+        
         this.init();
+    }
+
+    /**
+     * Wait for local auth service to be available
+     */
+    async waitForLocalAuth() {
+        return new Promise((resolve) => {
+            const checkAuth = () => {
+                if (window.localAuth) {
+                    resolve();
+                } else {
+                    setTimeout(checkAuth, 100);
+                }
+            };
+            checkAuth();
+        });
     }
 
     /**
@@ -53,9 +76,13 @@ class UnifiedFlowController {
             this.tripOptimizer = new TripOptimizer(this.optimizer);
         }
         
-        // Listen for Firebase profile events
-        window.addEventListener('authStateChanged', (e) => {
-            this.handleAuthStateChange(e.detail.user);
+        // Listen for local auth profile events
+        this.waitForLocalAuth().then(() => {
+            if (window.localAuth) {
+                window.localAuth.onAuthStateChanged((user) => {
+                    this.handleAuthStateChange(user);
+                });
+            }
         });
         
         // Listen for manual settings input
@@ -217,20 +244,156 @@ class UnifiedFlowController {
     }
 
     /**
-     * Validate Step 1 (Vehicle Information)
+     * Validate Step 1 (Vehicle Information) - Smart validation based on PDF upload status
      */
     validateStep1() {
-        const required = ['model', 'year', 'controller', 'motorType', 'currentSpeed', 
-                         'batteryVoltage', 'batteryType', 'batteryCapacity', 
-                         'tireDiameter', 'gearRatio'];
-        const isValid = required.every(field => this.vehicleData[field]);
-        
         const continueBtn = document.getElementById('continue-to-planning');
+        const validationMessage = document.getElementById('validation-message') || this.createValidationMessage();
+        
+        // Check if PDF was successfully uploaded with substantial controller data
+        const hasPDFData = this.pdfSettings && Object.keys(this.pdfSettings).length >= 5;
+        const pdfFunctionCount = hasPDFData ? Object.keys(this.pdfSettings).length : 0;
+        
+        let requiredFields = [];
+        let missingFields = [];
+        let fieldLabels = {
+            'model': 'Vehicle Model',
+            'year': 'Vehicle Year', 
+            'batteryType': 'Battery Type',
+            'tireDiameter': 'Tire Diameter',
+            'controller': 'Controller Type',
+            'motorType': 'Motor Type',
+            'currentSpeed': 'Current Speed',
+            'batteryVoltage': 'Battery Voltage',
+            'batteryCapacity': 'Battery Capacity',
+            'gearRatio': 'Gear Ratio'
+        };
+        
+        if (hasPDFData) {
+            // PDF uploaded with substantial data - only require critical fields
+            console.log(`🔍 PDF validation mode: ${pdfFunctionCount} functions found`);
+            requiredFields = ['model', 'year', 'batteryType', 'tireDiameter'];
+            
+            // Check each required field
+            requiredFields.forEach(field => {
+                if (!this.vehicleData[field]) {
+                    missingFields.push(fieldLabels[field]);
+                }
+            });
+            
+        } else {
+            // No PDF data - require all standard fields
+            console.log('🔍 Standard validation mode: No PDF data available');
+            requiredFields = ['model', 'year', 'controller', 'motorType', 'currentSpeed', 
+                             'batteryVoltage', 'batteryType', 'batteryCapacity', 
+                             'tireDiameter', 'gearRatio'];
+            
+            // Check each required field
+            requiredFields.forEach(field => {
+                if (!this.vehicleData[field]) {
+                    missingFields.push(fieldLabels[field]);
+                }
+            });
+        }
+        
+        const isValid = missingFields.length === 0;
+        
+        // Update continue button
         if (continueBtn) {
             continueBtn.disabled = !isValid;
         }
         
+        // Update validation message
+        this.updateValidationMessage(validationMessage, isValid, hasPDFData, pdfFunctionCount, missingFields);
+        
+        console.log(`✅ Validation complete: ${isValid ? 'PASSED' : 'FAILED'} (PDF: ${hasPDFData}, Missing: ${missingFields.length})`);
+        
         return isValid;
+    }
+    
+    /**
+     * Create validation message element if it doesn't exist
+     */
+    createValidationMessage() {
+        const continueBtn = document.getElementById('continue-to-planning');
+        if (!continueBtn || !continueBtn.parentElement) return null;
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.id = 'validation-message';
+        messageDiv.className = 'mt-2 text-xs';
+        
+        // Insert before the continue button
+        continueBtn.parentElement.insertBefore(messageDiv, continueBtn);
+        
+        return messageDiv;
+    }
+    
+    /**
+     * Update validation message with helpful information
+     */
+    updateValidationMessage(messageDiv, isValid, hasPDFData, pdfFunctionCount, missingFields) {
+        if (!messageDiv) return;
+        
+        if (isValid) {
+            // Show success message
+            if (hasPDFData) {
+                messageDiv.className = 'mt-2 text-xs text-green-600';
+                messageDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        Ready to continue! PDF uploaded (${pdfFunctionCount} functions) + critical vehicle details completed.
+                    </div>
+                `;
+            } else {
+                messageDiv.className = 'mt-2 text-xs text-green-600';
+                messageDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        All required vehicle information completed.
+                    </div>
+                `;
+            }
+        } else {
+            // Show what's missing
+            if (hasPDFData) {
+                messageDiv.className = 'mt-2 text-xs text-blue-600';
+                messageDiv.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            PDF uploaded (${pdfFunctionCount} functions) - only critical fields needed:
+                        </div>
+                        <div class="ml-4 text-blue-700">
+                            Still needed: ${missingFields.join(', ')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                messageDiv.className = 'mt-2 text-xs text-orange-600';
+                messageDiv.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            Missing required fields (${missingFields.length}):
+                        </div>
+                        <div class="ml-4 text-orange-700">
+                            ${missingFields.join(', ')}
+                        </div>
+                        <div class="ml-4 text-orange-500 text-xs">
+                            💡 Upload PDF settings to reduce required fields to just the critical ones.
+                        </div>
+                    </div>
+                `;
+            }
+        }
     }
 
     /**
@@ -357,23 +520,54 @@ class UnifiedFlowController {
                 console.warn('Unable to update upload area UI:', domError);
             }
             
-            // Critical dependency check
-            if (!this.pdfParser) {
-                throw new Error('PDF parsing service is not available. Please refresh the page and try again.');
+            // Try primary parser first, then fallback to simple parser
+            let result;
+            let parserUsed = 'none';
+            
+            // Attempt with primary PDF parser
+            if (this.pdfParser) {
+                try {
+                    console.log('Attempting PDF parsing with primary parser...');
+                    const parsePromise = this.pdfParser.parsePDF(file);
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('PDF parsing timed out after 30 seconds')), 30000)
+                    );
+                    
+                    result = await Promise.race([parsePromise, timeoutPromise]);
+                    parserUsed = 'primary';
+                    console.log('Primary parser completed:', result.success ? 'SUCCESS' : 'FAILED');
+                } catch (parseError) {
+                    console.warn('Primary PDF parser failed:', parseError.message);
+                    result = null;
+                }
             }
             
-            // Attempt PDF parsing with timeout protection
-            let result;
-            try {
-                const parsePromise = this.pdfParser.parsePDF(file);
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('PDF parsing timed out after 30 seconds')), 30000)
-                );
-                
-                result = await Promise.race([parsePromise, timeoutPromise]);
-            } catch (parseError) {
-                console.error('PDF parsing failed:', parseError);
-                throw new Error(`PDF parsing failed: ${parseError.message}`);
+            // If primary parser failed and simple parser is available, try fallback
+            if ((!result || !result.success || Object.keys(result.settings || {}).length === 0) && this.simplePdfParser) {
+                try {
+                    console.log('Attempting PDF parsing with simple fallback parser...');
+                    const simpleResult = await this.simplePdfParser.parsePDF(file);
+                    
+                    if (simpleResult.success && Object.keys(simpleResult.settings || {}).length > 0) {
+                        result = simpleResult;
+                        parserUsed = 'simple_fallback';
+                        console.log('Simple fallback parser succeeded:', Object.keys(simpleResult.settings).length, 'settings found');
+                    } else {
+                        console.warn('Simple fallback parser also failed');
+                    }
+                } catch (simpleError) {
+                    console.warn('Simple fallback parser failed:', simpleError.message);
+                }
+            }
+            
+            // If no parser is available
+            if (!this.pdfParser && !this.simplePdfParser) {
+                throw new Error('No PDF parsing service is available. Please refresh the page and try again.');
+            }
+            
+            // If all parsing attempts failed
+            if (!result) {
+                throw new Error('All PDF parsing methods failed. The PDF format may not be supported.');
             }
             
             // Validate parsing result structure
@@ -394,7 +588,7 @@ class UnifiedFlowController {
                 
                 // Show success UI safely
                 try {
-                    this.showPDFSuccessUI(result, settingsCount);
+                    this.showPDFSuccessUI(result, settingsCount, parserUsed);
                 } catch (uiError) {
                     console.warn('Unable to update success UI:', uiError);
                 }
@@ -451,7 +645,7 @@ class UnifiedFlowController {
     /**
      * Show PDF success UI safely
      */
-    showPDFSuccessUI(result, settingsCount) {
+    showPDFSuccessUI(result, settingsCount, parserUsed = 'unknown') {
         const resultDiv = document.getElementById('pdf-analysis-result');
         const contentDiv = document.getElementById('pdf-analysis-content');
         
@@ -460,7 +654,17 @@ class UnifiedFlowController {
             resultDiv.className = 'mt-4 p-3 bg-green-50 border border-green-200 rounded-md';
             
             const confidence = Math.round((result.metadata?.confidence || 0.8) * 100);
-            const methods = result.metadata?.extractionMethods?.join(', ') || 'Multi-pattern';
+            const methods = result.metadata?.extractionMethods?.join(', ') || result.metadata?.extractionMethod || 'Multi-pattern';
+            
+            // Parser labels
+            const parserLabels = {
+                'primary': '🔍 Advanced Parser',
+                'simple_fallback': '⚡ Simple Parser (Fallback)',
+                'unknown': '📄 PDF Parser'
+            };
+            
+            const parserLabel = parserLabels[parserUsed] || parserLabels['unknown'];
+            const showFallbackNote = parserUsed === 'simple_fallback';
             
             contentDiv.innerHTML = `
                 <div class="flex items-start">
@@ -471,12 +675,22 @@ class UnifiedFlowController {
                             Extracted ${settingsCount} controller settings with ${confidence}% confidence
                         </p>
                         <div class="text-xs text-green-600 mt-2 space-y-1">
+                            <div>Parser: ${parserLabel}</div>
                             <div>Extraction method: ${methods}</div>
                             <div>File: ${result.metadata?.fileName || 'Unknown'}</div>
+                            ${showFallbackNote ? '<div class="text-blue-600 font-medium">ℹ️ Used flexible fallback parser for better compatibility</div>' : ''}
                         </div>
-                        <button onclick="unifiedFlow.showPDFDetails()" class="mt-2 text-xs text-green-600 hover:text-green-800 underline">
-                            View detailed settings →
-                        </button>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <button onclick="unifiedFlow.showPDFDetails()" class="text-xs text-green-600 hover:text-green-800 underline">
+                                View detailed settings →
+                            </button>
+                            <button onclick="unifiedFlow.quickFillDefaults()" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors">
+                                ⚡ Quick Fill Defaults
+                            </button>
+                        </div>
+                        <div class="mt-2 text-xs text-blue-600">
+                            💡 Quick Fill automatically completes common vehicle details to get you started faster
+                        </div>
                     </div>
                 </div>
             `;
@@ -833,6 +1047,11 @@ class UnifiedFlowController {
         this.vehicleData.currentSettings = settings;
         this.vehicleData.settingsAnalysis = analysis;
         
+        // Auto-populate form fields when settings are successfully imported
+        if (source === 'PDF' && settings && Object.keys(settings).length > 0) {
+            this.autoPopulateFormFields(settings, source);
+        }
+        
         // Update current speed if detected and different
         if (analysis.topSpeed && Math.abs(analysis.topSpeed - (this.vehicleData.currentSpeed || 25)) > 2) {
             const speedInput = document.getElementById('current-speed');
@@ -847,6 +1066,410 @@ class UnifiedFlowController {
         }
         
         console.log(`Settings analysis complete for ${source}:`, analysis);
+    }
+
+    /**
+     * Auto-populate form fields based on extracted PDF settings
+     */
+    autoPopulateFormFields(settings, source) {
+        console.log(`🔄 Auto-populating form fields from ${source} settings:`, settings);
+        
+        let fieldsUpdated = [];
+        let requiredFieldsSet = 0;
+        const totalRequiredFields = 10; // Total required fields for validation
+        
+        // 1) Set Battery Voltage based on F.15 (Battery Volts)
+        if (settings[15]) {
+            const batteryVoltage = settings[15];
+            const batteryVoltageSelect = document.getElementById('battery-voltage');
+            
+            if (batteryVoltageSelect) {
+                // Map F.15 value to dropdown options
+                if (batteryVoltage >= 94) {
+                    batteryVoltageSelect.value = '96';
+                    this.vehicleData.batteryVoltage = '96';
+                } else if (batteryVoltage >= 80) {
+                    batteryVoltageSelect.value = '82';
+                    this.vehicleData.batteryVoltage = '82';
+                } else if (batteryVoltage >= 70) {
+                    batteryVoltageSelect.value = '72';
+                    this.vehicleData.batteryVoltage = '72';
+                } else if (batteryVoltage >= 58) {
+                    batteryVoltageSelect.value = '60';
+                    this.vehicleData.batteryVoltage = '60';
+                } else {
+                    batteryVoltageSelect.value = '48';
+                    this.vehicleData.batteryVoltage = '48';
+                }
+                
+                fieldsUpdated.push(`Battery Voltage: ${batteryVoltageSelect.value}V (from F.15: ${batteryVoltage})`);
+                requiredFieldsSet++;
+                
+                // Trigger change event to update any dependencies
+                batteryVoltageSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+        
+        // 2) Set default values for other required fields if they're empty
+        const defaultMappings = [
+            {
+                fieldId: 'vehicle-model',
+                defaultValue: 'e4',
+                displayName: 'Vehicle Model',
+                dataField: 'model'
+            },
+            {
+                fieldId: 'vehicle-year', 
+                defaultValue: '2016+',
+                displayName: 'Vehicle Year',
+                dataField: 'year'
+            },
+            {
+                fieldId: 'controller-type',
+                defaultValue: 'T2',
+                displayName: 'Controller Type',
+                dataField: 'controller'
+            },
+            {
+                fieldId: 'motor-type',
+                defaultValue: 'dc-stock',
+                displayName: 'Motor Type',
+                dataField: 'motorType'
+            },
+            {
+                fieldId: 'battery-type',
+                defaultValue: 'lead-acid',
+                displayName: 'Battery Type',
+                dataField: 'batteryType'
+            },
+            {
+                fieldId: 'battery-capacity',
+                defaultValue: '105',
+                displayName: 'Battery Capacity',
+                dataField: 'batteryCapacity'
+            },
+            {
+                fieldId: 'tire-diameter',
+                defaultValue: '22.5',
+                displayName: 'Tire Diameter',
+                dataField: 'tireDiameter'
+            },
+            {
+                fieldId: 'gear-ratio',
+                defaultValue: '10.35:1',
+                displayName: 'Gear Ratio',
+                dataField: 'gearRatio'
+            }
+        ];
+        
+        defaultMappings.forEach(mapping => {
+            const field = document.getElementById(mapping.fieldId);
+            if (field && (!field.value || field.value === '')) {
+                field.value = mapping.defaultValue;
+                
+                // Update vehicle data
+                if (mapping.dataField === 'batteryCapacity' || mapping.dataField === 'tireDiameter') {
+                    this.vehicleData[mapping.dataField] = parseFloat(mapping.defaultValue);
+                } else {
+                    this.vehicleData[mapping.dataField] = mapping.defaultValue;
+                }
+                
+                fieldsUpdated.push(`${mapping.displayName}: ${mapping.defaultValue} (default)`);
+                requiredFieldsSet++;
+                
+                // Trigger change event
+                field.dispatchEvent(new Event('change', { bubbles: true }));
+                field.dispatchEvent(new Event('input', { bubbles: true }));
+            } else if (field && field.value) {
+                // Field already has a value, still count as set
+                requiredFieldsSet++;
+            }
+        });
+        
+        // Update current speed field if it's empty and we can estimate from settings
+        const currentSpeedField = document.getElementById('current-speed');
+        if (currentSpeedField && (!currentSpeedField.value || currentSpeedField.value === '')) {
+            const estimatedSpeed = this.estimateTopSpeed(settings);
+            if (estimatedSpeed && estimatedSpeed > 15 && estimatedSpeed < 40) {
+                currentSpeedField.value = estimatedSpeed;
+                this.vehicleData.currentSpeed = estimatedSpeed;
+                fieldsUpdated.push(`Current Speed: ${estimatedSpeed} MPH (estimated from settings)`);
+                requiredFieldsSet++;
+                
+                currentSpeedField.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        } else if (currentSpeedField && currentSpeedField.value) {
+            requiredFieldsSet++;
+        }
+        
+        console.log(`✅ Auto-population complete. Updated ${fieldsUpdated.length} fields:`, fieldsUpdated);
+        
+        // 3) Show success message
+        this.showImportSuccessMessage(settings, fieldsUpdated);
+        
+        // 4) Check if all required fields are now filled and enable Continue button
+        this.validateStep1();
+        
+        // Save the updated data
+        this.saveData();
+        
+        return {
+            fieldsUpdated,
+            requiredFieldsSet,
+            totalRequiredFields,
+            allRequiredFieldsSet: requiredFieldsSet >= totalRequiredFields
+        };
+    }
+    
+    /**
+     * Show import success message with verification prompt
+     */
+    showImportSuccessMessage(settings, fieldsUpdated) {
+        const settingsCount = Object.keys(settings).length;
+        const hasF15 = settings[15] ? ` including F.15 (Battery Volts: ${settings[15]})` : '';
+        
+        // Create success message
+        const message = `Settings imported! Found ${settingsCount} controller settings${hasF15}. Auto-populated ${fieldsUpdated.length} form fields. Please verify vehicle details.`;
+        
+        // Show notification
+        this.showNotification(message, 'success');
+        
+        // Create detailed import summary in the settings result area
+        const resultDiv = document.getElementById('settings-input-result');
+        const contentDiv = document.getElementById('settings-input-content');
+        
+        if (resultDiv && contentDiv) {
+            resultDiv.classList.remove('hidden');
+            
+            let importSummaryHTML = `
+                <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
+                    <div class="flex items-start">
+                        <span class="text-green-600 mr-2">✅</span>
+                        <div class="flex-grow">
+                            <h4 class="font-medium text-green-900">Settings Imported Successfully!</h4>
+                            <p class="text-sm text-green-700 mt-1">
+                                Found ${settingsCount} controller settings and auto-populated ${fieldsUpdated.length} form fields.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (fieldsUpdated.length > 0) {
+                importSummaryHTML += `
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <h5 class="font-medium text-blue-900 text-sm mb-2">Auto-populated Fields:</h5>
+                        <ul class="text-xs text-blue-700 space-y-1">
+                `;
+                
+                fieldsUpdated.forEach(update => {
+                    importSummaryHTML += `<li>• ${update}</li>`;
+                });
+                
+                importSummaryHTML += `
+                        </ul>
+                        <p class="text-xs text-blue-600 mt-2 font-medium">
+                            💡 Please verify these auto-filled values are correct for your vehicle.
+                        </p>
+                    </div>
+                `;
+            }
+            
+            contentDiv.innerHTML = importSummaryHTML;
+        }
+        
+        console.log(`📋 Import success message displayed for ${settingsCount} settings`);
+    }
+
+    /**
+     * Quick Fill Defaults - fills common vehicle details after PDF upload
+     */
+    quickFillDefaults() {
+        console.log('🚀 Quick Fill Defaults triggered');
+        
+        try {
+            let fieldsUpdated = [];
+            
+            // Determine battery voltage from PDF settings (if available) for intelligent defaults
+            let batteryVoltage = '72'; // Default assumption
+            if (this.pdfSettings && this.pdfSettings[15]) {
+                const f15Value = this.pdfSettings[15];
+                if (f15Value >= 94) {
+                    batteryVoltage = '96';
+                } else if (f15Value >= 80) {
+                    batteryVoltage = '82';
+                } else if (f15Value >= 70) {
+                    batteryVoltage = '72';
+                } else if (f15Value >= 58) {
+                    batteryVoltage = '60';
+                } else {
+                    batteryVoltage = '48';
+                }
+                console.log(`📊 Detected battery voltage from F.15: ${f15Value} → ${batteryVoltage}V`);
+            }
+            
+            // Define defaults based on specified requirements
+            const quickFillDefaults = [
+                {
+                    fieldId: 'vehicle-model',
+                    value: 'e4',
+                    displayName: 'Vehicle Model',
+                    dataField: 'model',
+                    reason: 'Most common GEM model'
+                },
+                {
+                    fieldId: 'vehicle-year', 
+                    value: '2010-2015',
+                    displayName: 'Vehicle Year',
+                    dataField: 'year',
+                    reason: 'Common vintage with good parts availability'
+                },
+                {
+                    fieldId: 'controller-type',
+                    value: 'T2',
+                    displayName: 'Controller Type',
+                    dataField: 'controller',
+                    reason: 'Standard T2 controller'
+                },
+                {
+                    fieldId: 'motor-type',
+                    value: 'dc-stock',
+                    displayName: 'Motor Type',
+                    dataField: 'motorType',
+                    reason: 'Most common DC stock motor'
+                },
+                {
+                    fieldId: 'battery-type',
+                    value: 'lead-acid',
+                    displayName: 'Battery Type',
+                    dataField: 'batteryType',
+                    reason: `Lead acid typical for ${batteryVoltage}V systems`
+                },
+                {
+                    fieldId: 'battery-capacity',
+                    value: '150',
+                    displayName: 'Battery Capacity',
+                    dataField: 'batteryCapacity',
+                    reason: 'Common capacity for performance applications'
+                },
+                {
+                    fieldId: 'tire-diameter',
+                    value: '22',
+                    displayName: 'Tire Diameter',
+                    dataField: 'tireDiameter',
+                    reason: 'Standard 22" tires'
+                },
+                {
+                    fieldId: 'gear-ratio',
+                    value: '8.91:1',
+                    displayName: 'Gear Ratio',
+                    dataField: 'gearRatio',
+                    reason: 'Balanced performance ratio'
+                }
+            ];
+            
+            // Apply defaults only to empty fields
+            quickFillDefaults.forEach(defaultItem => {
+                const field = document.getElementById(defaultItem.fieldId);
+                if (field && (!field.value || field.value === '')) {
+                    field.value = defaultItem.value;
+                    
+                    // Update vehicle data
+                    if (defaultItem.dataField === 'batteryCapacity' || defaultItem.dataField === 'tireDiameter') {
+                        this.vehicleData[defaultItem.dataField] = parseFloat(defaultItem.value);
+                    } else {
+                        this.vehicleData[defaultItem.dataField] = defaultItem.value;
+                    }
+                    
+                    fieldsUpdated.push(`${defaultItem.displayName}: ${defaultItem.value} (${defaultItem.reason})`);
+                    
+                    // Trigger change events for form validation
+                    field.dispatchEvent(new Event('change', { bubbles: true }));
+                    field.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+            
+            // Also set battery voltage if not already set (derived from PDF F.15)
+            const batteryVoltageField = document.getElementById('battery-voltage');
+            if (batteryVoltageField && (!batteryVoltageField.value || batteryVoltageField.value === '')) {
+                batteryVoltageField.value = batteryVoltage;
+                this.vehicleData.batteryVoltage = batteryVoltage;
+                fieldsUpdated.push(`Battery Voltage: ${batteryVoltage}V (Based on PDF F.15: ${this.pdfSettings?.[15] || 'estimated'})`);
+                batteryVoltageField.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            
+            console.log(`✅ Quick Fill completed: ${fieldsUpdated.length} fields updated`);
+            
+            // Show success notification
+            this.showNotification(`Quick Fill completed! Auto-filled ${fieldsUpdated.length} common vehicle details. Please verify these match your vehicle.`, 'success');
+            
+            // Update validation to check if we can now continue
+            this.validateStep1();
+            
+            // Save the updated data
+            this.saveData();
+            
+            // Show detailed quick fill results
+            this.showQuickFillResults(fieldsUpdated);
+            
+            return {
+                success: true,
+                fieldsUpdated: fieldsUpdated.length,
+                details: fieldsUpdated
+            };
+            
+        } catch (error) {
+            console.error('Quick Fill failed:', error);
+            this.showNotification('Quick Fill failed. Please fill fields manually.', 'error');
+            
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+    
+    /**
+     * Show Quick Fill Results in a detailed summary
+     */
+    showQuickFillResults(fieldsUpdated) {
+        // Find or create a results area
+        let resultsDiv = document.getElementById('quick-fill-results');
+        if (!resultsDiv) {
+            // Create results div in the settings input result area
+            const settingsResultDiv = document.getElementById('settings-input-result');
+            if (settingsResultDiv) {
+                resultsDiv = document.createElement('div');
+                resultsDiv.id = 'quick-fill-results';
+                resultsDiv.className = 'mt-3';
+                settingsResultDiv.appendChild(resultsDiv);
+            }
+        }
+        
+        if (resultsDiv && fieldsUpdated.length > 0) {
+            resultsDiv.innerHTML = `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div class="flex items-start">
+                        <span class="text-blue-600 mr-2">⚡</span>
+                        <div class="flex-grow">
+                            <h4 class="font-medium text-blue-900">Quick Fill Applied</h4>
+                            <p class="text-sm text-blue-700 mt-1">
+                                Auto-filled ${fieldsUpdated.length} common vehicle details based on typical GEM configurations.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <h5 class="font-medium text-blue-900 text-sm mb-2">Applied Defaults:</h5>
+                        <ul class="text-xs text-blue-700 space-y-1">
+                            ${fieldsUpdated.map(field => `<li>• ${field}</li>`).join('')}
+                        </ul>
+                        <p class="text-xs text-blue-600 mt-2 font-medium">
+                            ⚠️ Please verify these defaults match your specific vehicle before continuing.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
     }
 
     /**
@@ -1274,8 +1897,7 @@ class UnifiedFlowController {
                     </button>
                     <div class="space-x-3">
                         <button onclick="unifiedFlow.shareWithCommunity()" 
-                                class="px-4 py-2 border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50" 
-                                data-auth-required style="display: none;">
+                                class="px-4 py-2 border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50">
                             🌟 Share with Community
                         </button>
                         <button onclick="unifiedFlow.exportSettings()" 
@@ -1618,18 +2240,18 @@ class UnifiedFlowController {
     }
     
     /**
-     * Auto-save current state to Firebase
+     * Auto-save current state to local storage
      */
     async autoSaveCurrentState() {
-        if (!this.autoSaveEnabled || !window.firebaseProfileManager) return;
+        if (!this.autoSaveEnabled || !window.localProfileManager) return;
         
         try {
-            const profileName = `Auto-saved ${new Date().toLocaleString()}`;
             const hasData = this.vehicleData.model && this.vehicleData.year;
             
             if (hasData) {
-                // Save as temporary profile
-                await window.firebaseProfileManager.saveCurrentProfile(profileName, 'Auto-saved configuration');
+                // Save auto-save data
+                await window.localProfileManager.autoSave();
+                console.log('Auto-saved configuration to local storage');
             }
         } catch (error) {
             console.warn('Auto-save failed:', error);
@@ -1640,14 +2262,14 @@ class UnifiedFlowController {
      * Save trip result to history
      */
     async saveTripToHistory(tripData, settings) {
-        if (!window.firebaseProfileManager) return;
+        if (!window.localProfileManager) return;
         
         const tripHistory = {
             vehicleData: this.vehicleData,
             tripData: tripData,
             settings: settings,
             optimization: this.tripData.optimizationMode || 'balanced',
-            createdAt: new Date(),
+            createdAt: new Date().toISOString(),
             summary: {
                 model: this.vehicleData.model,
                 year: this.vehicleData.year,
@@ -1657,7 +2279,7 @@ class UnifiedFlowController {
         };
         
         try {
-            await window.firebaseProfileManager.saveTripHistory(tripHistory);
+            await window.localProfileManager.saveTripHistory(tripHistory);
             console.log('Trip saved to history');
         } catch (error) {
             console.error('Failed to save trip history:', error);
@@ -1682,18 +2304,15 @@ class UnifiedFlowController {
     /**
      * Share current configuration with the community
      */
-    shareWithCommunity() {
-        if (!window.firebaseManager?.isAuthenticated()) {
-            this.showNotification('Please sign in to share with the community', 'warning');
-            return;
-        }
-        
-        // Store current optimization data for sharing
+    shareWithCommunity() {        
+        // Store current optimization data for sharing locally
         const sharingData = {
             vehicleData: this.vehicleData,
             tripData: this.tripData,
             controllerSettings: this.lastOptimizedSettings || {},
-            optimizationMode: this.tripData.optimizationMode || 'balanced'
+            optimizationMode: this.tripData.optimizationMode || 'balanced',
+            sharedAt: new Date().toISOString(),
+            profileName: this.getLocalProfileName()
         };
         
         // Store in session storage for the community page to pick up
@@ -1701,6 +2320,17 @@ class UnifiedFlowController {
         
         // Navigate to community page with share modal
         window.location.href = 'community.html?share=true';
+    }
+    
+    /**
+     * Get local profile name for sharing
+     */
+    getLocalProfileName() {
+        // Try to get from current profile or generate one
+        if (this.vehicleData.model && this.vehicleData.year) {
+            return `${this.vehicleData.model?.toUpperCase()} ${this.vehicleData.year} Configuration`;
+        }
+        return `Local Configuration ${new Date().toLocaleDateString()}`;
     }
 }
 

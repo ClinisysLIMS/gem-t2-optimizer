@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paste Text Parser Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">📋 Paste Text Parser Test</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Simple Copy-Paste Workflow</h2>
+            <p class="text-gray-600 mb-6">
+                This tool bypasses PDF parsing complexity entirely. Just copy text from any PDF reader and paste it here.
+            </p>
+            
+            <!-- Instructions -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <h3 class="font-semibold text-blue-900 mb-2">How to Use:</h3>
+                <ol class="list-decimal list-inside text-sm text-blue-800 space-y-1">
+                    <li>Open your PDF in <strong>any reader</strong> (Adobe Reader, Chrome, Firefox, etc.)</li>
+                    <li>Select all text with <kbd class="bg-blue-200 px-1 rounded">Ctrl+A</kbd> (or <kbd class="bg-blue-200 px-1 rounded">Cmd+A</kbd> on Mac)</li>
+                    <li>Copy with <kbd class="bg-blue-200 px-1 rounded">Ctrl+C</kbd> (or <kbd class="bg-blue-200 px-1 rounded">Cmd+C</kbd> on Mac)</li>
+                    <li>Paste into the text box below</li>
+                    <li>Click "Parse Text" to extract controller settings</li>
+                </ol>
+            </div>
+            
+            <!-- Test Text Box -->
+            <div class="mb-4">
+                <label for="test-text" class="block text-sm font-medium text-gray-700 mb-2">
+                    Paste Your PDF Text Here:
+                </label>
+                <textarea 
+                    id="test-text"
+                    placeholder="Paste your copied PDF text here...
+
+Example formats that work:
+F.No.1 MPH Scaling Counts 100 Value 100
+F.3: 15
+F.4 = 245
+Function 6 = 60
+1    100
+3:15
+
+Try pasting some text and clicking 'Parse Text' to see how it works!"
+                    class="w-full h-48 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+                    rows="12"></textarea>
+                
+                <div class="flex justify-between items-center mt-2">
+                    <div class="text-xs text-gray-500">
+                        <span id="char-count">0</span> characters | 
+                        <span id="line-count">0</span> lines
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="clear-text" class="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600">
+                            Clear
+                        </button>
+                        <button id="load-sample" class="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600">
+                            Load Sample
+                        </button>
+                        <button id="parse-text" class="px-4 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:bg-gray-400" disabled>
+                            Parse Text
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Parsing Results</h2>
+            <div id="parsing-results" class="min-h-32 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div class="text-gray-500 text-center">Paste some text and click "Parse Text" to see results...</div>
+            </div>
+        </div>
+
+        <!-- Extracted Settings -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Extracted Settings</h2>
+            <div id="extracted-settings" class="min-h-32 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div class="text-gray-500 text-center">No settings extracted yet...</div>
+            </div>
+        </div>
+
+        <!-- Pattern Testing -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Pattern Testing</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <h3 class="font-medium mb-2">Test Individual Patterns</h3>
+                    <div class="space-y-2">
+                        <button id="test-sentry" class="w-full px-3 py-2 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200">
+                            Test Sentry Format
+                        </button>
+                        <button id="test-table" class="w-full px-3 py-2 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200">
+                            Test Table Format
+                        </button>
+                        <button id="test-simple" class="w-full px-3 py-2 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200">
+                            Test Simple Format
+                        </button>
+                        <button id="test-mixed" class="w-full px-3 py-2 bg-orange-100 text-orange-700 rounded text-sm hover:bg-orange-200">
+                            Test Mixed Format
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium mb-2">Advantages of Text Parsing</h3>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <div>• ✅ Works with ANY PDF reader</div>
+                        <div>• ✅ No PDF.js library needed</div>
+                        <div>• ✅ Handles messy text extraction</div>
+                        <div>• ✅ Multiple pattern support</div>
+                        <div>• ✅ Very reliable and fast</div>
+                        <div>• ✅ User has full control</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Log -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-bold mb-3">Debug Log</h2>
+            <div id="debug-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-48 overflow-y-auto">
+                Text parser test initialized...\n
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the text parser -->
+    <script src="js/text-parser.js"></script>
+
+    <script>
+        // Global variables
+        let textParser = null;
+        
+        // DOM elements
+        const testTextarea = document.getElementById('test-text');
+        const parseBtn = document.getElementById('parse-text');
+        const charCount = document.getElementById('char-count');
+        const lineCount = document.getElementById('line-count');
+        const debugLog = document.getElementById('debug-log');
+        const parsingResults = document.getElementById('parsing-results');
+        const extractedSettings = document.getElementById('extracted-settings');
+
+        function log(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            debugLog.innerHTML += `[${timestamp}] ${message}\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+
+        function updateCounts() {
+            const text = testTextarea.value;
+            charCount.textContent = text.length;
+            lineCount.textContent = text.split('\n').length;
+            parseBtn.disabled = text.trim().length === 0;
+        }
+
+        function displayResults(result) {
+            if (result.success) {
+                parsingResults.className = 'border border-green-200 rounded-lg p-4 bg-green-50';
+                parsingResults.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="text-green-600 mr-2">✅</span>
+                        <div class="flex-grow">
+                            <h4 class="font-medium text-green-900">Text Parsing Successful</h4>
+                            <p class="text-sm text-green-700 mt-1">
+                                Found ${Object.keys(result.settings).length} controller settings
+                            </p>
+                            <div class="text-xs text-green-600 mt-2">
+                                Confidence: ${Math.round((result.metadata?.confidence || 0) * 100)}% | 
+                                Method: ${result.metadata?.extractionMethod || 'text_parser'} | 
+                                Original: ${result.metadata?.originalTextLength || 0} chars
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                displaySettings(result.settings);
+            } else {
+                parsingResults.className = 'border border-red-200 rounded-lg p-4 bg-red-50';
+                parsingResults.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="text-red-600 mr-2">❌</span>
+                        <div class="flex-grow">
+                            <h4 class="font-medium text-red-900">Text Parsing Failed</h4>
+                            <p class="text-sm text-red-700 mt-1">${result.error}</p>
+                            ${result.suggestions ? `
+                                <div class="mt-2">
+                                    <div class="text-xs text-red-700 font-medium">Suggestions:</div>
+                                    <ul class="text-xs text-red-600 mt-1 list-disc list-inside">
+                                        ${result.suggestions.map(s => `<li>${s}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                extractedSettings.innerHTML = '<div class="text-red-500 text-center">No settings extracted</div>';
+            }
+        }
+
+        function displaySettings(settings) {
+            if (!settings || Object.keys(settings).length === 0) {
+                extractedSettings.innerHTML = '<div class="text-gray-500 text-center">No settings found</div>';
+                return;
+            }
+
+            const functionNames = {
+                1: 'MPH Scaling', 3: 'Controlled Acceleration', 4: 'Max Armature Current',
+                5: 'Plug Current', 6: 'Armature Accel Rate', 7: 'Minimum Field Current',
+                8: 'Maximum Field Current', 9: 'Regen Armature Current', 10: 'Regen Max Field Current',
+                11: 'Turf Speed Limit', 12: 'Reverse Speed Limit', 15: 'Battery Volts',
+                20: 'MPH Overspeed', 24: 'Field Weakening Start'
+            };
+
+            const sortedSettings = Object.entries(settings).sort(([a], [b]) => parseInt(a) - parseInt(b));
+
+            let html = `
+                <div class="space-y-2">
+                    <h4 class="font-medium text-gray-900">Found ${sortedSettings.length} Settings:</h4>
+                    <div class="grid gap-2 max-h-64 overflow-y-auto">
+            `;
+
+            sortedSettings.forEach(([func, value]) => {
+                const name = functionNames[func] || `Function ${func}`;
+                html += `
+                    <div class="flex justify-between items-center p-2 bg-white rounded border text-sm">
+                        <span class="font-medium">F.${func}</span>
+                        <span class="text-gray-600 flex-grow mx-3">${name}</span>
+                        <span class="font-mono bg-gray-100 px-2 py-1 rounded">${value}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            extractedSettings.innerHTML = html;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                textParser = new TextParser();
+                log('✅ Text parser initialized successfully');
+            } catch (error) {
+                log(`❌ Failed to initialize text parser: ${error.message}`);
+                return;
+            }
+            
+            updateCounts();
+        });
+
+        // Event listeners
+        testTextarea.addEventListener('input', updateCounts);
+        testTextarea.addEventListener('paste', function() {
+            setTimeout(updateCounts, 10);
+        });
+
+        // Parse text
+        parseBtn.addEventListener('click', function() {
+            const text = testTextarea.value.trim();
+            if (!text) {
+                log('❌ No text to parse');
+                return;
+            }
+            
+            log(`🔍 Parsing ${text.length} characters of text...`);
+            
+            try {
+                const result = textParser.parseText(text);
+                
+                if (result.success) {
+                    log(`✅ Text parsing successful: ${Object.keys(result.settings).length} settings found`);
+                } else {
+                    log(`❌ Text parsing failed: ${result.error}`);
+                }
+                
+                displayResults(result);
+                
+            } catch (error) {
+                log(`❌ Text parsing error: ${error.message}`);
+                displayResults({ success: false, error: error.message });
+            }
+        });
+
+        // Clear text
+        document.getElementById('clear-text').addEventListener('click', function() {
+            testTextarea.value = '';
+            updateCounts();
+            parsingResults.innerHTML = '<div class="text-gray-500 text-center">Cleared - paste some text to test...</div>';
+            extractedSettings.innerHTML = '<div class="text-gray-500 text-center">No settings extracted yet...</div>';
+            log('🧹 Text cleared');
+        });
+
+        // Load sample text
+        document.getElementById('load-sample').addEventListener('click', function() {
+            const sampleText = `GEM Controller Settings Export
+
+F.No.1  MPH Scaling                 Counts 100  Value 100  %
+F.No.3  Controlled Acceleration     Counts 15   Value 15   A/s
+F.No.4  Max Armature Current Limit  Counts 245  Value 245  A
+F.No.6  Armature Acceleration Rate  Counts 60   Value 60   A/s
+F.No.7  Minimum Field Current       Counts 70   Value 70   A
+F.No.9  Regen Armature Current      Counts 225  Value 225  A
+F.No.11 Turf Speed Limit            Counts 11   Value 11   MPH
+F.No.15 Battery Volts               Counts 72   Value 72   V
+F.No.20 MPH Overspeed               Counts 5    Value 5    MPH
+F.No.24 Field Weakening Start       Counts 55   Value 55   %
+
+Additional formats that also work:
+F.1: 105
+F.3=18
+F 4-250
+Function 6 = 65
+1 108
+3:20`;
+            
+            testTextarea.value = sampleText;
+            updateCounts();
+            log('📝 Sample text loaded');
+        });
+
+        // Pattern testing buttons
+        document.getElementById('test-sentry').addEventListener('click', function() {
+            const sentryText = `F.No.1 MPH Scaling Counts 100 Value 100
+F.No.3 Controlled Acceleration Counts 15 Value 15
+F.No.4 Max Armature Current Limit Counts 245 Value 245`;
+            testTextarea.value = sentryText;
+            updateCounts();
+            log('🧪 Loaded Sentry format test text');
+        });
+
+        document.getElementById('test-table').addEventListener('click', function() {
+            const tableText = `Function    Description                  Current    Optimized
+F.1         MPH Scaling                 100        100
+F.3         Controlled Acceleration     15         15
+F.4         Max Armature Current        245        245`;
+            testTextarea.value = tableText;
+            updateCounts();
+            log('🧪 Loaded table format test text');
+        });
+
+        document.getElementById('test-simple').addEventListener('click', function() {
+            const simpleText = `F.1 = 100
+F.3: 15
+F.4-245
+F 6 60
+1 108
+3:20`;
+            testTextarea.value = simpleText;
+            updateCounts();
+            log('🧪 Loaded simple format test text');
+        });
+
+        document.getElementById('test-mixed').addEventListener('click', function() {
+            const mixedText = `GEM Settings
+F.No.1 MPH Scaling Counts 100 Value 100
+F.3: 15 (Acceleration)
+Function 4 = 245
+F 6    60    Armature Rate
+9     225     Regen Current
+11:11 Turf Speed`;
+            testTextarea.value = mixedText;
+            updateCounts();
+            log('🧪 Loaded mixed format test text');
+        });
+    </script>
+</body>
+</html>

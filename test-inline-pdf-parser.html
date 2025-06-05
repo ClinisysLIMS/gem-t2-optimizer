@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Inline PDF Parser</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Test Inline PDF Parser</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Single-Line Text Parser Test</h2>
+            <p class="text-gray-600 mb-6">
+                Tests the updated PDF parser with text extracted as a single line (simulating problematic PDF extraction).
+            </p>
+            
+            <!-- Test Cases -->
+            <div class="mb-6">
+                <h3 class="font-medium mb-3">Test Cases</h3>
+                <div class="space-y-3">
+                    <button class="test-btn w-full px-4 py-2 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200" 
+                            data-test="case1">
+                        Test Case 1: Basic Inline Format
+                    </button>
+                    <button class="test-btn w-full px-4 py-2 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200" 
+                            data-test="case2">
+                        Test Case 2: F.No Format with Cnts
+                    </button>
+                    <button class="test-btn w-full px-4 py-2 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200" 
+                            data-test="case3">
+                        Test Case 3: Mixed Format Single Line
+                    </button>
+                    <button class="test-btn w-full px-4 py-2 bg-orange-100 text-orange-700 rounded text-sm hover:bg-orange-200" 
+                            data-test="case4">
+                        Test Case 4: Units Format
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Input Text Area -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Test Text:</label>
+                <textarea id="test-text" 
+                          placeholder="Single-line text will be loaded when you click a test case..."
+                          class="w-full h-32 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows="6"></textarea>
+                
+                <div class="flex justify-between items-center mt-2">
+                    <div class="text-xs text-gray-500">
+                        <span id="char-count">0</span> characters
+                    </div>
+                    <button id="parse-btn" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                        Parse Text
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Parsing Results</h2>
+            <div id="parsing-results" class="min-h-32 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div class="text-gray-500 text-center">Click a test case and parse to see results...</div>
+            </div>
+        </div>
+
+        <!-- Extracted Settings -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Extracted Settings</h2>
+            <div id="extracted-settings" class="min-h-32 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div class="text-gray-500 text-center">No settings extracted yet...</div>
+            </div>
+        </div>
+
+        <!-- Debug Log -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-bold mb-3">Debug Log</h2>
+            <div id="debug-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                Inline PDF parser test initialized...\n
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the PDF parser -->
+    <script src="js/pdf-parser.js"></script>
+
+    <script>
+        // Test data
+        const testCases = {
+            case1: {
+                name: "Basic Inline Format",
+                text: "1 MPH Scaling 100 100 Cnts 3 Controlled Acceleration 15 15 Cnts 4 Max Armature Current 245 245 Cnts 6 Armature Accel Rate 60 60 Cnts 15 Battery Volts 72 72 Cnts"
+            },
+            case2: {
+                name: "F.No Format with Cnts", 
+                text: "F.No.1 MPH Scaling Counts 100 Value 100 Cnts F.No.3 Controlled Acceleration Counts 15 Value 15 Cnts F.No.4 Max Armature Current Counts 245 Value 245 Cnts"
+            },
+            case3: {
+                name: "Mixed Format Single Line",
+                text: "F.1 MPH Scaling 105 105 Cnts 3 Controlled Acceleration 18 18 Units F.4 Max Armature Current 250 250 Cnts 15 Battery Volts 72 72 V"
+            },
+            case4: {
+                name: "Units Format",
+                text: "1 MPH Scaling 100 Units 3 Controlled Acceleration 15 Units 4 Max Armature Current 245 Units 6 Armature Rate 60 Units"
+            }
+        };
+
+        // Global variables
+        let pdfParser = null;
+        
+        // DOM elements
+        const testTextarea = document.getElementById('test-text');
+        const parseBtn = document.getElementById('parse-btn');
+        const charCount = document.getElementById('char-count');
+        const debugLog = document.getElementById('debug-log');
+        const parsingResults = document.getElementById('parsing-results');
+        const extractedSettings = document.getElementById('extracted-settings');
+
+        function log(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            debugLog.innerHTML += `[${timestamp}] ${message}\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+
+        function updateCharCount() {
+            const text = testTextarea.value;
+            charCount.textContent = text.length;
+        }
+
+        function displayResults(result, testCase) {
+            if (result && typeof result === 'object' && result.settings) {
+                const settingsCount = Object.keys(result.settings).length;
+                parsingResults.className = 'border border-green-200 rounded-lg p-4 bg-green-50';
+                parsingResults.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="text-green-600 mr-2">✅</span>
+                        <div class="flex-grow">
+                            <h4 class="font-medium text-green-900">Parsing Successful</h4>
+                            <p class="text-sm text-green-700 mt-1">
+                                Found ${settingsCount} controller settings using inline patterns
+                            </p>
+                            <div class="text-xs text-green-600 mt-2">
+                                Test Case: ${testCase.name} | 
+                                Extraction Method: Inline Pattern Parser | 
+                                Text Length: ${testCase.text.length} chars
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                displaySettings(result.settings);
+            } else {
+                parsingResults.className = 'border border-red-200 rounded-lg p-4 bg-red-50';
+                parsingResults.innerHTML = `
+                    <div class="flex items-start">
+                        <span class="text-red-600 mr-2">❌</span>
+                        <div class="flex-grow">
+                            <h4 class="font-medium text-red-900">Parsing Failed</h4>
+                            <p class="text-sm text-red-700 mt-1">${result?.error || 'No settings found'}</p>
+                        </div>
+                    </div>
+                `;
+                
+                extractedSettings.innerHTML = '<div class="text-red-500 text-center">No settings extracted</div>';
+            }
+        }
+
+        function displaySettings(settings) {
+            if (!settings || Object.keys(settings).length === 0) {
+                extractedSettings.innerHTML = '<div class="text-gray-500 text-center">No settings found</div>';
+                return;
+            }
+
+            const functionNames = {
+                1: 'MPH Scaling', 3: 'Controlled Acceleration', 4: 'Max Armature Current',
+                5: 'Plug Current', 6: 'Armature Accel Rate', 7: 'Minimum Field Current',
+                8: 'Maximum Field Current', 9: 'Regen Armature Current', 10: 'Regen Max Field Current',
+                11: 'Turf Speed Limit', 12: 'Reverse Speed Limit', 15: 'Battery Volts',
+                20: 'MPH Overspeed', 24: 'Field Weakening Start'
+            };
+
+            const sortedSettings = Object.entries(settings).sort(([a], [b]) => parseInt(a) - parseInt(b));
+
+            let html = `
+                <div class="space-y-2">
+                    <h4 class="font-medium text-gray-900">Found ${sortedSettings.length} Settings:</h4>
+                    <div class="grid gap-2 max-h-64 overflow-y-auto">
+            `;
+
+            sortedSettings.forEach(([func, value]) => {
+                const name = functionNames[func] || `Function ${func}`;
+                html += `
+                    <div class="flex justify-between items-center p-2 bg-white rounded border text-sm">
+                        <span class="font-medium">F.${func}</span>
+                        <span class="text-gray-600 flex-grow mx-3">${name}</span>
+                        <span class="font-mono bg-gray-100 px-2 py-1 rounded">${value}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            extractedSettings.innerHTML = html;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                pdfParser = new PDFParser();
+                log('✅ PDF parser initialized successfully');
+            } catch (error) {
+                log(`❌ Failed to initialize PDF parser: ${error.message}`);
+                return;
+            }
+            
+            updateCharCount();
+        });
+
+        // Event listeners
+        testTextarea.addEventListener('input', updateCharCount);
+
+        // Test case buttons
+        document.querySelectorAll('.test-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const testId = this.dataset.test;
+                const testCase = testCases[testId];
+                
+                if (testCase) {
+                    testTextarea.value = testCase.text;
+                    updateCharCount();
+                    log(`📝 Loaded test case: ${testCase.name}`);
+                    log(`📏 Text length: ${testCase.text.length} characters`);
+                    log(`📝 Text preview: ${testCase.text.substring(0, 100)}...`);
+                    
+                    // Clear previous results
+                    parsingResults.innerHTML = '<div class="text-gray-500 text-center">Test case loaded - click Parse Text to see results...</div>';
+                    extractedSettings.innerHTML = '<div class="text-gray-500 text-center">No settings extracted yet...</div>';
+                }
+            });
+        });
+
+        // Parse text
+        parseBtn.addEventListener('click', function() {
+            const text = testTextarea.value.trim();
+            if (!text) {
+                log('❌ No text to parse');
+                return;
+            }
+            
+            log(`🔍 Starting parse test with ${text.length} characters`);
+            log(`📝 Text sample: ${text.substring(0, 200)}...`);
+            
+            try {
+                // Simulate the extraction process
+                const settings = pdfParser.extractFromPage(text, 1);
+                
+                const result = {
+                    success: Object.keys(settings).length > 0,
+                    settings: settings,
+                    metadata: {
+                        method: 'inline_test',
+                        textLength: text.length
+                    }
+                };
+                
+                // Find which test case was used
+                const currentTestCase = Object.values(testCases).find(tc => tc.text === text) || 
+                                      { name: 'Custom Text', text: text };
+                
+                if (result.success) {
+                    log(`✅ Parsing successful: ${Object.keys(result.settings).length} settings found`);
+                } else {
+                    log(`❌ Parsing failed: No settings found`);
+                }
+                
+                displayResults(result, currentTestCase);
+                
+            } catch (error) {
+                log(`❌ Parsing error: ${error.message}`);
+                displayResults({ success: false, error: error.message }, { name: 'Error', text: text });
+            }
+        });
+    </script>
+</body>
+</html>

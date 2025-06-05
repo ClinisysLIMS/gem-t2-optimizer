@@ -18,13 +18,33 @@
                     <h1 class="text-lg font-bold">🚗⚡ GEM T2 Smart Optimizer</h1>
                     <p class="text-xs opacity-90">AI-Powered Weekend Planning & Controller Optimization</p>
                 </div>
-                <nav class="hidden md:flex space-x-2">
-                    <a href="user-guide.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">📚 User Guide</a>
-                    <a href="community.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">🌟 Community</a>
-                    <a href="weekend-planner.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">Weekend Planner</a>
-                    <a href="reference-guide.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">Reference Guide</a>
-                    <a href="accessories-config.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">Accessories</a>
-                </nav>
+                <div class="flex items-center space-x-4">
+                    <!-- Profile Management -->
+                    <div class="flex items-center space-x-2">
+                        <button id="save-profile-btn" class="text-xs bg-green-600 hover:bg-green-500 px-2 py-1 rounded transition-colors">
+                            💾 Save Profile
+                        </button>
+                        <button id="load-profile-btn" class="text-xs bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded transition-colors">
+                            📂 Load Profile
+                        </button>
+                        <div class="relative group">
+                            <button class="text-xs text-green-300 hover:text-white p-1">
+                                ℹ️
+                            </button>
+                            <div class="absolute right-0 top-full mt-1 w-64 p-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                <p class="font-medium mb-1">🔒 Your data stays on your device</p>
+                                <p>No account needed! Profiles are saved in your browser's local storage for privacy and convenience. Export your profiles to back them up or share between devices.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation -->
+                    <nav class="hidden lg:flex space-x-2">
+                        <a href="user-guide.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">📚 Guide</a>
+                        <a href="community.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">🌟 Community</a>
+                        <a href="weekend-planner.html" class="text-xs hover:underline px-2 py-1 rounded hover:bg-green-600 transition-colors">Planner</a>
+                    </nav>
+                </div>
             </div>
         </div>
     </header>
@@ -307,13 +327,29 @@
                     </h3>
                     
                     <!-- Settings Input Options -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-3">
                         <button id="pdf-upload-btn" class="p-2 border border-gray-300 rounded-md hover:border-green-400 hover:bg-green-50 transition-colors text-center">
                             <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                             </svg>
                             <div class="text-xs font-medium">Upload PDF</div>
                             <div class="text-xs text-gray-500">Sentry/Export file</div>
+                        </button>
+                        
+                        <button id="paste-text-btn" class="p-2 border border-gray-300 rounded-md hover:border-teal-400 hover:bg-teal-50 transition-colors text-center">
+                            <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            <div class="text-xs font-medium">Paste Text</div>
+                            <div class="text-xs text-gray-500">Copy from PDF</div>
+                        </button>
+                        
+                        <button id="download-sample-pdf-btn" class="p-2 border border-gray-300 rounded-md hover:border-yellow-400 hover:bg-yellow-50 transition-colors text-center">
+                            <svg class="mx-auto h-4 w-4 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <div class="text-xs font-medium">Download Sample</div>
+                            <div class="text-xs text-gray-500">Test PDF format</div>
                         </button>
                         
                         <button id="manual-entry-btn" class="p-2 border border-gray-300 rounded-md hover:border-blue-400 hover:bg-blue-50 transition-colors text-center">
@@ -354,6 +390,55 @@
                         </p>
                         <input id="settings-pdf" type="file" accept=".pdf" class="hidden">
                         <button id="cancel-pdf-upload" class="mt-2 text-xs text-gray-500 hover:text-gray-700 underline">Cancel</button>
+                    </div>
+                    
+                    <!-- Paste Text Area (hidden by default) -->
+                    <div id="paste-text-area" class="hidden border border-teal-200 rounded-md p-3 bg-teal-50">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-medium text-teal-900 text-sm">Paste Text from PDF</h4>
+                            <button id="cancel-paste-text" class="text-xs text-teal-600 hover:text-teal-800 underline">Cancel</button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="text-xs text-teal-700 mb-2">
+                                <strong>Instructions:</strong>
+                                <ol class="list-decimal list-inside mt-1 space-y-0.5">
+                                    <li>Open your PDF in any reader (Adobe, Chrome, etc.)</li>
+                                    <li>Select all text with Ctrl+A (Cmd+A on Mac)</li>
+                                    <li>Copy with Ctrl+C (Cmd+C on Mac)</li>
+                                    <li>Paste into the text box below</li>
+                                    <li>Click "Parse Text" to extract settings</li>
+                                </ol>
+                            </div>
+                            
+                            <textarea id="pasted-text" 
+                                      placeholder="Paste your copied PDF text here...
+
+Example formats that work:
+F.No.1 MPH Scaling Counts 100 Value 100
+F.3: 15
+F.4 = 245
+Function 6 = 60
+1 100
+3:15"
+                                      class="w-full h-32 px-3 py-2 text-sm border border-teal-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 resize-vertical"
+                                      rows="6"></textarea>
+                            
+                            <div class="flex justify-between items-center mt-2">
+                                <div class="text-xs text-teal-600">
+                                    <span id="text-char-count">0</span> characters
+                                </div>
+                                <button id="parse-text-btn" 
+                                        class="px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700 disabled:bg-gray-400"
+                                        disabled>
+                                    Parse Text
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="text-parse-result" class="hidden mt-3">
+                            <!-- Results will be shown here -->
+                        </div>
                     </div>
                     
                     <!-- Manual Entry Form (hidden by default) -->
@@ -723,13 +808,11 @@
             }
         });
     </script>
-    <!-- Firebase Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="js/firebase-config.js"></script>
-    <script src="js/firebase-profile-manager.js"></script>
-    <script src="js/community-manager.js"></script>
+    <!-- Local Services (replacing Firebase) -->
+    <script src="js/local-storage-service.js"></script>
+    <script src="js/local-auth-service.js"></script>
+    <script src="js/local-profile-manager.js"></script>
+    <script src="js/local-community-manager.js"></script>
     
     <script src="js/shared-utils.js"></script>
     <script src="js/secure-storage.js"></script>
@@ -746,6 +829,9 @@
     <script src="js/optimizer.js"></script>
     <script src="js/trip-optimizer.js"></script>
     <script src="js/pdf-parser.js"></script>
+    <script src="js/simple-pdf-parser.js"></script>
+    <script src="js/sample-pdf-generator.js"></script>
+    <script src="js/text-parser.js"></script>
     <script src="js/vehicle-classifier.js"></script>
     <script src="js/accessories-manager.js"></script>
     <script src="js/driving-modes.js"></script>
@@ -765,9 +851,11 @@
 
             // Manual entry elements
             const pdfUploadBtn = document.getElementById('pdf-upload-btn');
+            const pasteTextBtn = document.getElementById('paste-text-btn');
             const manualEntryBtn = document.getElementById('manual-entry-btn');
             const factoryDefaultsBtn = document.getElementById('factory-defaults-btn');
             const pdfUploadArea = document.getElementById('pdf-upload-area');
+            const pasteTextArea = document.getElementById('paste-text-area');
             const manualEntryForm = document.getElementById('manual-entry-form');
             const settingsInputResult = document.getElementById('settings-input-result');
 
@@ -789,6 +877,14 @@
                 setActiveButton(pdfUploadBtn);
             });
 
+            pasteTextBtn.addEventListener('click', function() {
+                hideAllInputMethods();
+                pasteTextArea.classList.remove('hidden');
+                setActiveButton(pasteTextBtn);
+                // Focus on the textarea
+                document.getElementById('pasted-text').focus();
+            });
+
             manualEntryBtn.addEventListener('click', function() {
                 hideAllInputMethods();
                 manualEntryForm.classList.remove('hidden');
@@ -801,6 +897,35 @@
                 hideAllInputMethods();
                 setActiveButton(factoryDefaultsBtn);
                 loadFactoryDefaults();
+            });
+
+            // Download Sample PDF Button Handler
+            document.getElementById('download-sample-pdf-btn').addEventListener('click', function() {
+                try {
+                    if (typeof SamplePDFGenerator === 'undefined') {
+                        alert('Sample PDF generator is not available. Please refresh the page.');
+                        return;
+                    }
+                    
+                    const generator = new SamplePDFGenerator();
+                    const filename = generator.generateSamplePDF('sentry');
+                    
+                    // Show success notification
+                    showSettingsInputResult({
+                        success: true,
+                        message: `Sample PDF generated: ${filename}`,
+                        details: 'This PDF contains sample GEM controller settings in Sentry export format. You can now upload it to test the PDF parser functionality.'
+                    });
+                    
+                    console.log('Sample PDF generated successfully:', filename);
+                } catch (error) {
+                    console.error('Failed to generate sample PDF:', error);
+                    showSettingsInputResult({
+                        success: false,
+                        message: 'Failed to generate sample PDF',
+                        details: error.message
+                    });
+                }
             });
 
             // Sample Data Button Handler
@@ -821,6 +946,14 @@
                 clearActiveButtons();
             });
 
+            document.getElementById('cancel-paste-text').addEventListener('click', function() {
+                hideAllInputMethods();
+                clearActiveButtons();
+                // Clear the textarea
+                document.getElementById('pasted-text').value = '';
+                updateCharCount();
+            });
+
             document.getElementById('cancel-manual-entry').addEventListener('click', function() {
                 hideAllInputMethods();
                 clearActiveButtons();
@@ -832,8 +965,141 @@
                 saveManualEntrySettings();
             });
 
+            // Text parsing functionality
+            const pastedTextarea = document.getElementById('pasted-text');
+            const parseTextBtn = document.getElementById('parse-text-btn');
+            const textCharCount = document.getElementById('text-char-count');
+            
+            // Update character count and enable/disable parse button
+            function updateCharCount() {
+                const text = pastedTextarea.value;
+                textCharCount.textContent = text.length;
+                parseTextBtn.disabled = text.trim().length === 0;
+            }
+            
+            pastedTextarea.addEventListener('input', updateCharCount);
+            pastedTextarea.addEventListener('paste', function() {
+                // Update count after paste event
+                setTimeout(updateCharCount, 10);
+            });
+            
+            // Parse pasted text
+            parseTextBtn.addEventListener('click', function() {
+                const text = pastedTextarea.value.trim();
+                if (!text) {
+                    showSettingsInputResult({
+                        success: false,
+                        message: 'No text to parse',
+                        details: 'Please paste some text from your PDF first.'
+                    });
+                    return;
+                }
+                
+                try {
+                    // Initialize text parser if not already done
+                    if (typeof TextParser === 'undefined') {
+                        throw new Error('Text parser is not available. Please refresh the page.');
+                    }
+                    
+                    const textParser = new TextParser();
+                    const result = textParser.parseText(text);
+                    
+                    if (result.success) {
+                        // Store the extracted settings
+                        window.importedSettings = result.settings;
+                        
+                        // Show success result
+                        showSettingsInputResult({
+                            success: true,
+                            message: `Successfully parsed ${Object.keys(result.settings).length} controller settings`,
+                            details: `Extracted from ${result.metadata.originalTextLength} characters of pasted text using ${result.metadata.extractionMethod}.`
+                        });
+                        
+                        // Display preview
+                        displaySettingsPreview(result.settings, 'Pasted Text');
+                        
+                        // Show detailed results in the text parse result area
+                        showTextParseResult(result);
+                        
+                        console.log('Text parsing successful:', result);
+                    } else {
+                        showSettingsInputResult({
+                            success: false,
+                            message: 'Failed to parse controller settings from text',
+                            details: result.error + (result.suggestions ? ' Suggestions: ' + result.suggestions.join(', ') : '')
+                        });
+                        
+                        showTextParseResult(result);
+                    }
+                    
+                } catch (error) {
+                    console.error('Text parsing error:', error);
+                    showSettingsInputResult({
+                        success: false,
+                        message: 'Text parsing failed',
+                        details: error.message
+                    });
+                }
+            });
+            
+            // Show text parse result in the dedicated area
+            function showTextParseResult(result) {
+                const resultArea = document.getElementById('text-parse-result');
+                resultArea.classList.remove('hidden');
+                
+                if (result.success) {
+                    resultArea.className = 'mt-3 p-3 border border-green-300 bg-green-50 rounded';
+                    resultArea.innerHTML = `
+                        <div class="flex items-start">
+                            <span class="text-green-600 mr-2">✅</span>
+                            <div class="flex-grow">
+                                <h5 class="font-medium text-green-900">Text Parsing Successful</h5>
+                                <p class="text-sm text-green-700 mt-1">
+                                    Found ${Object.keys(result.settings).length} controller settings
+                                </p>
+                                <div class="text-xs text-green-600 mt-2">
+                                    Confidence: ${Math.round((result.metadata?.confidence || 0) * 100)}% | 
+                                    Original text: ${result.metadata?.originalTextLength || 0} chars | 
+                                    Method: ${result.metadata?.extractionMethod || 'text_parser'}
+                                </div>
+                                ${result.preview ? `
+                                    <div class="mt-2">
+                                        <details class="text-xs">
+                                            <summary class="cursor-pointer text-green-700 font-medium">Preview Settings (${result.preview.length})</summary>
+                                            <div class="mt-1 space-y-1">
+                                                ${result.preview.map(p => `<div>F.${p.function}: ${p.value} (${p.name})</div>`).join('')}
+                                            </div>
+                                        </details>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultArea.className = 'mt-3 p-3 border border-red-300 bg-red-50 rounded';
+                    resultArea.innerHTML = `
+                        <div class="flex items-start">
+                            <span class="text-red-600 mr-2">❌</span>
+                            <div class="flex-grow">
+                                <h5 class="font-medium text-red-900">Text Parsing Failed</h5>
+                                <p class="text-sm text-red-700 mt-1">${result.error}</p>
+                                ${result.suggestions ? `
+                                    <div class="mt-2">
+                                        <div class="text-xs text-red-700 font-medium">Suggestions:</div>
+                                        <ul class="text-xs text-red-600 mt-1 list-disc list-inside">
+                                            ${result.suggestions.map(s => `<li>${s}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
             function hideAllInputMethods() {
                 pdfUploadArea.classList.add('hidden');
+                pasteTextArea.classList.add('hidden');
                 manualEntryForm.classList.add('hidden');
                 document.getElementById('sample-data-modal').classList.add('hidden');
                 settingsInputResult.classList.add('hidden');
@@ -1807,6 +2073,363 @@ Export directly from your programming software when possible.`;
                 }, 3000);
             };
         });
+    </script>
+
+    <!-- Profile Management Modals -->
+    
+    <!-- Save Profile Modal -->
+    <div id="save-profile-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-bold mb-4">💾 Save Profile Locally</h3>
+            
+            <!-- Local Storage Info -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div class="flex items-start">
+                    <span class="text-blue-600 mr-2">🔒</span>
+                    <div class="text-xs text-blue-800">
+                        <p class="font-medium">Your data stays on your device - no account needed!</p>
+                        <p class="mt-1">Profiles are saved in your browser's local storage for privacy and convenience. Export your profiles to back them up or share between devices.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-sm text-gray-600 mb-4">Save your current vehicle configuration to local storage for quick access later.</p>
+            
+            <div class="space-y-3">
+                <div>
+                    <label for="profile-name" class="block text-sm font-medium text-gray-700 mb-1">Profile Name</label>
+                    <input type="text" id="profile-name" placeholder="e.g., My GEM e4, Weekend Cart, Daily Driver" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                
+                <div class="text-xs text-gray-500">
+                    <div>Current configuration includes:</div>
+                    <ul id="save-profile-summary" class="list-disc list-inside mt-1 space-y-1">
+                        <!-- Will be populated by JavaScript -->
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button id="cancel-save-profile" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                    Cancel
+                </button>
+                <button id="confirm-save-profile" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                    Save Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Profile Modal -->
+    <div id="load-profile-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-bold mb-4">📂 Load Profile</h3>
+            
+            <!-- Local Storage Info -->
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <div class="flex items-start">
+                    <span class="text-green-600 mr-2">🔒</span>
+                    <div class="text-xs text-green-800">
+                        <p class="font-medium">Your profiles are stored locally on this device</p>
+                        <p class="mt-1">All your saved configurations are private and secure in your browser's local storage. Use the export feature to transfer profiles between devices.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-sm text-gray-600 mb-4">Select a saved profile to load your vehicle configuration.</p>
+            
+            <div id="profiles-list" class="space-y-2 max-h-60 overflow-y-auto">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <div id="no-profiles-message" class="hidden text-center text-gray-500 py-8">
+                <div class="text-4xl mb-2">📁</div>
+                <div>No saved profiles found</div>
+                <div class="text-xs mt-1">Save your current configuration to create your first profile</div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button id="cancel-load-profile" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Management JavaScript -->
+    <script>
+        // Simple Local Profile Manager
+        class SimpleProfileManager {
+            constructor() {
+                this.storageKey = 'gem_vehicle_profiles';
+                this.init();
+            }
+            
+            init() {
+                // Set up event listeners
+                document.getElementById('save-profile-btn').addEventListener('click', () => this.showSaveModal());
+                document.getElementById('load-profile-btn').addEventListener('click', () => this.showLoadModal());
+                document.getElementById('cancel-save-profile').addEventListener('click', () => this.hideSaveModal());
+                document.getElementById('cancel-load-profile').addEventListener('click', () => this.hideLoadModal());
+                document.getElementById('confirm-save-profile').addEventListener('click', () => this.saveProfile());
+                
+                // Close modals when clicking outside
+                document.getElementById('save-profile-modal').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) this.hideSaveModal();
+                });
+                document.getElementById('load-profile-modal').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) this.hideLoadModal();
+                });
+            }
+            
+            showSaveModal() {
+                // Update the summary of current configuration
+                this.updateSaveProfileSummary();
+                document.getElementById('save-profile-modal').classList.remove('hidden');
+                document.getElementById('profile-name').focus();
+            }
+            
+            hideSaveModal() {
+                document.getElementById('save-profile-modal').classList.add('hidden');
+                document.getElementById('profile-name').value = '';
+            }
+            
+            showLoadModal() {
+                this.updateProfilesList();
+                document.getElementById('load-profile-modal').classList.remove('hidden');
+            }
+            
+            hideLoadModal() {
+                document.getElementById('load-profile-modal').classList.add('hidden');
+            }
+            
+            updateSaveProfileSummary() {
+                const summary = document.getElementById('save-profile-summary');
+                const data = this.getCurrentConfiguration();
+                
+                let items = [];
+                if (data.vehicleData) {
+                    const vd = data.vehicleData;
+                    if (vd.model) items.push(`Model: ${vd.model}`);
+                    if (vd.year) items.push(`Year: ${vd.year}`);
+                    if (vd.batteryVoltage) items.push(`Battery: ${vd.batteryVoltage}V`);
+                    if (vd.controller) items.push(`Controller: ${vd.controller}`);
+                }
+                
+                if (data.pdfSettings && Object.keys(data.pdfSettings).length > 0) {
+                    items.push(`PDF Settings: ${Object.keys(data.pdfSettings).length} functions`);
+                }
+                
+                if (items.length === 0) {
+                    items.push('No configuration data to save');
+                }
+                
+                summary.innerHTML = items.map(item => `<li>${item}</li>`).join('');
+            }
+            
+            getCurrentConfiguration() {
+                // Get current configuration from unifiedFlow or form fields
+                let vehicleData = {};
+                let pdfSettings = null;
+                
+                if (window.unifiedFlow) {
+                    vehicleData = { ...window.unifiedFlow.vehicleData };
+                    pdfSettings = window.unifiedFlow.pdfSettings ? { ...window.unifiedFlow.pdfSettings } : null;
+                } else {
+                    // Fallback to reading form fields directly
+                    const fields = [
+                        'vehicle-model', 'vehicle-year', 'controller-type', 'current-speed',
+                        'motor-type', 'battery-voltage', 'battery-type', 'battery-capacity',
+                        'tire-diameter', 'gear-ratio'
+                    ];
+                    
+                    fields.forEach(fieldId => {
+                        const field = document.getElementById(fieldId);
+                        if (field && field.value) {
+                            const key = fieldId.replace('vehicle-', '').replace('battery-', 'battery').replace('tire-', 'tire').replace('gear-', 'gear').replace('-', '');
+                            vehicleData[key] = field.value;
+                        }
+                    });
+                }
+                
+                return {
+                    vehicleData,
+                    pdfSettings,
+                    savedAt: new Date().toISOString()
+                };
+            }
+            
+            saveProfile() {
+                const name = document.getElementById('profile-name').value.trim();
+                if (!name) {
+                    alert('Please enter a profile name');
+                    return;
+                }
+                
+                const config = this.getCurrentConfiguration();
+                const profiles = this.getProfiles();
+                
+                // Generate unique ID
+                const id = Date.now().toString();
+                
+                profiles[id] = {
+                    id,
+                    name,
+                    ...config
+                };
+                
+                localStorage.setItem(this.storageKey, JSON.stringify(profiles));
+                
+                this.hideSaveModal();
+                this.showNotification(`Profile "${name}" saved successfully!`, 'success');
+            }
+            
+            loadProfile(profileId) {
+                const profiles = this.getProfiles();
+                const profile = profiles[profileId];
+                
+                if (!profile) {
+                    this.showNotification('Profile not found', 'error');
+                    return;
+                }
+                
+                // Load vehicle data
+                if (profile.vehicleData && window.unifiedFlow) {
+                    Object.assign(window.unifiedFlow.vehicleData, profile.vehicleData);
+                    
+                    // Update form fields
+                    Object.entries(profile.vehicleData).forEach(([key, value]) => {
+                        const fieldMapping = {
+                            'model': 'vehicle-model',
+                            'year': 'vehicle-year',
+                            'controller': 'controller-type',
+                            'currentSpeed': 'current-speed',
+                            'motorType': 'motor-type',
+                            'batteryVoltage': 'battery-voltage',
+                            'batteryType': 'battery-type',
+                            'batteryCapacity': 'battery-capacity',
+                            'tireDiameter': 'tire-diameter',
+                            'gearRatio': 'gear-ratio'
+                        };
+                        
+                        const fieldId = fieldMapping[key];
+                        if (fieldId) {
+                            const field = document.getElementById(fieldId);
+                            if (field) {
+                                field.value = value;
+                                field.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        }
+                    });
+                }
+                
+                // Load PDF settings
+                if (profile.pdfSettings && window.unifiedFlow) {
+                    window.unifiedFlow.pdfSettings = { ...profile.pdfSettings };
+                }
+                
+                // Trigger validation
+                if (window.unifiedFlow && typeof window.unifiedFlow.validateStep1 === 'function') {
+                    window.unifiedFlow.validateStep1();
+                }
+                
+                this.hideLoadModal();
+                this.showNotification(`Profile "${profile.name}" loaded successfully!`, 'success');
+            }
+            
+            deleteProfile(profileId) {
+                if (!confirm('Are you sure you want to delete this profile?')) {
+                    return;
+                }
+                
+                const profiles = this.getProfiles();
+                delete profiles[profileId];
+                localStorage.setItem(this.storageKey, JSON.stringify(profiles));
+                
+                this.updateProfilesList();
+                this.showNotification('Profile deleted', 'success');
+            }
+            
+            getProfiles() {
+                try {
+                    const stored = localStorage.getItem(this.storageKey);
+                    return stored ? JSON.parse(stored) : {};
+                } catch (error) {
+                    console.error('Error loading profiles:', error);
+                    return {};
+                }
+            }
+            
+            updateProfilesList() {
+                const profiles = this.getProfiles();
+                const profilesList = document.getElementById('profiles-list');
+                const noProfilesMessage = document.getElementById('no-profiles-message');
+                
+                if (Object.keys(profiles).length === 0) {
+                    profilesList.innerHTML = '';
+                    noProfilesMessage.classList.remove('hidden');
+                    return;
+                }
+                
+                noProfilesMessage.classList.add('hidden');
+                
+                profilesList.innerHTML = Object.values(profiles).map(profile => `
+                    <div class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-grow">
+                                <h4 class="font-medium text-gray-900">${profile.name}</h4>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Saved: ${new Date(profile.savedAt).toLocaleDateString()}
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">
+                                    ${profile.vehicleData?.model || 'Unknown model'} • 
+                                    ${profile.vehicleData?.batteryVoltage || 'Unknown'}V •
+                                    ${profile.pdfSettings ? Object.keys(profile.pdfSettings).length + ' PDF settings' : 'No PDF settings'}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2 ml-3">
+                                <button onclick="profileManager.loadProfile('${profile.id}')" 
+                                        class="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">
+                                    Load
+                                </button>
+                                <button onclick="profileManager.deleteProfile('${profile.id}')" 
+                                        class="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-md text-sm max-w-sm ${
+                    type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                    type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                    'bg-blue-100 text-blue-800 border border-blue-200'
+                }`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 3000);
+            }
+        }
+        
+        // Initialize profile manager
+        let profileManager;
+        document.addEventListener('DOMContentLoaded', function() {
+            profileManager = new SimpleProfileManager();
+        });
+        
+        // Make profileManager globally available for button clicks
+        window.profileManager = profileManager;
     </script>
 </body>
 </html>

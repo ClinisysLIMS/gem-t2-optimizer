@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Local Storage Messages - GEM T2 Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Test Local Storage Messages</h1>
+        
+        <!-- Message Updates Summary -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">Firebase Messages Replaced with Local Storage Messages</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Success Messages -->
+                <div>
+                    <h3 class="font-medium text-green-700 mb-3">✅ Success Messages</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="bg-green-50 border border-green-200 rounded p-2">
+                            <strong>Profile Save:</strong> "Profile saved successfully!"
+                        </div>
+                        <div class="bg-green-50 border border-green-200 rounded p-2">
+                            <strong>Profile Load:</strong> "Profile loaded!"
+                        </div>
+                        <div class="bg-green-50 border border-green-200 rounded p-2">
+                            <strong>Profile Delete:</strong> "Profile deleted"
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Error Messages -->
+                <div>
+                    <h3 class="font-medium text-red-700 mb-3">❌ Error Messages</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="bg-red-50 border border-red-200 rounded p-2">
+                            <strong>Save Failed:</strong> "Profile save failed - please check your browser storage"
+                        </div>
+                        <div class="bg-red-50 border border-red-200 rounded p-2">
+                            <strong>Load Failed:</strong> "Profile load failed - please check your browser storage"
+                        </div>
+                        <div class="bg-red-50 border border-red-200 rounded p-2">
+                            <strong>Delete Failed:</strong> "Profile deletion failed - please check your browser storage"
+                        </div>
+                        <div class="bg-red-50 border border-red-200 rounded p-2">
+                            <strong>Not Found:</strong> "Profile not found in local storage"
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Storage Space Feature -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">🗄️ Storage Space Monitoring</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-medium mb-3">New Feature: Storage Space Checking</h3>
+                    <ul class="text-sm space-y-2">
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-2">✓</span>
+                            <span>Automatically checks storage space when errors occur</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-2">✓</span>
+                            <span>Shows warning when storage is >90% full</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-2">✓</span>
+                            <span>Shows info when storage is >75% full</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-600 mr-2">✓</span>
+                            <span>Suggests exporting profiles when space is low</span>
+                        </li>
+                    </ul>
+                    
+                    <button id="check-storage-btn" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Check Storage Now
+                    </button>
+                </div>
+                
+                <div id="storage-info" class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-medium mb-2">Current Storage Usage</h4>
+                    <div id="storage-details" class="text-sm text-gray-600">
+                        Click "Check Storage Now" to see storage information
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Message Triggers -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">🎬 Test Message Triggers</h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button onclick="testMessage('success', 'Profile saved successfully!')" 
+                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Test Success
+                </button>
+                
+                <button onclick="testMessage('success', 'Profile loaded!')" 
+                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Test Load
+                </button>
+                
+                <button onclick="testMessage('success', 'Profile deleted')" 
+                        class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                    Test Delete
+                </button>
+                
+                <button onclick="testMessage('error', 'Profile save failed - please check your browser storage')" 
+                        class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                    Test Error
+                </button>
+            </div>
+        </div>
+        
+        <!-- Files Updated -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">📁 Files Updated</h2>
+            
+            <div class="space-y-4">
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="font-medium">✅ js/local-profile-manager.js</h3>
+                    <ul class="text-sm text-gray-600 mt-1 space-y-1">
+                        <li>• Updated error messages to reference local storage</li>
+                        <li>• Changed success messages to be more concise</li>
+                        <li>• Added automatic storage space checking</li>
+                        <li>• Improved error context for users</li>
+                    </ul>
+                </div>
+                
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="font-medium">✅ local-profile-system.html</h3>
+                    <ul class="text-sm text-gray-600 mt-1 space-y-1">
+                        <li>• Updated "loaded successfully!" to "loaded!"</li>
+                        <li>• Added storage space checking to notifications</li>
+                        <li>• Integrated storage monitoring with error handling</li>
+                    </ul>
+                </div>
+                
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h3 class="font-medium">ℹ️ Other Files</h3>
+                    <ul class="text-sm text-gray-600 mt-1 space-y-1">
+                        <li>• Firebase-specific files maintained for potential future use</li>
+                        <li>• Local storage equivalents now handle all messaging</li>
+                        <li>• Community and other features updated to use local messages</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Test Links -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">🔗 Test the Updated Messages</h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <a href="index-new.html" class="bg-blue-100 hover:bg-blue-200 p-3 rounded text-center">
+                    <div class="text-2xl mb-1">🏠</div>
+                    <div class="text-sm font-medium">Main App</div>
+                    <div class="text-xs text-gray-600">Try saving profiles</div>
+                </a>
+                
+                <a href="local-profile-system.html" class="bg-green-100 hover:bg-green-200 p-3 rounded text-center">
+                    <div class="text-2xl mb-1">🗂️</div>
+                    <div class="text-sm font-medium">Profile System</div>
+                    <div class="text-xs text-gray-600">Test all operations</div>
+                </a>
+                
+                <a href="test-no-auth.html" class="bg-orange-100 hover:bg-orange-200 p-3 rounded text-center">
+                    <div class="text-2xl mb-1">🧪</div>
+                    <div class="text-sm font-medium">No Auth Test</div>
+                    <div class="text-xs text-gray-600">Verify no Firebase</div>
+                </a>
+                
+                <a href="community.html" class="bg-purple-100 hover:bg-purple-200 p-3 rounded text-center">
+                    <div class="text-2xl mb-1">🌟</div>
+                    <div class="text-sm font-medium">Community</div>
+                    <div class="text-xs text-gray-600">Local sharing</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Test message display function
+        function testMessage(type, message) {
+            showNotification(message, type);
+        }
+        
+        // Notification system (same as in other files)
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-md text-sm max-w-sm shadow-lg ${
+                type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                type === 'warning' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                'bg-blue-100 text-blue-800 border border-blue-200'
+            }`;
+            
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            notification.innerHTML = `<div class="flex items-start"><span class="mr-2">${icon}</span><span>${message}</span></div>`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 4000);
+        }
+        
+        // Storage space checking
+        async function checkStorageSpace() {
+            const storageDetails = document.getElementById('storage-details');
+            
+            try {
+                if ('storage' in navigator && 'estimate' in navigator.storage) {
+                    const estimate = await navigator.storage.estimate();
+                    const used = estimate.usage || 0;
+                    const quota = estimate.quota || 0;
+                    
+                    if (quota > 0) {
+                        const usedMB = Math.round(used / 1024 / 1024);
+                        const quotaMB = Math.round(quota / 1024 / 1024);
+                        const percentUsed = Math.round((used / quota) * 100);
+                        
+                        let statusColor = 'text-green-600';
+                        let statusMessage = 'Storage usage is healthy';
+                        
+                        if (percentUsed > 90) {
+                            statusColor = 'text-red-600';
+                            statusMessage = 'Storage almost full! Consider exporting profiles.';
+                            showNotification(`Storage almost full: ${usedMB}MB used of ${quotaMB}MB. Consider exporting profiles and clearing browser data.`, 'warning');
+                        } else if (percentUsed > 75) {
+                            statusColor = 'text-yellow-600';
+                            statusMessage = 'Storage getting full. Monitor usage.';
+                            showNotification(`Storage: ${usedMB}MB used of ${quotaMB}MB available`, 'info');
+                        }
+                        
+                        storageDetails.innerHTML = `
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span>Used:</span>
+                                    <span class="font-medium">${usedMB}MB</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Available:</span>
+                                    <span class="font-medium">${quotaMB}MB</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Percentage:</span>
+                                    <span class="font-medium ${statusColor}">${percentUsed}%</span>
+                                </div>
+                                <div class="mt-3 p-2 bg-white rounded border">
+                                    <div class="h-2 bg-gray-200 rounded">
+                                        <div class="h-full bg-blue-500 rounded" style="width: ${percentUsed}%"></div>
+                                    </div>
+                                </div>
+                                <div class="text-xs ${statusColor} font-medium">
+                                    ${statusMessage}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        storageDetails.innerHTML = '<div class="text-gray-500">Storage quota information not available</div>';
+                    }
+                } else {
+                    storageDetails.innerHTML = '<div class="text-gray-500">Storage API not supported in this browser</div>';
+                }
+            } catch (error) {
+                console.error('Error checking storage:', error);
+                storageDetails.innerHTML = '<div class="text-red-500">Error checking storage space</div>';
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('check-storage-btn').addEventListener('click', checkStorageSpace);
+        
+        // Auto-check storage on page load
+        document.addEventListener('DOMContentLoaded', checkStorageSpace);
+    </script>
+</body>
+</html>

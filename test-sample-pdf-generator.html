@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample PDF Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body class="bg-gray-50 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">📄 Sample PDF Generator</h1>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Generate Test PDFs</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Create downloadable sample PDFs in various formats to test the PDF parser functionality.
+                These PDFs contain known controller settings in different layouts.
+            </p>
+            
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <h3 class="font-medium mb-2">PDF Formats</h3>
+                    <div class="space-y-2">
+                        <button id="generate-sentry" class="w-full px-3 py-2 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors">
+                            📊 GE Sentry Export Format
+                        </button>
+                        <button id="generate-table" class="w-full px-3 py-2 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors">
+                            📋 Table Format
+                        </button>
+                        <button id="generate-simple" class="w-full px-3 py-2 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors">
+                            📝 Simple List Format
+                        </button>
+                        <button id="generate-mixed" class="w-full px-3 py-2 bg-orange-100 text-orange-700 rounded text-sm hover:bg-orange-200 transition-colors">
+                            🔀 Mixed Format (Real-world)
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium mb-2">Special Templates</h3>
+                    <div class="space-y-2">
+                        <button id="generate-editable" class="w-full px-3 py-2 bg-yellow-100 text-yellow-700 rounded text-sm hover:bg-yellow-200 transition-colors">
+                            ✏️ Editable Template
+                        </button>
+                        <button id="generate-test-suite" class="w-full px-3 py-2 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors">
+                            🧪 Complete Test Suite
+                        </button>
+                        <button id="test-generated-pdf" class="w-full px-3 py-2 bg-indigo-100 text-indigo-700 rounded text-sm hover:bg-indigo-200 transition-colors">
+                            🔄 Generate & Test Loop
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Custom Settings PDF</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Create a PDF with your own controller settings for testing.
+            </p>
+            
+            <div class="mb-4">
+                <h3 class="font-medium mb-2">Enter Custom Settings</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">F.1 (MPH Scaling)</label>
+                        <input type="number" id="f1" value="100" min="0" max="999" class="w-full text-sm border border-gray-300 rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">F.3 (Acceleration)</label>
+                        <input type="number" id="f3" value="15" min="0" max="999" class="w-full text-sm border border-gray-300 rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">F.4 (Max Current)</label>
+                        <input type="number" id="f4" value="245" min="0" max="999" class="w-full text-sm border border-gray-300 rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600 mb-1">F.15 (Battery Volts)</label>
+                        <input type="number" id="f15" value="72" min="0" max="999" class="w-full text-sm border border-gray-300 rounded p-2">
+                    </div>
+                </div>
+                
+                <div class="flex gap-2">
+                    <select id="custom-format" class="text-sm border border-gray-300 rounded p-2">
+                        <option value="sentry">Sentry Format</option>
+                        <option value="table">Table Format</option>
+                        <option value="simple">Simple Format</option>
+                        <option value="mixed">Mixed Format</option>
+                    </select>
+                    <button id="generate-custom" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                        Generate Custom PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Test Generated PDFs</h2>
+            <div class="mb-4">
+                <input type="file" id="test-pdf-upload" accept=".pdf" class="w-full text-sm border border-gray-300 rounded p-2">
+                <div class="text-xs text-gray-500 mt-1">Upload a generated PDF to test parsing</div>
+            </div>
+            
+            <div id="test-results" class="min-h-32 border border-gray-200 rounded p-3 bg-gray-50">
+                <div class="text-gray-500 text-center">Upload a PDF to see test results...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold mb-3">Generation Results</h2>
+            <div id="generation-log" class="min-h-32 border border-gray-200 rounded p-3 bg-gray-50">
+                <div class="text-gray-500 text-center">Click a generation button above to see results...</div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3">Event Log</h2>
+            <div id="console-log" class="bg-gray-100 p-3 rounded text-xs font-mono max-h-64 overflow-y-auto">
+                Sample PDF generator initialized...\n
+            </div>
+        </div>
+    </div>
+
+    <!-- Load PDF.js worker setup -->
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
+    <!-- Load dependencies -->
+    <script src="js/simple-pdf-parser.js"></script>
+    <script src="js/pdf-parser.js"></script>
+    <script src="js/sample-pdf-generator.js"></script>
+
+    <script>
+        // UI elements
+        const consoleLog = document.getElementById('console-log');
+        const generationLog = document.getElementById('generation-log');
+        const testResults = document.getElementById('test-results');
+        
+        let generator = null;
+        let parser = null;
+        let simpleParser = null;
+        
+        function logEvent(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            consoleLog.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            console.log(message);
+        }
+
+        function displayGenerationResult(format, filename, success = true, error = null) {
+            const resultClass = success ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800';
+            const icon = success ? '✅' : '❌';
+            
+            const resultHtml = `
+                <div class="flex items-start p-3 border rounded-md ${resultClass} mb-2">
+                    <span class="mr-2">${icon}</span>
+                    <div class="flex-grow">
+                        <h4 class="font-medium">${format} Format</h4>
+                        ${success ? 
+                            `<p class="text-sm mt-1">Generated: ${filename}</p>
+                             <p class="text-xs mt-1">File should download automatically</p>` : 
+                            `<p class="text-sm mt-1">Error: ${error}</p>`
+                        }
+                    </div>
+                </div>
+            `;
+            
+            if (generationLog.innerHTML.includes('Click a generation button')) {
+                generationLog.innerHTML = resultHtml;
+            } else {
+                generationLog.innerHTML += resultHtml;
+            }
+        }
+
+        function displayTestResult(result, filename) {
+            const success = result.success && Object.keys(result.settings || {}).length > 0;
+            const resultClass = success ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800';
+            const icon = success ? '✅' : '❌';
+            
+            let settingsHtml = '';
+            if (success) {
+                const settings = Object.entries(result.settings).slice(0, 5);
+                settingsHtml = `
+                    <div class="mt-2 text-xs">
+                        <div class="font-medium mb-1">Found Settings:</div>
+                        ${settings.map(([func, value]) => `<div>F.${func} = ${value}</div>`).join('')}
+                        ${Object.keys(result.settings).length > 5 ? `<div>... and ${Object.keys(result.settings).length - 5} more</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            testResults.className = `p-4 rounded-md border ${resultClass}`;
+            testResults.innerHTML = `
+                <div class="flex items-start">
+                    <span class="mr-2">${icon}</span>
+                    <div class="flex-grow">
+                        <h4 class="font-medium">PDF Test Result</h4>
+                        <p class="text-sm mt-1">File: ${filename}</p>
+                        ${success ? 
+                            `<p class="text-sm mt-1">Extracted ${Object.keys(result.settings).length} settings successfully</p>
+                             <p class="text-xs mt-1">Parser: ${result.metadata?.extractionMethod || 'Unknown'}</p>` : 
+                            `<p class="text-sm mt-1">Failed: ${result.error}</p>`
+                        }
+                        ${settingsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                generator = new SamplePDFGenerator();
+                logEvent('✅ Sample PDF generator ready');
+            } catch (error) {
+                logEvent(`❌ Failed to initialize PDF generator: ${error.message}`);
+                return;
+            }
+            
+            try {
+                parser = new PDFParser();
+                logEvent('✅ Advanced PDF parser ready');
+            } catch (error) {
+                logEvent(`⚠️ Advanced PDF parser not available: ${error.message}`);
+            }
+            
+            try {
+                simpleParser = new SimplePDFParser();
+                logEvent('✅ Simple PDF parser ready');
+            } catch (error) {
+                logEvent(`⚠️ Simple PDF parser not available: ${error.message}`);
+            }
+        });
+
+        // Format generation buttons
+        document.getElementById('generate-sentry').addEventListener('click', function() {
+            logEvent('Generating GE Sentry format PDF...');
+            try {
+                const filename = generator.generateSamplePDF('sentry');
+                displayGenerationResult('GE Sentry Export', filename, true);
+                logEvent(`✅ Sentry format PDF generated: ${filename}`);
+            } catch (error) {
+                displayGenerationResult('GE Sentry Export', null, false, error.message);
+                logEvent(`❌ Sentry format generation failed: ${error.message}`);
+            }
+        });
+
+        document.getElementById('generate-table').addEventListener('click', function() {
+            logEvent('Generating table format PDF...');
+            try {
+                const filename = generator.generateSamplePDF('table');
+                displayGenerationResult('Table Format', filename, true);
+                logEvent(`✅ Table format PDF generated: ${filename}`);
+            } catch (error) {
+                displayGenerationResult('Table Format', null, false, error.message);
+                logEvent(`❌ Table format generation failed: ${error.message}`);
+            }
+        });
+
+        document.getElementById('generate-simple').addEventListener('click', function() {
+            logEvent('Generating simple format PDF...');
+            try {
+                const filename = generator.generateSamplePDF('simple');
+                displayGenerationResult('Simple List', filename, true);
+                logEvent(`✅ Simple format PDF generated: ${filename}`);
+            } catch (error) {
+                displayGenerationResult('Simple List', null, false, error.message);
+                logEvent(`❌ Simple format generation failed: ${error.message}`);
+            }
+        });
+
+        document.getElementById('generate-mixed').addEventListener('click', function() {
+            logEvent('Generating mixed format PDF...');
+            try {
+                const filename = generator.generateSamplePDF('mixed');
+                displayGenerationResult('Mixed Format', filename, true);
+                logEvent(`✅ Mixed format PDF generated: ${filename}`);
+            } catch (error) {
+                displayGenerationResult('Mixed Format', null, false, error.message);
+                logEvent(`❌ Mixed format generation failed: ${error.message}`);
+            }
+        });
+
+        document.getElementById('generate-editable').addEventListener('click', function() {
+            logEvent('Generating editable template PDF...');
+            try {
+                const filename = generator.generateEditablePDF();
+                displayGenerationResult('Editable Template', filename, true);
+                logEvent(`✅ Editable template PDF generated: ${filename}`);
+            } catch (error) {
+                displayGenerationResult('Editable Template', null, false, error.message);
+                logEvent(`❌ Editable template generation failed: ${error.message}`);
+            }
+        });
+
+        document.getElementById('generate-test-suite').addEventListener('click', function() {
+            logEvent('Generating complete test suite...');
+            try {
+                const results = generator.generateTestSuite();
+                results.forEach(result => {
+                    displayGenerationResult(result.format, result.filename, result.success, result.error);
+                    if (result.success) {
+                        logEvent(`✅ ${result.format} format generated: ${result.filename}`);
+                    } else {
+                        logEvent(`❌ ${result.format} format failed: ${result.error}`);
+                    }
+                });
+                logEvent(`📦 Test suite complete: ${results.filter(r => r.success).length}/${results.length} successful`);
+            } catch (error) {
+                logEvent(`❌ Test suite generation failed: ${error.message}`);
+            }
+        });
+
+        // Custom PDF generation
+        document.getElementById('generate-custom').addEventListener('click', function() {
+            logEvent('Generating custom PDF...');
+            try {
+                const customSettings = {
+                    1: { value: parseInt(document.getElementById('f1').value) || 100, name: 'MPH Scaling', description: 'Controls top speed scaling' },
+                    3: { value: parseInt(document.getElementById('f3').value) || 15, name: 'Controlled Acceleration', description: 'Acceleration rate control' },
+                    4: { value: parseInt(document.getElementById('f4').value) || 245, name: 'Max Armature Current Limit', description: 'Maximum motor current' },
+                    15: { value: parseInt(document.getElementById('f15').value) || 72, name: 'Battery Volts', description: 'Nominal battery voltage' }
+                };
+                
+                const format = document.getElementById('custom-format').value;
+                const filename = generator.generateCustomPDF(customSettings, format);
+                displayGenerationResult(`Custom ${format}`, filename, true);
+                logEvent(`✅ Custom PDF generated: ${filename}`);
+            } catch (error) {
+                displayGenerationResult('Custom PDF', null, false, error.message);
+                logEvent(`❌ Custom PDF generation failed: ${error.message}`);
+            }
+        });
+
+        // Generate and test loop
+        document.getElementById('test-generated-pdf').addEventListener('click', async function() {
+            logEvent('Starting generate & test loop...');
+            
+            // Generate a test PDF in memory (we'll simulate this)
+            try {
+                const filename = generator.generateSamplePDF('sentry');
+                logEvent(`📄 Generated test PDF: ${filename}`);
+                logEvent('ℹ️ To complete the test loop, download the PDF and upload it using the file input below');
+                displayGenerationResult('Generate & Test', filename, true);
+            } catch (error) {
+                logEvent(`❌ Generate & test failed: ${error.message}`);
+                displayGenerationResult('Generate & Test', null, false, error.message);
+            }
+        });
+
+        // PDF upload testing
+        document.getElementById('test-pdf-upload').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            logEvent(`🧪 Testing uploaded PDF: ${file.name}`);
+            
+            try {
+                let result = null;
+                let parserUsed = 'none';
+                
+                // Try advanced parser first
+                if (parser) {
+                    try {
+                        result = await parser.parsePDF(file);
+                        parserUsed = 'advanced';
+                        logEvent(`🔍 Advanced parser: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+                    } catch (error) {
+                        logEvent(`⚠️ Advanced parser failed: ${error.message}`);
+                    }
+                }
+                
+                // Try simple parser if advanced failed
+                if ((!result || !result.success) && simpleParser) {
+                    try {
+                        result = await simpleParser.parsePDF(file);
+                        parserUsed = 'simple';
+                        logEvent(`⚡ Simple parser: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+                    } catch (error) {
+                        logEvent(`⚠️ Simple parser failed: ${error.message}`);
+                    }
+                }
+                
+                if (result) {
+                    const settingsCount = Object.keys(result.settings || {}).length;
+                    logEvent(`📊 Extraction complete: ${settingsCount} settings found using ${parserUsed} parser`);
+                    displayTestResult(result, file.name);
+                } else {
+                    logEvent(`❌ All parsers failed for ${file.name}`);
+                    displayTestResult({ success: false, error: 'All parsers failed' }, file.name);
+                }
+                
+            } catch (error) {
+                logEvent(`❌ PDF test error: ${error.message}`);
+                displayTestResult({ success: false, error: error.message }, file.name);
+            }
+        });
+    </script>
+</body>
+</html>

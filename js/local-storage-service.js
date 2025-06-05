@@ -16,7 +16,8 @@ class LocalStorageService {
             tripHistory: 'trip_history',
             presets: 'presets',
             cacheData: 'cache_data',
-            preferences: 'user_preferences'
+            preferences: 'user_preferences',
+            communityData: 'community_data'
         };
         
         console.log('Local Storage Service initialized with IndexedDB');
@@ -112,6 +113,14 @@ class LocalStorageService {
                 keyPath: 'userId'
             });
             prefStore.createIndex('updated', 'updated', { unique: false });
+        }
+        
+        // Community data store
+        if (!this.db.objectStoreNames.contains(this.stores.communityData)) {
+            const communityStore = this.db.createObjectStore(this.stores.communityData, {
+                keyPath: 'userId'
+            });
+            communityStore.createIndex('updated', 'updated', { unique: false });
         }
     }
     
@@ -558,6 +567,31 @@ class LocalStorageService {
         }
     }
     
+    /**
+     * Save community data for a user
+     */
+    async saveCommunityData(userId, data) {
+        const communityData = {
+            userId: userId,
+            ...data
+        };
+        return await this.save(this.stores.communityData, communityData);
+    }
+    
+    /**
+     * Get community data for a user
+     */
+    async getCommunityData(userId) {
+        return await this.get(this.stores.communityData, userId);
+    }
+    
+    /**
+     * Delete community data for a user
+     */
+    async deleteCommunityData(userId) {
+        return await this.delete(this.stores.communityData, userId);
+    }
+
     /**
      * Database maintenance
      */
